@@ -24,4 +24,6 @@ if [ "${1:-}" = "--all" ]; then
   done
   [ "$fail" -eq 0 ] && echo "check-commit-msg: all commits OK"; exit "$fail"
 fi
+# A merge commit keeps git's own message, as --all skips it
+[ -f "$(git rev-parse --git-path MERGE_HEAD)" ] && exit 0
 check "$1" "commit message"

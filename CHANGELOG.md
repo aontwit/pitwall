@@ -4,6 +4,7 @@
 
 - `/pitwall:plan`: the front of the loop. It interviews the owner in rounds of 2–3 tick-box questions, recording each answer in the spec or plan before the next round, and writes plan rows `queue` can pick. Modes: `new` (whole product), `phase` (open a `TBD` phase), `amend` (a decision changed). It ends with a docs-only PR. Optional profile `plan` keys: `spec` and `question banks`, so domain questions (art, economy …) live in the repo and not in the skill
 - `init` points to `/pitwall:plan` when the plan has no rows yet
+- Docs conflicts between sibling agent PRs: `scripts/resolve-docs-conflict.mjs` does `merge-order` 2b's union (base's lines first, a task row once and ticked if either side ticked) and refuses what union cannot decide. The patch-id leaves out the profile's "resolve conflicts yourself" files, so fixing a plan-log conflict no longer makes the verdict stale and forces a re-verify. A commit-msg hook that refuses git's merge message gets the profile's commit pattern instead. Found on Guild Register: every merge left the other open PRs conflicting in the plan's rows and log
 
 ## 0.3.0 — 2026-10-10
 

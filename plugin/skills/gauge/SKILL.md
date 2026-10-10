@@ -71,13 +71,13 @@ Status: **PARTIAL** — all A passed, 1 C item left
 
 The writer's `/pitwall:gauge` is not the verdict (pstack `shipping`: safe = a verdict from an agent that did not write the code) · every PR gets one from a fresh agent, pinned to its head · the single home of the verifier's scope and of the patch-id command — other files point here
 
-**patch-id** of a PR = the stable patch-id of its whole diff against the merge-base with its base branch (the profile's base, or the parent PR's branch in a stack):
+**patch-id** of a PR = the stable patch-id of its diff against the merge-base with its base branch (the profile's base, or the parent PR's branch in a stack), **without the files the profile's `git` section lets the agent resolve itself** (plan rows, progress logs — bookkeeping that every sibling PR appends to, so each merge would make the other PRs' verdicts stale for no code change) · a PR that changes only those files → its whole diff:
 
 ```bash
-git diff $(git merge-base origin/<pr base> <head>) <head> | git patch-id --stable | cut -d' ' -f1
+git diff $(git merge-base origin/<pr base> <head>) <head> -- . ':(exclude)<resolve-yourself path>' … | git patch-id --stable | cut -d' ' -f1
 ```
 
-The patch-id changes only when the PR's own hunks or their context lines change (a new commit, a conflict resolution, base editing lines next to the PR's) → every result pinned to the old one is stale · a clean merge / rebase of base over unrelated code and a retarget after the parent merged keep it → the verdict survives
+The patch-id changes only when the PR's own hunks or their context lines change outside those files (a new commit, a conflict resolution in code, base editing lines next to the PR's) · a docs conflict resolved per `/pitwall:merge-order` 2b keeps it → every result pinned to the old one is stale · a clean merge / rebase of base over unrelated code and a retarget after the parent merged keep it → the verdict survives
 
 When: after the writer's `/pitwall:gauge`, on the committed head, before `gh pr create` (`${CLAUDE_PLUGIN_ROOT}/skills/pitwall/playbooks/opening-a-pr.md` section 2) · again for an agent PR with no verdict or a stale one (`${CLAUDE_PLUGIN_ROOT}/skills/pitwall/playbooks/lap.md` sync item 0)
 

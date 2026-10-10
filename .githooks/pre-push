@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Nothing internal and nothing non-English leaves this machine.
+root="$(git rev-parse --show-toplevel)"
+bash "$root/scripts/check-neutral.sh" && bash "$root/scripts/check-english.sh"

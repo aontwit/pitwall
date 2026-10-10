@@ -1,0 +1,10 @@
+{
+  "name": "pitwall",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-strip-types --test tests/*.test.mjs",
+    "check:neutral": "bash scripts/check-neutral.sh",
+    "check:english": "bash scripts/check-english.sh"
+  }
+}

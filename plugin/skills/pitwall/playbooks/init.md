@@ -47,6 +47,7 @@ Never ask what a file answered; never fill a business value (prices, limits, cre
 
 - `.claude/agent-loop.md` from the draft + answers · a row nobody could answer → `none` + the reason, never left as `{{…}}`
 - no tracker and no plan → copy `<pitwall dir>/templates/plan.md` to the chosen path; the profile `plan` section points at it
+- the plan file goes into `git` → `resolve conflicts yourself`: every PR appends a row and a log line to it, so two open PRs always conflict there (append-only, safe to union)
 - no verification skill → `verification skill: none`; level B items with no browser fall to C, say so in the report
 - `permissions`: write the list into the profile; adding it to the settings file is the user's step
 - `git check-ignore -v .claude/agent-loop.md <plan file>` matches → the file cannot be committed as is: say which `.gitignore` line hides it and the line that un-ignores it (e.g. `!.claude/agent-loop.md`) — adding it is the user's call

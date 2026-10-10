@@ -9,7 +9,9 @@ Main risk: fixing from reading the code, then calling it done because typecheck 
 - Open **the same screen where the bug happens** (browser per the profile, the loop's dev server) on base and make the bug happen, collect evidence: console message / request / on-screen text / screenshot
 - Cannot reproduce directly → build the conditions yourself: recipes in the profile's "states to build", a temporary mock config, add logs and read them while running — keep trying until the bug happens · it counts as reproduced when the symptom **matches the report** (same message / screen), not just a similar error
 - You may ask a human for help **only with the profile's human-only steps** via the pair run of `/pitwall:gauge` — write a specific one-line reason why you cannot do it yourself, and only after doing everything you can yourself
-- Tried every way and it still does not happen → **park as a question** with what was tried — never fix by guessing
+- Tried every way and it still does not happen → two cases, never fix by guessing:
+  - the code and the screen show the reported behaviour is **already correct** (evidence: `file:line` + what the screen shows on base) → this is "already done" (`lap.md` research): no code change, the PR only fixes the stale note / plan row and carries that evidence as its repro rows · say "not a bug" in the title
+  - no evidence either way → **park as a question** with what was tried
 - Repro needs a human-only step but the user is away → park "waiting for pair run" — **steps 1 and 4 must never be ⏳** (`/pitwall:lap`)
 
 ## 2. Find the root cause

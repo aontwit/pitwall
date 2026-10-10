@@ -137,4 +137,4 @@ agents that used a separate worktree (isolation) → remove the worktree + its l
 - never edit `.env*`, secrets, CI workflows (unless the task says so directly), never answer the plan's open questions yourself
 - never touch other people's PRs / branches / tasks, never move a task to `review` before its PR merges, and never move it past `review`
 - never ask the user mid-round — human questions are asked all at once in the briefing of `queue.md` · during the run use "the ladder" · the pair run for human-only steps does not count as asking
-- never open a PR for a bug task that was never reproduced (playbook `bug-fix` item 1)
+- never open a PR for a bug task that was never reproduced (playbook `bug-fix` item 1) — except the "already correct" case there, which changes no code

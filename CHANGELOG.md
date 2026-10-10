@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- `bug-fix`: a bug that cannot be reproduced because the behaviour is already correct ends in a no-code PR with the evidence, not a park; `lap` allows that one case
+- `init` lists the plan file under "resolve conflicts yourself", since every PR appends to it
+
 ## 0.2.0 — 2026-10-10
 
 Fixes from the first runs on two other repos.

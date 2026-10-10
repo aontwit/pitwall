@@ -14,11 +14,11 @@ Read the **base as the loop will see it**, not the working tree: `git fetch orig
 
 | Value | Read from |
 |---|---|
-| install + check commands | lockfile → package manager (`package-lock.json` npm · `pnpm-lock.yaml` pnpm · `yarn.lock` yarn · `bun.lock*` bun), frozen install form · scripts that exist in `package.json` (typecheck / lint / test / build) · other stacks: `Makefile`, `pyproject.toml`, `Cargo.toml`, `go.mod` · a check with no command → `none`, never invent one |
+| install + check commands | lockfile → package manager (`package-lock.json` npm · `pnpm-lock.yaml` pnpm · `yarn.lock` yarn · `bun.lock*` bun), frozen install form · scripts that exist in `package.json` (typecheck / lint / test / build) · other stacks: `Makefile`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `project.godot` (Godot: engine version from `config/features`, no install step) · no package scripts → the `run:` steps of `.github/workflows/*.yml` are the next source: a step that calls a script in the repo → that script is the command, with the env vars the step sets written as a requirement (`GODOT` = path to the engine binary) · a check with no command → `none`, never invent one |
 | base | the branch most of the last 30 merged **work** PRs target — count only PRs whose head is not itself a target (a `<base> → release` PR is a release, not work): `gh pr list --state merged --limit 30 --json headRefName,baseRefName` → drop rows whose `headRefName` is any row's `baseRefName` → most common `baseRefName` · compare with `git symbolic-ref --short refs/remotes/origin/HEAD` (strip `origin/`) · they differ, or no work PRs yet → it becomes a step 3 question with both as options |
 | protected branches | `gh api repos/{owner}/{repo}/branches?protected=true -q '.[].name'` (403 / empty → ask) |
 | hooks | `.husky/`, `lefthook.yml`, `git config core.hooksPath` |
-| CI checks | `.github/workflows/*.yml` job names |
+| CI checks | `.github/workflows/*.yml` job names, and their `run:` steps when the row above found no commands |
 | repo rules | `CLAUDE.md`, `AGENTS.md`, `.claude/rules/`, `.cursor/rules/`, `CONTRIBUTING.md`, a docs / knowledge-base index |
 | dev server | a `dev` / `start` script + its port (script flags, framework config) |
 | verification skill | a `.claude/skills/*/SKILL.md` that launches or drives the app |

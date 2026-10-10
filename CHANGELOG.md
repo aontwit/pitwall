@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.2.1 — 2026-10-10
 
+- README: a Status section that lists what has been proven on real repos and what has not
 - A wakeup round that opens a PR, parks a task or stops the loop sends one push notification, so an away user hears about it
 - `drive` keeps looping: every wakeup prompt is `/loop /pitwall:lap` (a bare `/pitwall:lap` ran once and stopped)
 - `drive` starts only with a pickable task, not a queue of blocked ones

@@ -59,6 +59,7 @@ Open a todo list whose first steps are the chosen playbook's steps, copied word 
 | stop now / `/brake` | `playbooks/brake.md` |
 | which to merge first / which PR is ready / `/merge-order` | `playbooks/merge-order.md` |
 | what do I keep repeating / `/secretary` | `playbooks/secretary.md` |
+| set this repo up / `init` | `playbooks/init.md` |
 | is the profile complete / `doctor` | `playbooks/doctor.md` |
 | test together / pair run / verify / `/gauge` | the `gauge` skill (pair run section) |
 | open a task / `/ticket` | the `ticket` skill |

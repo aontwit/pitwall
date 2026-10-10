@@ -29,5 +29,11 @@ assert.match(noLanguage.stdout, /MISSING  language/, "names the missing section"
 assert.equal(run(full + "\n## tracker\n\nnothing\n").status, 1, "tracker section without clickup|none fails");
 assert.equal(run(full + "\n## tracker\n\n`tracker: none`\n").status, 0, "tracker: none passes");
 assert.equal(spawnSync("bash", [doctor, join(dir, "missing.md")]).status, 3, "no profile → exit 3");
+assert.equal(run(full + "\n| base | `{{base}}` |\n").status, 1, "a {{…}} placeholder left in the profile fails");
+assert.equal(
+  spawnSync("bash", [doctor, "plugin/skills/pitwall/templates/agent-loop.md"]).status,
+  1,
+  "the shipped template is not a valid profile until filled",
+);
 
 console.log("OK: doctor");

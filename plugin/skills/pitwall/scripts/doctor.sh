@@ -42,5 +42,11 @@ if has tracker && ! grep -qE 'tracker: *`?(clickup|none)\b' "$profile"; then
   echo "BAD      tracker: the section must say \`tracker: clickup\` or \`tracker: none\`"; problems=$((problems+1))
 fi
 
+left="$(grep -c '{{' "$profile" || true)"
+if [ "$left" -gt 0 ]; then
+  echo "UNFILLED $left line(s) still hold a {{…}} placeholder:"; grep -n '{{' "$profile" | cut -c1-120
+  problems=$((problems+1))
+fi
+
 if [ "$problems" -eq 0 ]; then echo "doctor: profile OK ($profile)"; else echo "doctor: $problems problem(s) in $profile"; fi
 [ "$problems" -eq 0 ]

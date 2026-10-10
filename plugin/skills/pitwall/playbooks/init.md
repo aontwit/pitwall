@@ -29,7 +29,7 @@ Read the **base as the loop will see it**, not the working tree: `git fetch orig
 
 ## 2. Draft
 
-Copy `<pitwall dir>/templates/agent-loop.md` and fill every `{{…}}` that step 1 settled · roles in `agents per task`: a stronger model for design and the review panel, a faster one for pattern work and the verifier (a default — listed in the report)
+Copy `<pitwall dir>/templates/agent-loop.md` and fill every `{{…}}` that step 1 settled · roles in `agents per task`: a stronger model for design, a faster one for pattern work and the verifier, and **two different models** in the review panel — its variety comes from the models (a default — listed in the report)
 
 ## 3. Ask once
 

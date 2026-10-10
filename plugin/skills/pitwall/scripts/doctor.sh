@@ -38,8 +38,8 @@ for row in "${rows[@]}"; do
   fi
 done
 
-if has tracker && ! grep -qE 'tracker: *`?(clickup|none)\b' "$profile"; then
-  echo "BAD      tracker: the section must say \`tracker: clickup\` or \`tracker: none\`"; problems=$((problems+1))
+if has tracker && ! grep -qE 'tracker: *`?(clickup|github|none)\b' "$profile"; then
+  echo "BAD      tracker: the section must say \`tracker: clickup\`, \`tracker: github\` or \`tracker: none\`"; problems=$((problems+1))
 fi
 
 left="$(grep -c '{{' "$profile" || true)"

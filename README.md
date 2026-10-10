@@ -102,7 +102,7 @@ Every command is `/pitwall:<command>`. Or say what you want in plain words, Engl
 | states to build | recipes for the states your tests need |
 | repo-specific evidence | file pattern → extra proof + level |
 | plan (optional) | where the plan lives and how its rows look |
-| tracker (optional) | `clickup` or `none` (the PR is the record) |
+| tracker (optional) | `clickup`, `github` (GitHub Issues) or `none` (the PR is the record) |
 | agents per task | subagent + model per role, review panel, checklists |
 | repo rules | your rules files, principles turned off |
 | multi-machine (optional) | hand off loop state between machines |
@@ -118,7 +118,7 @@ pitwall is pre-1.0. It has run end to end on two repos outside the one it came f
 | install from this repo, `/pitwall:init`, `/pitwall:doctor` | `/pitwall:brake`, and `/pitwall:stop` during a task |
 | `/pitwall:queue`, including tasks typed in words and blocking on a question it must not guess | a wakeup that picks a new task and reaches a PR on its own |
 | `/pitwall:lap` end to end: repro, fix, checks, browser evidence, two-model review, independent verifier, PR (3 PRs) | `/pitwall:merge-order` and the sync after a PR merges |
-| `/pitwall:drive` start, a self-scheduled wakeup that re-enters the loop, `/pitwall:stop` between rounds | `tracker: clickup` in plugin form |
+| `/pitwall:drive` start, a self-scheduled wakeup that re-enters the loop, `/pitwall:stop` between rounds | `tracker: clickup` in plugin form, `tracker: github` inside a lap |
 | routing from Thai and English requests (eval) | the `port`, `move-only` and `ratchet` playbooks, multi-machine hand-off |
 | | a `/pitwall:lap` on a repo outside JavaScript / TypeScript, macOS and Linux |
 
@@ -161,6 +161,7 @@ Commit `.claude/agent-loop.md` (and `PLAN.md`, if init wrote one) to your base b
 - `git`, `bash` and Node 18+ on the machine that runs the loop
 - For level B: a dev server and a browser Claude can drive
 - For `tracker: clickup`: the ClickUp MCP connector
+- For `tracker: github`: Issues turned on in the repo, and the labels the profile names already created
 
 ## Development
 

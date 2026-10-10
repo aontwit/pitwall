@@ -32,7 +32,7 @@ Then fill `pr` in this head's `verified` entries (`/pitwall:gauge` "Record resul
 
 ## 4. PR body
 
-- What: the brief + link to the plan row / tracker task · playbook used
+- What: the brief + link to the plan row / tracker task (`tracker: github` → `Refs #<n>`, never a closing keyword — `pitwall:ticket` G1) · playbook used
 - Changes: one bullet per behaviour that changed (no file | +/− table — GitHub's Files tab already shows it) · a playbook may ask for its own table (e.g. `ratchet` moves)
 - **Verify table** from `/pitwall:gauge` + the verifier row `| Verifier | — | <subagent> <model> @<7-char headSha> patch <12-char patchId> | ✅ <VERIFIED / PARTIAL> |` (the PR-body check fails without it)
 - **Decisions to confirm**: every fork that used ladder step 2, one line each: option taken · other options · where to change it (none → write "none")

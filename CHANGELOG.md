@@ -8,6 +8,7 @@ Fixes from the first runs on two other repos.
 - `init` fetches and reads every file from `origin/<base>`, not a working tree that may be behind (a repo that had moved from one package manager to another got the old commands)
 - `init` flags a profile or plan file that `.gitignore` hides, and its report says to commit both before the first lap
 - `init` puts two different models in the review panel
+- `doctor` flags a profile whose install command no longer matches the base's lockfile
 - `lap` counts a reviewer severity outside `CRITICAL` / `WARNING` / `INFO` as `INFO`
 - README: install scopes (user, project, local) and how to update
 

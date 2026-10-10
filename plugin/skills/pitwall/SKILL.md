@@ -1,6 +1,6 @@
 ---
 name: pitwall
-description: Single entry point of the agent loop — reads the request (Thai / English), picks a playbook, then does it with evidence. Use when the user runs /pitwall:pitwall or says "ใส่คิว", "ลุย", "ออกรถ", "ทำ 1 งาน", "หยุดหลังจบงานนี้", "หยุดเดี๋ยวนี้", "merge ตัวไหนก่อน", "แก้บั๊ก", "เทสด้วยกัน", "เปิด task", "ผมย้ำอะไรบ่อย", "ให้ทำเอง", "งานไหน agent ทำได้", "PR ไหนพร้อม" · repo values live in .claude/agent-loop.md
+description: Single entry point of the agent loop — reads the request (Thai / English), picks a playbook, then does it with evidence. Use when the user runs /pitwall:pitwall or says "ใส่คิว", "ลุย", "ออกรถ", "ทำ 1 งาน", "หยุดหลังจบงานนี้", "หยุดเดี๋ยวนี้", "merge ตัวไหนก่อน", "แก้บั๊ก", "เทสด้วยกัน", "เปิด task", "ผมย้ำอะไรบ่อย", "วางแผน", "สัมภาษณ์ผม", "แบ่ง phase", "ให้ทำเอง", "งานไหน agent ทำได้", "PR ไหนพร้อม" · repo values live in .claude/agent-loop.md
 user-invocable: true
 ---
 
@@ -52,6 +52,7 @@ Open a todo list whose first steps are the chosen playbook's steps, copied word 
 
 | Request | playbook |
 |---|---|
+| plan the project / interview me / split into phases / open the next phase / a decision changed / `/pitwall:plan` | `playbooks/plan.md` — spec + plan rows, docs-only PR |
 | queue it / briefing / which tasks can the agent do / `/pitwall:queue` | `playbooks/queue.md` (ends with briefing) |
 | go / drive off / let it work on its own / `/pitwall:drive` | `playbooks/drive.md` — build and prove the whole queue, humans merge |
 | do 1 task / `/pitwall:lap` | `playbooks/lap.md` |
@@ -72,7 +73,7 @@ Open a todo list whose first steps are the chosen playbook's steps, copied word 
 
 Requests may come in the user's language; the Thai trigger phrases in the description map to the same rows.
 
-Commands: each playbook has its own shortcut skill — `/pitwall:queue`, `/pitwall:drive`, `/pitwall:lap`, `/pitwall:stop`, `/pitwall:brake`, `/pitwall:merge-order`, `/pitwall:secretary`, `/pitwall:init`, `/pitwall:doctor` — which invokes this skill with the playbook name as the first argument · a first argument that names a row → that playbook · anything else (`/pitwall:pitwall <request in words>`, or a request with no command) routes by the table · `/pitwall:gauge` and `/pitwall:ticket` are separate skills of this plugin
+Commands: each playbook has its own shortcut skill — `/pitwall:plan`, `/pitwall:queue`, `/pitwall:drive`, `/pitwall:lap`, `/pitwall:stop`, `/pitwall:brake`, `/pitwall:merge-order`, `/pitwall:secretary`, `/pitwall:init`, `/pitwall:doctor` — which invokes this skill with the playbook name as the first argument · a first argument that names a row → that playbook · anything else (`/pitwall:pitwall <request in words>`, or a request with no command) routes by the table · `/pitwall:gauge` and `/pitwall:ticket` are separate skills of this plugin
 
 ## principles (`principles/`)
 
@@ -107,7 +108,7 @@ Required sections · a playbook that needs a section that is missing → stop an
 | level B | dev server + port rules, browser, pages, viewport, time per method, human-only steps (what only a human may click: wallet popup, 2FA, payment confirm …), (optional) verification skill, upkeep cadence |
 | states to build | recipes for producing the states to test, or a pointer to the file that holds them |
 | repo-specific evidence | file pattern → extra evidence + level |
-| plan (optional) | plan folder, reading order, row format, where open questions go, rows not to queue, playbook per row type |
+| plan (optional) | plan folder, reading order, row format, where open questions go, rows not to queue, playbook per row type, (optional) spec file and question bank files for `/pitwall:plan` |
 | tracker (optional — missing = `none`) | `tracker: clickup \| github \| none` · for `clickup`: location, tag, QA, meaning of each status, naming · for `github` (GitHub Issues): agent label, the `in progress` / `review` / `pending` labels, QA login, `milestone: current \| none`, naming (both in the `pitwall:ticket` skill) · `none` = no tasks, the PR is the record |
 | agents per task | subagent type + model per role (`code role`, `verifier`), review panel, domain checklist files |
 | repo rules | rules files in use, principles turned off (with the reason) |

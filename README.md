@@ -6,7 +6,7 @@
 
 The agent loop that queues your work, proves every PR, and leaves the merge to you.
 
-Ask every question once, up front. Then the agent builds one task per round, proves it, gets a verdict from a verifier that did not write the code, and opens the PR. 15 playbooks, 20 principles. Runs in Claude Code today; Codex, Cursor and Gemini CLI are planned.
+Plan in short interview rounds, then ask every remaining question once, up front. Then the agent builds one task per round, proves it, gets a verdict from a verifier that did not write the code, and opens the PR. 16 playbooks, 20 principles. Runs in Claude Code today; Codex, Cursor and Gemini CLI are planned.
 
 > **Quick start:** `/plugin marketplace add aontwit/pitwall`, then `/plugin install pitwall@pitwall`, then run `/pitwall:init` in your repo.
 
@@ -25,7 +25,8 @@ pitwall adds:
 
 ```mermaid
 flowchart TD
-    init["/pitwall:init<br/>write the profile"] --> queue["/pitwall:queue<br/>pick tasks + ask once"]
+    init["/pitwall:init<br/>write the profile"] --> plan["/pitwall:plan<br/>interview → spec + rows"]
+    plan --> queue["/pitwall:queue<br/>pick tasks + ask once"]
     queue --> drive["/pitwall:drive"]
     drive --> lap
 
@@ -64,6 +65,7 @@ Every command is `/pitwall:<command>`. Or say what you want in plain words, Engl
 |---------|--------------|
 | `/pitwall:init` | One-time setup: read the repo, ask what it can't read, write `.claude/agent-loop.md` |
 | `/pitwall:doctor` | Check the profile against the contract and say which section is missing |
+| `/pitwall:plan` | Interview you in rounds of 2–3 questions, record each answer in the spec, and write plan rows (docs-only PR) |
 | `/pitwall:queue` | Pick tasks the agent can finish alone (6 criteria), then ask every open question once |
 | `/pitwall:drive` | Start the loop: one task per round until the queue is empty or you stop it |
 | `/pitwall:lap` | Run exactly one round |
@@ -84,6 +86,7 @@ Every command is `/pitwall:<command>`. Or say what you want in plain words, Engl
 | Bring behaviour over from another branch | `port` | Parity test with golden output from the source |
 | New feature | `feature` | Name the data shape before any logic |
 | Read-only question | `investigation` | Cited answer, never code |
+| Spec and plan rows | `plan` | Every answer lands in a file before the next round |
 
 ### Principles
 

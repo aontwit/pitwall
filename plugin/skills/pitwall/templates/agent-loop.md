@@ -25,7 +25,7 @@ Repo values that pitwall (`/pitwall`, `/pitwall:gauge`, `/pitwall:ticket`) reads
 | base | `{{base}}` — pulled at the start of every round, PRs target it |
 | never push / check out to edit | `{{base}}`, {{release branches, other protected branches}} |
 | agent branch | `agent/<id>-<slug>` |
-| commit / PR title | `<type>: <summary>` (type = feat / fix / refactor / test / chore) |
+| commit / PR title | {{the pattern the repo enforces, e.g. `<type>(<scope>): <summary>` · types · body / trailer rules}} |
 | hooks | {{pre-commit / pre-push commands, or none}} — never `--no-verify` |
 | resolve conflicts yourself | {{docs paths the agent may merge itself, e.g. `docs/**/*.md` · everything else → a human}} |
 | ignored checks | {{CI checks that never pass and must not block `/pitwall:merge-order`, or none}} |

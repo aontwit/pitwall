@@ -18,6 +18,7 @@ Read the **base as the loop will see it**, not the working tree: `git fetch orig
 | base | the branch most of the last 30 merged **work** PRs target — count only PRs whose head is not itself a target (a `<base> → release` PR is a release, not work): `gh pr list --state merged --limit 30 --json headRefName,baseRefName` → drop rows whose `headRefName` is any row's `baseRefName` → most common `baseRefName` · compare with `git symbolic-ref --short refs/remotes/origin/HEAD` (strip `origin/`) · they differ, or no work PRs yet → it becomes a step 3 question with both as options |
 | protected branches | `gh api repos/{owner}/{repo}/branches?protected=true -q '.[].name'` (403 / empty → ask) |
 | hooks | `.husky/`, `lefthook.yml`, `git config core.hooksPath` |
+| commit / PR title pattern | the repo's own rule first: a `commit-msg` hook and the script it calls, `commitlint.config.*`, a CI step that checks messages, the commit rule in the repo rules files · none → the shape of the last 20 commit subjects · nothing consistent → `<type>: <summary>` (type = feat / fix / refactor / test / chore) as a default listed in the report · a hook the agent's commits must pass always wins over the default |
 | CI checks | `.github/workflows/*.yml` job names |
 | repo rules | `CLAUDE.md`, `AGENTS.md`, `.claude/rules/`, `.cursor/rules/`, `CONTRIBUTING.md`, a docs / knowledge-base index |
 | dev server | a `dev` / `start` script + its port (script flags, framework config) |

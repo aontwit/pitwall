@@ -128,6 +128,7 @@ Then, in each repo:
 ```bash
 npm test                      # doctor, references, PR-body check, secretary scan
 bash scripts/check-english.sh # files and commit messages stay English
+bash scripts/check-commit-msg.sh --all  # type(scope): summary, no co-author trailer
 claude plugin validate ./plugin --strict
 claude plugin eval plugin --scaffold --ablation none   # routing eval, calls the model
 ```

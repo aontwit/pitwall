@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-exec bash "$(git rev-parse --show-toplevel)/scripts/check-english.sh" --msg "$1"
+exec bash "$(git rev-parse --show-toplevel)/scripts/check-commit-msg.sh" "$1"

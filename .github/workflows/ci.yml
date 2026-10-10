@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # commit message check reads every commit
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -19,6 +21,9 @@ jobs:
 
       - name: English only
         run: bash scripts/check-english.sh
+
+      - name: Commit messages
+        run: bash scripts/check-commit-msg.sh --all
 
       - name: No internal names
         env:

@@ -111,7 +111,7 @@ Every command is `/pitwall:<command>`. Or say what you want in plain words, Engl
 
 ## Status
 
-pitwall is pre-1.0. It has run end to end on two repos outside the one it came from (TypeScript, GitHub, `tracker: none`, Windows).
+pitwall is pre-1.0. It has run end to end on two repos outside the one it came from (TypeScript, GitHub, `tracker: none`, Windows). `/pitwall:init` and `/pitwall:doctor` have also run on a Godot (GDScript) game repo.
 
 | Proven | Not proven yet |
 |--------|----------------|
@@ -120,7 +120,7 @@ pitwall is pre-1.0. It has run end to end on two repos outside the one it came f
 | `/pitwall:lap` end to end: repro, fix, checks, browser evidence, two-model review, independent verifier, PR (3 PRs) | `/pitwall:merge-order` and the sync after a PR merges |
 | `/pitwall:drive` start, a self-scheduled wakeup that re-enters the loop, `/pitwall:stop` between rounds | `tracker: clickup` in plugin form |
 | routing from Thai and English requests (eval) | the `port`, `move-only` and `ratchet` playbooks, multi-machine hand-off |
-| | repos outside JavaScript / TypeScript, macOS and Linux |
+| | a `/pitwall:lap` on a repo outside JavaScript / TypeScript, macOS and Linux |
 
 ## Installation
 

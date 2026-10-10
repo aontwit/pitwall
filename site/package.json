@@ -1,0 +1,21 @@
+{
+  "name": "pitwall-docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "check": "astro check",
+    "build": "astro check && astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "astro": "^7.3.8",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@astrojs/markdown-remark": "^7.3.2",
+    "@types/three": "^0.186.0",
+    "typescript": "^6.0.3"
+  }
+}

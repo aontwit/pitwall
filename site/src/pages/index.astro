@@ -1,0 +1,691 @@
+---
+import Base from '../layouts/Base.astro';
+import { defaultLang, href, t } from '../i18n/ui';
+import plugin from '../../../plugin/.claude-plugin/plugin.json';
+
+const tr = t(defaultLang);
+const install = '/plugin marketplace add aontwit/pitwall';
+
+const gh = 'https://github.com/aontwit/pitwall/blob/main/';
+type Option = { command: string; to: string };
+const doc = (command: string, to: string): Option => ({ command, to: href(to) });
+
+const stages: { label: string; title: string; lede: string; options: Option[] }[] = [
+  {
+    label: 'Plan',
+    title: 'Interview, then write the rows',
+    lede: 'Short rounds of tick-box questions. Every answer lands in the spec before the next round, and the plan ends as rows the queue can pick.',
+    options: [doc('/pitwall:init', 'docs/playbooks/init/'), doc('/pitwall:plan', 'docs/playbooks/plan/')],
+  },
+  {
+    label: 'Queue',
+    title: 'Ask every question once',
+    lede: 'Pick the tasks the agent can finish alone, then ask everything only a human can decide, up front, as tick boxes. Nobody gets asked at 2am.',
+    options: [doc('/pitwall:queue', 'docs/playbooks/queue/')],
+  },
+  {
+    label: 'Lap',
+    title: 'The engine: one task per round',
+    lede: 'Branch from base, code by playbook, prove it, review it, open the PR. The round never waits on a human for something it can decide.',
+    options: [
+      doc('/pitwall:drive', 'docs/playbooks/drive/'),
+      doc('/pitwall:lap', 'docs/playbooks/lap/'),
+      doc('/pitwall:stop', 'docs/playbooks/stop/'),
+      doc('/pitwall:brake', 'docs/playbooks/brake/'),
+    ],
+  },
+  {
+    label: 'Verify',
+    title: 'Evidence, not claims',
+    lede: 'Checks run, the page is driven in a browser, and a verifier that did not write the code gives a verdict pinned to the patch-id.',
+    options: [
+      { command: '/pitwall:gauge', to: `${gh}plugin/skills/gauge/SKILL.md` },
+      doc('prove-it-works', 'docs/principles/prove-it-works/'),
+    ],
+  },
+  {
+    label: 'Merge',
+    title: 'Humans merge',
+    lede: 'Open PRs are ordered by stack and readiness. The agent never merges, force-pushes or touches a protected branch.',
+    options: [doc('/pitwall:merge-order', 'docs/playbooks/merge-order/'), doc('opening-a-pr', 'docs/playbooks/opening-a-pr/')],
+  },
+];
+
+// The engine on the Lap stage, one part per step of a round (in the order the round runs).
+const engineParts = [
+  { key: 'intake', name: 'Intake', step: 'Pick the next task', side: 'right' },
+  { key: 'pistons', name: 'Pistons', step: 'Code, a subagent per role', side: 'right' },
+  { key: 'ignition', name: 'Ignition', step: 'Gauge runs the proof', side: 'left' },
+  { key: 'heads', name: 'Heads', step: 'Review panel, two models', side: 'right' },
+  { key: 'crank', name: 'Crank', step: 'Verifier at the patch-id', side: 'left' },
+  { key: 'exhaust', name: 'Exhaust', step: 'Open the PR', side: 'right' },
+];
+
+// Speed gauge: 0-360 km/h over a 240 degree sweep, a tick every 20, a number every 40.
+const sweep = (kmh: number) => ((-120 + (kmh / 360) * 240) * Math.PI) / 180;
+const at = (kmh: number, r: number) => ({ x: 100 + r * Math.sin(sweep(kmh)), y: 100 - r * Math.cos(sweep(kmh)) });
+const ticks = Array.from({ length: 19 }, (_, i) => {
+  const major = i % 2 === 0;
+  const a = at(i * 20, major ? 78 : 84);
+  const b = at(i * 20, 90);
+  const n = at(i * 20, 64);
+  return { x1: a.x, y1: a.y, x2: b.x, y2: b.y, major, n: i * 20, tx: n.x, ty: n.y + 4 };
+});
+const arc = (from: number, to: number) => {
+  const a = at(from, 90);
+  const b = at(to, 90);
+  return `M ${a.x} ${a.y} A 90 90 0 ${to - from > 270 ? 1 : 0} 1 ${b.x} ${b.y}`;
+};
+---
+
+<Base title="pitwall — the agent loop">
+  <div class="stage" data-stage-root>
+    <canvas class="scene" aria-hidden="true"></canvas>
+    <div class="ring" aria-hidden="true"></div>
+
+    <header class="chrome top">
+      <a class="wordmark" href={href('/')}><span>pit</span>wall</a>
+      <nav class="links label" aria-label="Site">
+        <a href={href('docs/')}>{tr('nav.docs')}</a>
+        <a href="https://github.com/aontwit/pitwall">{tr('nav.github')}</a>
+      </nav>
+    </header>
+
+    <div class="intro" aria-live="polite">
+      {
+        stages.map((s, i) => (
+          <section data-panel hidden={i !== 0}>
+            <p class="eyebrow label">{tr('hero.stage')} {i + 1}</p>
+            <h1 class="title label">{s.title}</h1>
+            <p class="lede">{s.lede}</p>
+          </section>
+        ))
+      }
+    </div>
+
+    <nav class="stepper" aria-label="The loop">
+      <ol>
+        {
+          stages.map((s, i) => (
+            <li style={`--i: ${i}`}>
+              <button type="button" data-step aria-pressed={i === 0 ? 'true' : 'false'}>
+                <span class="step-label label">{s.label}</span>
+                <span class="node">{i + 1}</span>
+              </button>
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+
+    {
+      stages.map((s, i) => (
+        <ul class="options label" data-option hidden={i !== 0}>
+          {s.options.map((o, j) => (
+            <li style={`--j: ${j}`}>
+              <a href={o.to}>
+                <span class="dot" />
+                {o.command}
+              </a>
+            </li>
+          ))}
+        </ul>
+      ))
+    }
+
+    <div class="parts" aria-hidden="true">
+      {
+        engineParts.map((p, i) => (
+          <div class="part" data-part={p.key} data-side={p.side}>
+            <span class="part-name label">
+              {String(i + 1).padStart(2, '0')} {p.name}
+            </span>
+            <span class="part-step">{p.step}</span>
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="hud" data-hud hidden>
+      <div class="lights" aria-hidden="true">{Array.from({ length: 15 }, () => <span />)}</div>
+      <svg class="gauge" viewBox="0 0 200 200" role="img" aria-label="Speed">
+        <path class="gauge-arc" d={arc(0, 360)} />
+        <path class="gauge-red" d={arc(300, 360)} />
+        {ticks.map((k) => <line class:list={['tick', { major: k.major }]} x1={k.x1} y1={k.y1} x2={k.x2} y2={k.y2} />)}
+        {ticks.filter((k) => k.major).map((k) => <text class="tick-n" x={k.tx} y={k.ty}>{k.n}</text>)}
+        <line class="needle" data-needle x1="100" y1="112" x2="100" y2="22" transform="rotate(-120 100 100)" />
+        <circle class="hub" cx="100" cy="100" r="6" />
+        <text class="speed" data-speed x="100" y="146">0</text>
+        <text class="unit" x="100" y="162">KM/H</text>
+      </svg>
+      <p class="gear label" data-gear>N</p>
+      <p class="hint">{tr('drive.hint')}</p>
+    </div>
+
+    <div class="pads" data-pads hidden>
+      <div class="pad-group">
+        <button type="button" class="pad label" data-key="left" aria-label={tr('drive.left')}>◀</button>
+        <button type="button" class="pad label" data-key="right" aria-label={tr('drive.right')}>▶</button>
+      </div>
+      <div class="pad-group">
+        <button type="button" class="pad label" data-key="down" aria-label={tr('drive.brake')}>BRK</button>
+        <button type="button" class="pad pad-go label" data-key="up" aria-label={tr('drive.throttle')}>GO</button>
+      </div>
+    </div>
+
+    <button type="button" class="drive-toggle label" data-drive data-on={tr('drive.start')} data-off={tr('drive.exit')} aria-pressed="false">
+      {tr('drive.start')}
+    </button>
+
+    <footer class="chrome bottom">
+      <a class="corner label" href="https://github.com/aontwit/pitwall/blob/main/CHANGELOG.md">v{plugin.version}</a>
+      <div class="start">
+        <p class="eyebrow label">{tr('hero.install')}</p>
+        <div class="install">
+          <code>{install}</code>
+          <button type="button" class="copy label" data-copy={install} data-done={tr('hero.copied')}>{tr('hero.copy')}</button>
+        </div>
+        <a class="cta label" href={href('docs/')}>{tr('hero.cta')}</a>
+      </div>
+      <a class="corner label" href={href('docs/#credits')}>{tr('credits.models')}</a>
+    </footer>
+  </div>
+</Base>
+
+<script>
+  import { mountCar, type Scene } from '../scripts/car';
+  import { href } from '../i18n/ui';
+
+  const root = document.querySelector<HTMLElement>('[data-stage-root]');
+  const steps = [...document.querySelectorAll<HTMLButtonElement>('[data-step]')];
+  const panels = [...document.querySelectorAll<HTMLElement>('[data-panel]')];
+  const options = [...document.querySelectorAll<HTMLElement>('[data-option]')];
+
+  let scene: Scene | undefined;
+  const canvas = root?.querySelector<HTMLCanvasElement>('.scene');
+  const labels = new Map([...document.querySelectorAll<HTMLElement>('[data-part]')].map((el) => [el.dataset['part'] ?? '', el]));
+  if (canvas && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    try {
+      scene = mountCar(canvas, { base: href(''), labels });
+    } catch {
+      // no WebGL: the CSS ring and the stepper still work
+    }
+  }
+
+  const select = (n: number): void => {
+    steps.forEach((s, i) => s.setAttribute('aria-pressed', String(i === n)));
+    panels.forEach((p, i) => (p.hidden = i !== n));
+    options.forEach((o, i) => (o.hidden = i !== n));
+    root?.style.setProperty('--active', String(n));
+    root?.classList.toggle('is-engine', n === 2); // the exploded engine needs the bottom of the stage
+    scene?.focus(n);
+  };
+  steps.forEach((s, i) => s.addEventListener('click', () => select(i)));
+
+  // ---------- drive mode ----------
+  const toggle = document.querySelector<HTMLButtonElement>('[data-drive]');
+  const hud = document.querySelector<HTMLElement>('[data-hud]');
+  const pads = document.querySelector<HTMLElement>('[data-pads]');
+  const needle = document.querySelector<SVGLineElement>('[data-needle]');
+  const speed = document.querySelector<SVGTextElement>('[data-speed]');
+  const gear = document.querySelector<HTMLElement>('[data-gear]');
+  const lights = [...document.querySelectorAll<HTMLElement>('.lights span')];
+  const held = new Set<string>();
+  let driving = false;
+  let hudFrame = 0;
+
+  const push = (): void =>
+    scene?.input({
+      throttle: held.has('up') ? 1 : 0,
+      brake: held.has('down') ? 1 : 0,
+      steer: (held.has('left') ? 1 : 0) - (held.has('right') ? 1 : 0),
+    });
+
+  const drawHud = (): void => {
+    if (!scene) return;
+    const { kmh, gear: g, rpm } = scene.telemetry();
+    needle?.setAttribute('transform', `rotate(${-120 + (Math.min(kmh, 360) / 360) * 240} 100 100)`);
+    if (speed) speed.textContent = String(Math.round(kmh));
+    if (gear) gear.textContent = g === -1 ? 'R' : g === 0 ? 'N' : String(g);
+    const lit = Math.round(((rpm - 6000) / 9000) * lights.length);
+    lights.forEach((l, i) => l.classList.toggle('on', i < lit));
+    hudFrame = requestAnimationFrame(drawHud);
+  };
+
+  const setDriving = (on: boolean): void => {
+    if (!scene) return;
+    driving = on;
+    held.clear();
+    scene.drive(on);
+    root?.classList.toggle('is-driving', on);
+    if (hud) hud.hidden = !on;
+    if (pads) pads.hidden = !on || !matchMedia('(pointer: coarse)').matches;
+    if (toggle) {
+      toggle.setAttribute('aria-pressed', String(on));
+      toggle.textContent = (on ? toggle.dataset['off'] : toggle.dataset['on']) ?? '';
+    }
+    cancelAnimationFrame(hudFrame);
+    if (on) hudFrame = requestAnimationFrame(drawHud);
+  };
+  toggle?.addEventListener('click', () => setDriving(!driving));
+  if (!scene && toggle) toggle.hidden = true;
+
+  const keyMap: Record<string, string> = {
+    ArrowUp: 'up',
+    KeyW: 'up',
+    ArrowDown: 'down',
+    KeyS: 'down',
+    Space: 'down',
+    ArrowLeft: 'left',
+    KeyA: 'left',
+    ArrowRight: 'right',
+    KeyD: 'right',
+  };
+  window.addEventListener('keydown', (e) => {
+    if (!driving) return;
+    if (e.code === 'Escape') return setDriving(false);
+    const k = keyMap[e.code];
+    if (!k) return;
+    e.preventDefault(); // arrows and space must not scroll the page while driving
+    held.add(k);
+    push();
+  });
+  window.addEventListener('keyup', (e) => {
+    const k = keyMap[e.code];
+    if (!k) return;
+    held.delete(k);
+    push();
+  });
+  window.addEventListener('blur', () => {
+    held.clear();
+    push();
+  });
+  pads?.querySelectorAll<HTMLButtonElement>('[data-key]').forEach((b) => {
+    const k = b.dataset['key'] ?? '';
+    const release = (): void => {
+      held.delete(k);
+      push();
+    };
+    b.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      b.setPointerCapture(e.pointerId);
+      held.add(k);
+      push();
+    });
+    b.addEventListener('pointerup', release);
+    b.addEventListener('pointercancel', release);
+  });
+
+  document.querySelector<HTMLButtonElement>('[data-copy]')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget as HTMLButtonElement;
+    const label = btn.textContent;
+    await navigator.clipboard.writeText(btn.dataset['copy'] ?? '');
+    btn.textContent = btn.dataset['done'] ?? label;
+    setTimeout(() => (btn.textContent = label), 1600);
+  });
+</script>
+
+<style>
+  .stage {
+    --r: min(42vh, 34vw, 470px);
+    --cy: 52%;
+    position: relative;
+    height: 100svh;
+    min-height: 640px;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% var(--cy), #1d1d29 0%, var(--bg) 60%, var(--bg-deep) 100%);
+  }
+
+  .scene {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .ring {
+    position: absolute;
+    left: 50%;
+    top: var(--cy);
+    width: calc(var(--r) * 2);
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border-radius: 50%;
+    border: 1.5px solid rgb(255 255 255 / 0.7);
+    box-shadow: -18px 0 60px -20px rgb(225 6 0 / 0.5), 18px 0 60px -20px rgb(225 6 0 / 0.3);
+    mask-image: linear-gradient(to bottom, transparent 4%, #000 30%, #000 70%, transparent 96%);
+    pointer-events: none;
+  }
+
+  .chrome {
+    position: absolute;
+    inset-inline: var(--edge);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 2;
+  }
+  .top { top: var(--edge); }
+  .bottom { bottom: var(--edge); align-items: flex-end; }
+
+  .links { display: flex; gap: 28px; font-size: 20px; }
+  .links a, .corner {
+    color: var(--t-60);
+    text-decoration: none;
+    transition: color 0.5s var(--ease-move);
+  }
+  .links a:hover, .corner:hover { color: var(--text); }
+  .corner { font-size: 16px; }
+
+  .intro {
+    position: absolute;
+    top: clamp(76px, 11vh, 110px);
+    left: 50%;
+    translate: -50% 0;
+    width: min(780px, calc(100% - 2 * var(--edge)));
+    text-align: center;
+    z-index: 2;
+  }
+  .intro section:not([hidden]) { animation: reveal 2s var(--ease-reveal); }
+  .eyebrow {
+    margin: 0;
+    font-size: 14px;
+    line-height: 18px;
+    letter-spacing: var(--track-eyebrow);
+    color: var(--t-80);
+  }
+  .title {
+    margin: 8px 0 10px;
+    font-size: clamp(24px, 2.4vw, 34px);
+    line-height: 1.3;
+    letter-spacing: var(--track-lede);
+  }
+  .lede {
+    margin: 0 auto;
+    max-width: 52ch;
+    font: 500 11px/18px var(--font-body);
+    letter-spacing: var(--track-lede);
+    text-transform: uppercase;
+    color: var(--t-60);
+  }
+
+  .stepper ol { list-style: none; margin: 0; padding: 0; }
+  .stepper li {
+    --a: calc(198deg - var(--i) * 9deg);
+    position: absolute;
+    left: calc(50% + var(--r) * cos(var(--a)));
+    top: calc(var(--cy) + var(--r) * sin(var(--a)));
+    translate: -100% -50%;
+    z-index: 2;
+  }
+  .stepper button {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text);
+    cursor: pointer;
+    translate: 26px 0; /* centre the node on the ring */
+    opacity: 0.3;
+    transition: opacity 0.6s var(--ease-move);
+  }
+  .stepper button:hover, .stepper button:focus-visible { opacity: 0.8; box-shadow: none; }
+  .stepper button[aria-pressed='true'] { opacity: 1; }
+  .step-label { font-size: 20px; }
+  .node {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--bg);
+    box-shadow: 0 0 0 2px rgb(255 255 255 / 0.5);
+    font: 500 12px/1 var(--font-mono);
+    color: var(--t-60);
+    transition: width 0.6s var(--ease-move), box-shadow 0.6s var(--ease-move);
+  }
+  .stepper button:focus-visible .node { box-shadow: var(--ring-glow); }
+  [aria-pressed='true'] .node {
+    width: 52px;
+    color: var(--text);
+    box-shadow: var(--ring-glow);
+  }
+
+  .options {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: 16px;
+  }
+  .options li {
+    --a: calc(-6deg + var(--j) * 5.5deg);
+    position: absolute;
+    left: calc(50% + var(--r) * cos(var(--a)));
+    top: calc(var(--cy) + var(--r) * sin(var(--a)));
+    translate: -8px -50%;
+    z-index: 2;
+  }
+  .options:not([hidden]) li { animation: reveal 2s var(--ease-reveal) backwards; animation-delay: calc(var(--j) * 120ms); }
+  .options a {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    white-space: nowrap;
+    color: var(--t-60);
+    text-decoration: none;
+    transition: color 0.5s var(--ease-move);
+  }
+  .options li:first-child a, .options a:hover { color: var(--accent-muted); }
+  .dot {
+    width: 16px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--bg);
+    box-shadow: 0 0 0 2px var(--t-40);
+  }
+  .options li:first-child .dot, .options a:hover .dot { box-shadow: 0 0 0 2px var(--accent-muted), 0 0 12px 2px rgb(225 6 0 / 0.45); }
+
+  .start { text-align: center; display: grid; justify-items: center; gap: 10px; }
+  .install {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 4px 4px 16px;
+    border-radius: 15px;
+    background: rgb(11 11 16 / 0.7);
+    box-shadow: 0 0 0 1px var(--line);
+    backdrop-filter: blur(6px);
+  }
+  .install code { font: 400 13px/1 var(--font-mono); color: var(--t-80); }
+  .copy, .cta {
+    border: 0;
+    border-radius: 15px;
+    padding: 6px 14px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.5s var(--ease-move), color 0.5s var(--ease-move);
+  }
+  .copy { background: rgb(255 255 255 / 0.08); color: var(--text); }
+  .copy:hover { background: rgb(255 255 255 / 0.16); }
+  .cta {
+    margin-top: 4px;
+    padding: 8px 22px;
+    color: var(--text);
+    text-decoration: none;
+    box-shadow: 0 0 0 1.5px var(--accent);
+  }
+  .cta:hover { background: var(--accent); color: var(--bg-deep); }
+
+  /* not enough room outside the ring: the option label goes inside it */
+  @media (max-width: 1100px) {
+    .options a { flex-direction: row-reverse; }
+    .options li { translate: calc(-100% + 8px) -50%; }
+  }
+
+  /* ---------- engine part labels (placed by the scene) ---------- */
+  .parts { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+  .part {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: grid;
+    gap: 2px;
+    padding: 0 0 0 14px;
+    margin: -10px 0 0 34px;
+    border-left: 1.5px solid var(--accent);
+    opacity: 0;
+    white-space: nowrap;
+  }
+  .part[data-side='left'] {
+    margin: -10px 0 0 -34px;
+    padding: 0 14px 0 0;
+    border-left: 0;
+    border-right: 1.5px solid var(--accent);
+    text-align: right;
+    translate: -100% 0;
+  }
+  .part-name { font-size: 15px; color: var(--text); }
+  .part-step {
+    font: 500 10px/1.4 var(--font-body);
+    letter-spacing: var(--track-lede);
+    text-transform: uppercase;
+    color: var(--t-60);
+  }
+
+  /* ---------- drive mode ---------- */
+  .drive-toggle {
+    position: absolute;
+    right: var(--edge);
+    bottom: calc(var(--edge) + 36px);
+    z-index: 3;
+    width: 76px;
+    aspect-ratio: 1;
+    border: 0;
+    border-radius: 50%;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: var(--ring-glow), 0 0 24px 4px rgb(225 6 0 / 0.25);
+    transition: box-shadow 0.5s var(--ease-move);
+  }
+  .drive-toggle:hover { box-shadow: var(--ring-glow), 0 0 30px 8px rgb(225 6 0 / 0.45); }
+  .drive-toggle[aria-pressed='true'] { color: var(--accent-muted); }
+
+  .stage > :is(.intro, .stepper, .options, .ring, .bottom, .parts) { transition: opacity 0.6s var(--ease-move); }
+  .is-driving > :is(.intro, .stepper, .options, .ring, .bottom, .parts) { opacity: 0; pointer-events: none; }
+  .start { transition: opacity 0.6s var(--ease-move); }
+  .is-engine .start { opacity: 0; pointer-events: none; }
+
+  .hud {
+    position: absolute;
+    right: calc(var(--edge) + 96px);
+    bottom: var(--edge);
+    z-index: 3;
+    display: grid;
+    justify-items: center;
+    width: 260px;
+    animation: reveal 1s var(--ease-reveal);
+  }
+  .lights { display: flex; gap: 4px; margin-bottom: 6px; }
+  .lights span {
+    width: 9px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: rgb(255 255 255 / 0.08);
+  }
+  .lights span.on { background: var(--text); box-shadow: 0 0 8px 1px rgb(255 255 255 / 0.7); }
+  .lights span.on:nth-child(n + 6) { background: var(--accent); box-shadow: 0 0 8px 1px rgb(225 6 0 / 0.8); }
+  .lights span.on:nth-child(n + 11) { background: var(--accent-muted); }
+  .gauge { width: 200px; overflow: visible; }
+  .gauge-arc, .gauge-red { fill: none; stroke-width: 2; }
+  .gauge-arc { stroke: var(--t-30); }
+  .gauge-red { stroke: var(--accent); stroke-width: 3; }
+  .tick { stroke: var(--t-40); stroke-width: 1; }
+  .tick.major { stroke: var(--text); stroke-width: 1.5; }
+  .tick-n { fill: var(--t-60); font: 400 11px var(--font-display); letter-spacing: 0.05em; text-anchor: middle; }
+  .needle { stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; filter: drop-shadow(0 0 4px rgb(225 6 0 / 0.9)); }
+  .hub { fill: var(--bg); stroke: var(--text); stroke-width: 1.5; }
+  .speed { fill: var(--text); font: 400 34px var(--font-display); letter-spacing: 0.04em; text-anchor: middle; }
+  .unit { fill: var(--t-60); font: 400 10px var(--font-display); letter-spacing: var(--track-eyebrow); text-anchor: middle; }
+  .gear {
+    position: absolute;
+    top: 22px;
+    left: 0;
+    margin: 0;
+    width: 34px;
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border-radius: 2px;
+    box-shadow: 0 0 0 1.5px var(--line);
+    font-size: 22px;
+  }
+  .hint {
+    margin: 4px 0 0;
+    font: 500 10px/1.5 var(--font-body);
+    letter-spacing: var(--track-lede);
+    text-transform: uppercase;
+    color: var(--t-40);
+    text-align: center;
+  }
+
+  .pads {
+    position: absolute;
+    inset-inline: var(--edge);
+    bottom: calc(var(--edge) + 120px);
+    z-index: 3;
+    display: flex;
+    justify-content: space-between;
+    touch-action: none;
+    user-select: none;
+  }
+  .pad-group { display: flex; gap: 12px; }
+  .pad {
+    width: 64px;
+    aspect-ratio: 1;
+    border: 0;
+    border-radius: 50%;
+    background: rgb(11 11 16 / 0.6);
+    color: var(--text);
+    font-size: 16px;
+    box-shadow: 0 0 0 1.5px rgb(255 255 255 / 0.4);
+    touch-action: none;
+  }
+  .pad:active { box-shadow: var(--ring-glow); }
+  .pad-go { box-shadow: 0 0 0 1.5px var(--accent); }
+
+  @keyframes reveal {
+    from { opacity: 0; }
+  }
+
+  @media (max-width: 760px) {
+    .stage { --r: 46vw; --cy: 50%; min-height: 680px; }
+    .links { font-size: 17px; gap: 18px; }
+    .intro { top: 72px; }
+    .stepper ol {
+      position: absolute;
+      bottom: 190px;
+      inset-inline: 0;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      z-index: 2;
+    }
+    .stepper li { position: static; translate: none; }
+    .stepper button { flex-direction: column-reverse; gap: 6px; translate: none; }
+    .step-label { font-size: 14px; }
+    .node { width: 34px; }
+    [aria-pressed='true'] .node { width: 40px; }
+    .options { display: none; }
+    .hud { right: auto; left: 50%; bottom: auto; top: 64px; translate: -50% 0; scale: 0.85; transform-origin: top center; }
+    .hint { display: none; }
+    .drive-toggle { width: 64px; font-size: 14px; bottom: calc(var(--edge) + 150px); }
+    .corner { display: none; }
+    .bottom { justify-content: center; }
+    .install code { font-size: 11px; }
+  }
+</style>

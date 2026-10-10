@@ -37,6 +37,10 @@ jobs:
           fi
           bash scripts/check-neutral.sh
 
+      - name: Docs site builds (it renders the playbooks and principles)
+        working-directory: site
+        run: npm ci && npm run build
+
       - name: Validate plugin and marketplace
         run: |
           npx -y @anthropic-ai/claude-code@2.1.294 plugin validate ./plugin --strict

@@ -1,0 +1,232 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { defaultLang, href, t } from '../../i18n/ui';
+
+type Entry = CollectionEntry<'overview' | 'playbooks' | 'principles'>;
+
+export const getStaticPaths = (async () => {
+  const [overview, playbooks, principles] = await Promise.all([
+    getCollection('overview'),
+    getCollection('playbooks'),
+    getCollection('principles'),
+  ]);
+  const byId = (a: Entry, b: Entry) => a.id.localeCompare(b.id);
+  const nav = {
+    playbooks: playbooks.sort(byId).map((e) => e.id),
+    principles: principles.sort(byId).map((e) => e.id),
+  };
+  return [
+    ...overview.map((entry) => ({ params: { slug: undefined }, props: { entry, source: 'README.md', nav } })),
+    ...playbooks.map((entry) => ({
+      params: { slug: `playbooks/${entry.id}` },
+      props: { entry, source: `plugin/skills/pitwall/playbooks/${entry.id}.md`, nav },
+    })),
+    ...principles.map((entry) => ({
+      params: { slug: `principles/${entry.id}` },
+      props: { entry, source: `plugin/skills/pitwall/principles/${entry.id}.md`, nav },
+    })),
+  ];
+}) satisfies GetStaticPaths;
+
+interface Props {
+  entry: Entry;
+  source: string;
+  nav: { playbooks: string[]; principles: string[] };
+}
+
+const { entry, source, nav } = Astro.props;
+const { Content, headings } = await render(entry);
+const tr = t(defaultLang);
+const here = Astro.url.pathname;
+const title = headings.find((h) => h.depth === 1)?.text ?? entry.id;
+const toc = headings.filter((h) => h.depth === 2);
+const sections = [
+  { key: 'nav.playbooks', base: 'docs/playbooks/', ids: nav.playbooks },
+  { key: 'nav.principles', base: 'docs/principles/', ids: nav.principles },
+] as const;
+---
+
+<Base title={`${title} · pitwall`} description={entry.data.description}>
+  <header class="bar">
+    <a class="wordmark" href={href('/')}><span>pit</span>wall</a>
+    <nav class="links label" aria-label="Site">
+      <a href={href('docs/')} aria-current="page">{tr('nav.docs')}</a>
+      <a href="https://github.com/aontwit/pitwall">{tr('nav.github')}</a>
+    </nav>
+  </header>
+
+  <div class="shell">
+    <aside class="side">
+      <nav aria-label="Docs">
+        <a class="item" href={href('docs/')} aria-current={here === href('docs/') ? 'page' : undefined}>
+          {tr('nav.overview')}
+        </a>
+        {
+          sections.map((s) => (
+            <details open={here.startsWith(href(s.base))}>
+              <summary class="label">{tr(s.key)}</summary>
+              <ul>
+                {s.ids.map((id) => (
+                  <li>
+                    <a class="item" href={href(`${s.base}${id}/`)} aria-current={here === href(`${s.base}${id}/`) ? 'page' : undefined}>
+                      {id}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ))
+        }
+      </nav>
+    </aside>
+
+    <main class="prose">
+      <Content />
+      <p class="source">
+        <a class="label" href={`https://github.com/aontwit/pitwall/blob/main/${source}`}>{tr('docs.source')} ↗</a>
+      </p>
+    </main>
+
+    {
+      toc.length > 1 && (
+        <nav class="toc" aria-label="On this page">
+          <ul>
+            {toc.map((h) => (
+              <li>
+                <a href={`#${h.slug}`}>{h.text}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px var(--edge);
+    background: rgb(21 21 30 / 0.85);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .links { display: flex; gap: 28px; font-size: 19px; }
+  .links a { color: var(--t-60); text-decoration: none; }
+  .links a:hover, .links a[aria-current] { color: var(--text); }
+
+  .shell {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 72ch) 200px;
+    gap: 56px;
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 40px var(--edge) 96px;
+  }
+
+  .side, .toc { position: sticky; top: 92px; align-self: start; max-height: calc(100svh - 120px); overflow-y: auto; }
+  .side summary {
+    margin: 22px 0 6px;
+    font-size: 15px;
+    letter-spacing: var(--track-eyebrow);
+    color: var(--t-40);
+    cursor: pointer;
+    list-style: none;
+  }
+  .side summary::-webkit-details-marker { display: none; }
+  .side summary::after { content: ' +'; }
+  .side details[open] summary::after { content: ' –'; }
+  .side ul, .toc ul { list-style: none; margin: 0; padding: 0; }
+  .item {
+    display: block;
+    padding: 3px 0 3px 14px;
+    border-left: 2px solid transparent;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--t-60);
+    text-decoration: none;
+    transition: color 0.5s var(--ease-move);
+  }
+  .item:hover { color: var(--text); }
+  .item[aria-current='page'] { color: var(--text); border-color: var(--accent); }
+
+  .toc a { display: block; padding: 3px 0; font-size: 13px; color: var(--t-40); text-decoration: none; }
+  .toc a:hover { color: var(--text); }
+
+  .prose { min-width: 0; }
+  .prose :global(h1),
+  .prose :global(h2),
+  .prose :global(h3) {
+    font-family: var(--font-display);
+    font-weight: 400;
+    text-transform: uppercase;
+    line-height: 1.15;
+    scroll-margin-top: 92px;
+  }
+  .prose :global(h1) { margin: 0 0 24px; font-size: clamp(34px, 4vw, 48px); letter-spacing: 0.06em; }
+  .prose :global(h2) { margin: 56px 0 14px; font-size: 28px; letter-spacing: var(--track-lede); }
+  .prose :global(h3) { margin: 36px 0 10px; font-size: 21px; letter-spacing: var(--track-label); color: var(--t-80); }
+  .prose :global(p), .prose :global(li) { color: var(--t-80); }
+  .prose :global(a) { color: var(--accent-muted); text-underline-offset: 3px; }
+  .prose :global(a:hover) { color: var(--accent); }
+  .prose :global(strong) { color: var(--text); font-weight: 600; }
+  .prose :global(blockquote) {
+    margin: 24px 0;
+    padding: 4px 20px;
+    border-left: 2px solid var(--accent);
+    background: rgb(225 6 0 / 0.07);
+  }
+  .prose :global(code) { font: 400 0.86em var(--font-mono); }
+  .prose :global(:not(pre) > code) {
+    padding: 2px 6px;
+    border-radius: 2px;
+    background: rgb(255 255 255 / 0.07);
+    color: var(--text);
+  }
+  .prose :global(pre) {
+    padding: 18px 20px;
+    border-radius: 15px;
+    box-shadow: 0 0 0 1px var(--line);
+    overflow-x: auto;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .prose :global(table) {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+    font-size: 15px;
+  }
+  .prose :global(th) {
+    font: 400 15px/1.3 var(--font-display);
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
+    color: var(--t-60);
+    text-align: left;
+  }
+  .prose :global(th), .prose :global(td) { padding: 10px 14px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .prose :global(hr) { border: 0; border-top: 1px solid var(--line); margin: 48px 0; }
+  .prose :global(img) { max-width: 100%; }
+
+  .source { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .source a { font-size: 15px; color: var(--t-60); text-decoration: none; }
+  .source a:hover { color: var(--accent); }
+
+  @media (max-width: 1100px) {
+    .shell { grid-template-columns: 220px minmax(0, 1fr); }
+    .toc { display: none; }
+  }
+  @media (max-width: 760px) {
+    .shell { grid-template-columns: minmax(0, 1fr); gap: 24px; padding-top: 16px; }
+    .side { position: static; max-height: none; border-bottom: 1px solid var(--line); padding-bottom: 16px; }
+    .prose :global(pre) { font-size: 13px; }
+  }
+</style>

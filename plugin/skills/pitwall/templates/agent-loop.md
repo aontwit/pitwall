@@ -78,7 +78,7 @@ PR-body check: `node <pitwall dir>/scripts/check-pr-body.mjs --file <body file>`
 
 ## tracker
 
-`tracker: none` — no tasks, the PR is the record · for ClickUp write `tracker: clickup` and fill: workspace / space / sprint folder, tag, QA, meaning of `review`, task names
+`tracker: none` — no tasks, the PR is the record · for ClickUp write `tracker: clickup` and fill: workspace / space / sprint folder, tag, QA, meaning of `review`, task names · for GitHub Issues write `tracker: github` and fill: agent label, `in progress` / `review` / `pending` labels, QA login, `milestone: current | none`, issue names (phase parent, `<prefix> <id> ` for a row)
 
 ## agents per task
 

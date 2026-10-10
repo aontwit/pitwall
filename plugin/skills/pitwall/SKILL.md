@@ -108,7 +108,7 @@ Required sections · a playbook that needs a section that is missing → stop an
 | states to build | recipes for producing the states to test, or a pointer to the file that holds them |
 | repo-specific evidence | file pattern → extra evidence + level |
 | plan (optional) | plan folder, reading order, row format, where open questions go, rows not to queue, playbook per row type |
-| tracker (optional — missing = `none`) | `tracker: clickup \| none` · for `clickup`: location, tag, QA, meaning of each status, naming (the `pitwall:ticket` skill) · `none` = no tasks, the PR is the record |
+| tracker (optional — missing = `none`) | `tracker: clickup \| github \| none` · for `clickup`: location, tag, QA, meaning of each status, naming · for `github` (GitHub Issues): agent label, the `in progress` / `review` / `pending` labels, QA login, `milestone: current \| none`, naming (both in the `pitwall:ticket` skill) · `none` = no tasks, the PR is the record |
 | agents per task | subagent type + model per role (`code role`, `verifier`), review panel, domain checklist files |
 | repo rules | rules files in use, principles turned off (with the reason) |
 | multi-machine (optional) | state hand-off branch |

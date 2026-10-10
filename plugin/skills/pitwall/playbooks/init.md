@@ -23,7 +23,7 @@ Read the **base as the loop will see it**, not the working tree: `git fetch orig
 | dev server | a `dev` / `start` script + its port (script flags, framework config) |
 | verification skill | a `.claude/skills/*/SKILL.md` that launches or drives the app |
 | plan | `PLAN.md`, `TODO.md`, `IMPLEMENTATION_PLAN.md`, `tasks.md`, `docs/**/plan*`, `.taskmaster/` |
-| tracker | tracker tools connected in this session (ClickUp MCP) |
+| tracker | tracker tools connected in this session (ClickUp MCP) · GitHub Issues: `gh repo view --json hasIssuesEnabled`, the labels (`gh label list --json name`) and open milestones (`gh api "repos/{owner}/{repo}/milestones?state=open"`) that already exist |
 | language | language of `CLAUDE.md` and of the last 20 commit subjects |
 | `gh` | `gh auth status` — fails → stop: pitwall needs an authenticated `gh` |
 
@@ -34,7 +34,7 @@ Copy `<pitwall dir>/templates/agent-loop.md` and fill every `{{…}}` that step 
 ## 3. Ask once
 
 Only what step 1 could not settle, plus the rows a human must confirm — AskUserQuestion, ≤ 4 questions per call, ≤ 4 options, recommended first, in the language step 1 found:
-- tracker: `clickup` / `none`
+- tracker: `clickup` / `github` / `none` · `github` → which existing labels mean agent work, `in progress`, `review` and `pending` (labels the repo does not have yet → name them in the report for the user to create; init never creates one), QA login, `milestone: current` (open milestones exist) or `none`
 - user language · PR / commit language
 - base, when step 1 found two candidates (the merged-PR target first, as recommended)
 - protected branches (when the API did not answer)

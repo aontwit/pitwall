@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0 — 2026-10-10
+
+Fixes and a GitHub Issues tracker from the first run on a repo outside JavaScript / TypeScript (Godot).
+
+- `tracker: github`: GitHub Issues as a tracker, through `gh` alone. Status moves through labels the profile names. A plan row becomes a sub-issue of one parent issue per phase. The open milestone with the nearest due date stands in for the sprint. The agent never closes an issue, and PRs say `Refs #n`, so QA still decides when work is done
+- `init` takes the commit / PR title pattern from the repo's own rule (commit-msg hook, commitlint, CI check, rules files, then recent commits), not a fixed `<type>: <summary>` that the repo's hook could reject
+- `init` reads check commands from the `run:` steps of CI workflows when the repo has no package scripts, and knows `project.godot`
+- `init` flags a project-scope install whose `.claude/settings.json` lacks the `extraKnownMarketplaces` entry a teammate's clone needs; the README shows the entry
+- README Status: `init` and `doctor` have run on a Godot (GDScript) repo
+
 ## 0.2.1 — 2026-10-10
 
 - README: a Status section that lists what has been proven on real repos and what has not

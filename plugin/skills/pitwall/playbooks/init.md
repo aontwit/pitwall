@@ -50,6 +50,7 @@ Never ask what a file answered; never fill a business value (prices, limits, cre
 - the plan file goes into `git` → `resolve conflicts yourself`: every PR appends a row and a log line to it, so two open PRs always conflict there (append-only, safe to union)
 - no verification skill → `verification skill: none`; level B items with no browser fall to C, say so in the report
 - `permissions`: write the list into the profile; adding it to the settings file is the user's step
+- `.claude/settings.json` on the base has `"pitwall@pitwall": true` under `enabledPlugins` but no `pitwall` key under `extraKnownMarketplaces` → a teammate's clone cannot resolve the plugin: say so in the report, with the entry to add (`"pitwall": { "source": { "source": "github", "repo": "aontwit/pitwall" } }`) — adding it is the user's step, like `permissions`
 - `git check-ignore -v .claude/agent-loop.md <plan file>` matches → the file cannot be committed as is: say which `.gitignore` line hides it and the line that un-ignores it (e.g. `!.claude/agent-loop.md`) — adding it is the user's call
 
 ## 5. Check + report

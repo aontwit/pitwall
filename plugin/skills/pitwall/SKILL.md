@@ -1,12 +1,12 @@
 ---
 name: pitwall
-description: Single entry point of the agent loop — reads the request (Thai / English), picks a playbook, then does it with evidence. Use when the user runs /pitwall or says "ใส่คิว", "ลุย", "ออกรถ", "ทำ 1 งาน", "หยุดหลังจบงานนี้", "หยุดเดี๋ยวนี้", "merge ตัวไหนก่อน", "แก้บั๊ก", "เทสด้วยกัน", "เปิด task", "ผมย้ำอะไรบ่อย", "ให้ทำเอง", "งานไหน agent ทำได้", "PR ไหนพร้อม" · repo values live in .claude/agent-loop.md
+description: Single entry point of the agent loop — reads the request (Thai / English), picks a playbook, then does it with evidence. Use when the user runs /pitwall:pitwall or says "ใส่คิว", "ลุย", "ออกรถ", "ทำ 1 งาน", "หยุดหลังจบงานนี้", "หยุดเดี๋ยวนี้", "merge ตัวไหนก่อน", "แก้บั๊ก", "เทสด้วยกัน", "เปิด task", "ผมย้ำอะไรบ่อย", "ให้ทำเอง", "งานไหน agent ทำได้", "PR ไหนพร้อม" · repo values live in .claude/agent-loop.md
 user-invocable: true
 ---
 
 # pitwall
 
-The skill holds no repo-specific values: everything that belongs to the repo (base, check commands, browser, human-only steps, tracker, plan, recipes for building states) lives in the profile `.claude/agent-loop.md` · no profile → stop and say "this repo has not set up pitwall yet — run `/pitwall init`" · never guess values the profile should hold
+The skill holds no repo-specific values: everything that belongs to the repo (base, check commands, browser, human-only steps, tracker, plan, recipes for building states) lives in the profile `.claude/agent-loop.md` · no profile → only `init` and `doctor` run; every other request stops with "this repo has not set up pitwall yet — run `/pitwall:init`" · never guess values the profile should hold
 
 **pitwall dir** = `${CLAUDE_SKILL_DIR}` (this skill's folder: `playbooks/`, `principles/`, `scripts/`) · every `playbooks/…`, `principles/…`, `scripts/…` path in this skill and in the playbooks is relative to it, and `<pitwall dir>` in a command means this path
 
@@ -16,8 +16,8 @@ In the report, state which rule changed which decision
 
 1. **Prove it against the real thing** — the real page / request / value, not a stand-in · typecheck passing does not mean the UI works
 2. **A check the agent can run itself must never be handed to a human** — ⏳ is allowed only for "the 3 wait cases (⏳)" at the top of `playbooks/lap.md` (`1 human-only step while the user is away` · `2 needs the dev env after merge` · `3 environment unusable`), with a specific reason
-3. **Ask everything once, up front; never mid-round** — questions that belong to the human are asked with AskUserQuestion as tick boxes, in the profile's user language, recommended option first, marked with the profile's recommended marker; gather every point of the task into a single round (before `/drive` = briefing in `playbooks/queue.md`)
-4. **Loop work uses the 3-step ladder** (next section) — every task that runs through the `queue` / `drive` / `lap` playbooks (including `/lap` typed by the user) · work outside the loop that the user orders directly (edit files as told, answer questions) uses "Direct work" below
+3. **Ask everything once, up front; never mid-round** — questions that belong to the human are asked with AskUserQuestion as tick boxes, in the profile's user language, recommended option first, marked with the profile's recommended marker; gather every point of the task into a single round (before `/pitwall:drive` = briefing in `playbooks/queue.md`)
+4. **Loop work uses the 3-step ladder** (next section) — every task that runs through the `queue` / `drive` / `lap` playbooks (including `/pitwall:lap` typed by the user) · work outside the loop that the user orders directly (edit files as told, answer questions) uses "Direct work" below
 5. **Humans merge** — the agent builds, proves, opens the PR · never merge, force-push, or touch branches the profile forbids
 6. **Lessons become structure first** — script / lint / test / CI > a step in a playbook > text in rules > memory · writing the same instruction a second time = it should be a check
 7. **Record decisions when you make them** — a row in the task's `decisions.tsv` (state folder), not written back at the end
@@ -32,7 +32,7 @@ When you hit a fork during a run that has no answer in state (`answers`):
 | 2 Default + record | reversible, and there is a default in the rules / playbook (port = follow the source, existing behaviour = keep as is, UI = closest to the existing one) | follow the default · a row in `decisions.tsv` · PR section **Decisions to confirm** (one line each: option taken / other options / where to change it) · continue |
 | 3 Park | on the "Always park" list, or no safe default | park as usual (`playbooks/lap.md`) + keep the question to ask as tick boxes next round |
 
-**Classify before parking or asking** (the one definition — `/queue` and `/lap` point here) · **lists first**: an item on "Always park" / "Never default either" is parked / asked even when it can be run — a prototype only attaches evidence to the question, never answers it · *observable* = a fact a run reveals (what X does: behavior, timing, output, what an endpoint returns), not a choice (which X it should be) → step 1, the prototype result goes with the decision, not a question for the human · *not decidable by experiment* (business rule, backend / third-party value, design with no design file or source, a plan open question) → park in the run / ask in the briefing · a plateau is not a stop: change method before parking (`playbooks/lap.md` §4)
+**Classify before parking or asking** (the one definition — `/pitwall:queue` and `/pitwall:lap` point here) · **lists first**: an item on "Always park" / "Never default either" is parked / asked even when it can be run — a prototype only attaches evidence to the question, never answers it · *observable* = a fact a run reveals (what X does: behavior, timing, output, what an endpoint returns), not a choice (which X it should be) → step 1, the prototype result goes with the decision, not a question for the human · *not decidable by experiment* (business rule, backend / third-party value, design with no design file or source, a plan open question) → park in the run / ask in the briefing · a plateau is not a stop: change method before parking (`playbooks/lap.md` §4)
 
 **Always park** (never use a default): money / price / fee · permissions / security / user data · deletes / irreversible · backend / third-party values not yet provided (placeholder only where the plan allows)
 
@@ -48,30 +48,31 @@ At 95%: a clear bug with an obvious cause, a pattern that already exists in the 
 
 ## Choose a playbook
 
-Open a todo list whose first steps are the chosen playbook's steps, copied word for word · steps you don't do stay in the list with `skip: <reason>` — **cannot be skipped**: checking, reviewing, gauging (`/gauge`), repro before / after the fix in `bug-fix` · a resumed `/lap` round does not copy again, it uses the existing todo
+Open a todo list whose first steps are the chosen playbook's steps, copied word for word · steps you don't do stay in the list with `skip: <reason>` — **cannot be skipped**: checking, reviewing, gauging (`/pitwall:gauge`), repro before / after the fix in `bug-fix` · a resumed `/pitwall:lap` round does not copy again, it uses the existing todo
 
 | Request | playbook |
 |---|---|
-| queue it / briefing / which tasks can the agent do / `/queue` | `playbooks/queue.md` (ends with briefing) |
-| go / drive off / let it work on its own / `/drive` | `playbooks/drive.md` — build and prove the whole queue, humans merge |
-| do 1 task / `/lap` | `playbooks/lap.md` |
-| stop after this task / `/stop` | `playbooks/stop.md` |
-| stop now / `/brake` | `playbooks/brake.md` |
-| which to merge first / which PR is ready / `/merge-order` | `playbooks/merge-order.md` |
-| what do I keep repeating / `/secretary` | `playbooks/secretary.md` |
+| queue it / briefing / which tasks can the agent do / `/pitwall:queue` | `playbooks/queue.md` (ends with briefing) |
+| go / drive off / let it work on its own / `/pitwall:drive` | `playbooks/drive.md` — build and prove the whole queue, humans merge |
+| do 1 task / `/pitwall:lap` | `playbooks/lap.md` |
+| stop after this task / `/pitwall:stop` | `playbooks/stop.md` |
+| stop now / `/pitwall:brake` | `playbooks/brake.md` |
+| which to merge first / which PR is ready / `/pitwall:merge-order` | `playbooks/merge-order.md` |
+| what do I keep repeating / `/pitwall:secretary` | `playbooks/secretary.md` |
 | set this repo up / `init` | `playbooks/init.md` |
 | is the profile complete / `doctor` | `playbooks/doctor.md` |
-| test together / pair run / verify / `/gauge` | the `gauge` skill (pair run section) |
-| open a task / `/ticket` | the `ticket` skill |
-| inside `/lap`, by task type: fix a bug / refactor that must stay identical / bring a number down / bring over from another branch | `bug-fix.md` / `move-only.md` / `ratchet.md` / `port.md` |
+| test together / pair run / verify / `/pitwall:gauge` | the `pitwall:gauge` skill (pair run section) |
+| open a task / `/pitwall:ticket` | the `pitwall:ticket` skill |
+| inside `/pitwall:lap`, by task type: fix a bug / refactor that must stay identical / bring a number down / bring over from another branch | `bug-fix.md` / `move-only.md` / `ratchet.md` / `port.md` |
+| fix a bug (direct request) | `playbooks/bug-fix.md` (its steps replace `feature.md` steps 3–6), then `/pitwall:gauge` and `playbooks/opening-a-pr.md` |
 | build / add / change a feature (direct request) | `playbooks/feature.md` |
-| open a PR for this branch (direct request) | `/gauge`, then `playbooks/opening-a-pr.md` |
+| open a PR for this branch (direct request) | `/pitwall:gauge`, then `playbooks/opening-a-pr.md` |
 | read-only question (how does it work / why / are you sure) | `playbooks/investigation.md` |
-| matches no row | design a task-specific playbook in the todo list (every step ends with a check) **ending with `/gauge` and `playbooks/opening-a-pr.md`**, and say so in the report |
+| matches no row | design a task-specific playbook in the todo list (every step ends with a check) **ending with `/pitwall:gauge` and `playbooks/opening-a-pr.md`**, and say so in the report |
 
 Requests may come in the user's language; the Thai trigger phrases in the description map to the same rows.
 
-The old commands (`/queue` `/drive` `/lap` `/stop` `/brake` `/merge-order` `/secretary`) can still be typed — they are shortcuts to the same playbook
+Commands: each playbook has its own shortcut skill — `/pitwall:queue`, `/pitwall:drive`, `/pitwall:lap`, `/pitwall:stop`, `/pitwall:brake`, `/pitwall:merge-order`, `/pitwall:secretary`, `/pitwall:init`, `/pitwall:doctor` — which invokes this skill with the playbook name as the first argument · a first argument that names a row → that playbook · anything else (`/pitwall:pitwall <request in words>`, or a request with no command) routes by the table · `/pitwall:gauge` and `/pitwall:ticket` are separate skills of this plugin
 
 ## principles (`principles/`)
 
@@ -107,7 +108,7 @@ Required sections · a playbook that needs a section that is missing → stop an
 | states to build | recipes for producing the states to test, or a pointer to the file that holds them |
 | repo-specific evidence | file pattern → extra evidence + level |
 | plan (optional) | plan folder, reading order, row format, where open questions go, rows not to queue, playbook per row type |
-| tracker (optional — missing = `none`) | `tracker: clickup \| none` · for `clickup`: location, tag, QA, meaning of each status, naming (the `ticket` skill) · `none` = no tasks, the PR is the record |
+| tracker (optional — missing = `none`) | `tracker: clickup \| none` · for `clickup`: location, tag, QA, meaning of each status, naming (the `pitwall:ticket` skill) · `none` = no tasks, the PR is the record |
 | agents per task | subagent type + model per role (`code role`, `verifier`), review panel, domain checklist files |
 | repo rules | rules files in use, principles turned off (with the reason) |
 | multi-machine (optional) | state hand-off branch |

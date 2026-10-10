@@ -1,11 +1,11 @@
 ---
 name: merge-order
-description: Merge order — resolve docs / wiki conflicts in the agent's PRs yourself, then read my open PRs, sort them by stack (a PR whose base is another PR's branch) and give each one's readiness level (🟢 can merge / 🟡 can merge but B/C still pending or no current verifier verdict / ⏸ waiting for base / 🔴 blocked) + the next one to press · retarget PRs whose base has merged into the profile's base yourself. Use when the user runs /merge-order, "merge ตัวไหนก่อน", "ลำดับ merge", "PR ไหนพร้อม" — /lap and every report refer to this skill instead of writing the merge order themselves · repo values live in .claude/agent-loop.md
+description: Merge order — resolve docs / wiki conflicts in the agent's PRs yourself, then read my open PRs, sort them by stack (a PR whose base is another PR's branch) and give each one's readiness level (🟢 can merge / 🟡 can merge but B/C still pending or no current verifier verdict / ⏸ waiting for base / 🔴 blocked) + the next one to press · retarget PRs whose base has merged into the profile's base yourself. Use when the user runs /pitwall:merge-order, "merge ตัวไหนก่อน", "ลำดับ merge", "PR ไหนพร้อม" — /pitwall:lap and every report refer to this skill instead of writing the merge order themselves · repo values live in .claude/agent-loop.md
 ---
 
-# /merge-order — which one to merge first
+# /pitwall:merge-order — which one to merge first
 
-The merge order lives here and only here — PR bodies / round reports / messages to the user **never explain the merge order themselves**, they write only "merge order: `/merge-order`"
+The merge order lives here and only here — PR bodies / round reports / messages to the user **never explain the merge order themselves**, they write only "merge order: `/pitwall:merge-order`"
 
 Arguments: none = all my open PRs · `<PR number>` = only the stack containing that PR · Claude **does not merge itself** (forbidden in the profile) — a human presses
 
@@ -16,7 +16,7 @@ gh pr list --author "@me" --state open --limit 100 \
   --json number,title,url,headRefName,baseRefName,isDraft,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup,body
 ```
 
-Verdicts: state `verified` (path in the profile; multi-machine → **receive** first; none → no PR has a verdict) · `git fetch origin -q` → the current patch-id of every PR (`/gauge` "Independent verifier")
+Verdicts: state `verified` (path in the profile; multi-machine → **receive** first; none → no PR has a verdict) · `git fetch origin -q` → the current patch-id of every PR (`/pitwall:gauge` "Independent verifier")
 
 A "destination" base = `base` in the profile + branches the profile forbids pushing to · any other base = another PR's branch (stack)
 
@@ -56,9 +56,9 @@ Per PR with `mergeable = CONFLICTING`, head starting with `agent/` (agent branch
 | Two status board lines for the same line | Merge into one line that states both things |
 | Unsure the merge is right | `git merge --abort` → 🔴 `conflict needs a human: <file:line>` |
 
-5. Check: `git grep -n -e '^<<<<<<<' -e '^>>>>>>>' -e '^=======$' -- <files>` is empty · `git diff --check` passes · referenced paths / task numbers exist (docs of `/gauge`)
+5. Check: `git grep -n -e '^<<<<<<<' -e '^>>>>>>>' -e '^=======$' -- <files>` is empty · `git diff --check` passes · referenced paths / task numbers exist (docs of `/pitwall:gauge`)
 6. `git commit --no-edit` (message `Merge remote-tracking branch 'origin/<base>' into <head>` — looks the same as the web button) → `git push -u origin <head>` (hooks run) → `git worktree remove <scratchpad>/wt-merge`
-7. Note in the report: `resolved conflict: #n (<file>) — kept both sides` · `mergeable` is recomputed slowly → ⏳, then running `/merge-order` again will show 🟢
+7. Note in the report: `resolved conflict: #n (<file>) — kept both sides` · `mergeable` is recomputed slowly → ⏳, then running `/pitwall:merge-order` again will show 🟢
 
 Child PRs in a stack need nothing — the conflict shows up when it is retargeted to base, and is fixed in that round
 
@@ -76,7 +76,7 @@ Parent → child: start from the PR whose base = destination, then follow `headR
 | 🟢 can merge now | base = destination, not blocked, no `- [ ]` pending, a passing verdict at the PR's current patch-id |
 | ⏳ | a check is still running (PENDING / IN_PROGRESS — not counting ignored checks) or `mergeable = UNKNOWN` |
 
-Release PRs (head = destination, the separate release table) need no verdict — the verdict clauses above skip them, as `/gauge` "Record results + tick the PR yourself" item 2 does
+Release PRs (head = destination, the separate release table) need no verdict — the verdict clauses above skip them, as `/pitwall:gauge` "Record results + tick the PR yourself" item 2 does
 
 Child PRs in a stack have no checks yet (CI usually runs only on PRs into base) — checks run after retarget, not a problem
 
@@ -94,7 +94,7 @@ Stack A — 12 PR (<base> ← #101 ← … ← #112)
 | 2 | #102 carousel | ⏸ | waiting for #101 |
 …
 
-Next: merge #101 → then press "Delete branch" in that PR (GitHub moves #102 to base itself) · forgot to delete → run /merge-order again and it retargets
+Next: merge #101 → then press "Delete branch" in that PR (GitHub moves #102 to base itself) · forgot to delete → run /pitwall:merge-order again and it retargets
 ```
 
 - A long run of consecutive ⏸ PRs → collapse into one row `#103–#112 ⏸ waiting for the previous one` unless one of them is 🔴 (always shown separately)
@@ -105,10 +105,10 @@ Next: merge #101 → then press "Delete branch" in that PR (GitHub moves #102 to
 - The **Create a merge commit** button (keeps stack history intact) — **never Squash / Rebase** PRs in a stack: the parent's commits get rewritten → the child sees the parent's commits twice and conflicts
 - Merge one at a time, in order · press only PRs whose base = the profile's base (check the PR header before pressing)
 - After merging, press **Delete branch** right away → GitHub moves the child PR to base
-- After merging → the next `/lap` round syncs the task to `review` itself (or `/ticket`)
+- After merging → the next `/pitwall:lap` round syncs the task to `review` itself (or `/pitwall:ticket`)
 
 ## Never
 
 - Never `gh pr merge` / close a PR / delete a branch yourself — only retarget (`gh pr edit --base`) and merge base **into** an `agent/*` branch per step 2b
 - Never resolve conflicts in code / config / lockfile — report them to a human
-- Never edit the body / tick checkboxes in this skill (that is the job of `/lap` + `/gauge`)
+- Never edit the body / tick checkboxes in this skill (that is the job of `/pitwall:lap` + `/pitwall:gauge`)

@@ -1,2 +1,3 @@
 # word list of internal names: it is itself internal (CI reads it from a secret)
 .neutral-deny
+plugin/evals/results/

@@ -8,7 +8,7 @@ skill="$here/../SKILL.md"
 profile="${1:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.claude/agent-loop.md}"
 
 if [ ! -f "$profile" ]; then
-  echo "no profile at $profile — this repo has not set up pitwall yet (run /pitwall init)"
+  echo "no profile at $profile — this repo has not set up pitwall yet (run /pitwall:init)"
   exit 3
 fi
 

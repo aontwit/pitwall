@@ -19,7 +19,7 @@ The human supervises asynchronously. Agents must stay unblocked. Make reasonable
 ## pitwall adaptation
 
 Changed from upstream on purpose:
-- **Questions are not dropped, they move to the start.** Everything only the human can decide is asked once, as tick boxes in the user's language (profile `language`), in the `/queue` briefing (`playbooks/queue.md` §4). The run then proceeds without asking.
+- **Questions are not dropped, they move to the start.** Everything only the human can decide is asked once, as tick boxes in the user's language (profile `language`), in the `/pitwall:queue` briefing (`playbooks/queue.md` §4). The run then proceeds without asking.
 - **During the run, use the decision ladder** in `pitwall/SKILL.md` (test → reversible default listed under "Decisions to confirm" → park). "Proceed, then present" = step 2.
 - **Wider boundary than upstream.** Besides irreversible actions, the always-park list (money / price / fee, permissions / security / user data, deletes, backend or third-party values not provided) and the "Never guess about" list in `SKILL.md` "Direct work" are never defaulted.
 - **Direct work** the user gives while present keeps the 95% rule in `SKILL.md` "Direct work".

@@ -1,0 +1,14 @@
+{
+  "name": "pitwall",
+  "owner": {
+    "name": "aontwit"
+  },
+  "description": "pitwall: an agent loop plugin for Claude Code",
+  "plugins": [
+    {
+      "name": "pitwall",
+      "source": "./plugin",
+      "description": "Agent loop for Claude Code: queue the work, ask once, let the agent build and prove each PR, merge yourself."
+    }
+  ]
+}

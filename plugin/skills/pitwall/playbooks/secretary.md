@@ -1,20 +1,20 @@
 ---
 name: secretary
-description: Secretary — read this repo's past conversations (local transcripts), find what the user has to say again / correct again and what the agent explains again every round, then report what should become a skill / rule / memory (or an existing skill that still needs reminding). Use when the user runs /secretary, "เลขา", "ผมย้ำอะไรบ่อย", "อะไรควรเป็น skill" — /stop calls it at the end of a session · does not create a skill itself until the user chooses
+description: Secretary — read this repo's past conversations (local transcripts), find what the user has to say again / correct again and what the agent explains again every round, then report what should become a skill / rule / memory (or an existing skill that still needs reminding). Use when the user runs /pitwall:secretary, "เลขา", "ผมย้ำอะไรบ่อย", "อะไรควรเป็น skill" — /pitwall:stop calls it at the end of a session · does not create a skill itself until the user chooses
 ---
 
-# /secretary — things repeated often → skill
+# /pitwall:secretary — things repeated often → skill
 
 Principle: anything that has to be said more than 2 times belongs in a file, not in someone's memory · the secretary **reports and proposes**, the user chooses
 
-Arguments: none = since the previous report (`--since auto`) · `all` = everything · `<YYYY-MM-DD>` = since that date · called from `/stop` = short mode (step 6)
+Arguments: none = since the previous report (`--since auto`) · `all` = everything · `<YYYY-MM-DD>` = since that date · called from `/pitwall:stop` = short mode (step 6)
 
 ## 1. Pull the messages
 
 Run from the repo's main checkout (the transcript path is computed from cwd — a worktree gets a different folder):
 
 ```bash
-node <pitwall dir>/scripts/secretary-scan.mjs --since auto --assistant > <scratchpad>/secretary.txt
+node <pitwall dir>/scripts/secretary-scan.mjs --since auto --assistant > <scratchpad>/pitwall:secretary.txt
 ```
 
 - 1 line = `time session U|A message` · `U` = what the user typed themselves (including `/command args`, `[N image]`) · `A` = what the agent told the user (cut at 240 characters — things deep inside a long message are lost)
@@ -57,7 +57,7 @@ Per topic that passes the threshold, grep keywords (Thai + English) in `.claude/
 | A one-line ban / requirement, every task | the repo's rules files (profile `repo rules`) |
 | Repo-specific values (branch, check, port) | `.claude/agent-loop.md` |
 | The user's personal preference / used across repos | memory (`feedback`) |
-| Agent explains again | move the explanation into a skill and have reports refer to the skill name (like `/merge-order`) |
+| Agent explains again | move the explanation into a skill and have reports refer to the skill name (like `/pitwall:merge-order`) |
 | Domain knowledge (WHAT / WHY) | the repo's docs / knowledge base |
 
 ## 5. Report (short, in the profile's user language)
@@ -69,7 +69,7 @@ Secretary · <machine> · <N> messages · <M> sessions · since <date>
 |---|---|---|---|---|
 | Get QA report → fix → how to test | 5 / 4 | "here's the QA report" | new | skill `/qa-fix` |
 | Asks what to do next / whether to wait | 9 / 3 | "so I have to wait, right?" | new | every report ends with "You: …" (lap / rules) |
-| Merge order | agent 11 | "merge in order, #101 first" | exists `/merge-order` | — |
+| Merge order | agent 11 | "merge in order, #101 first" | exists `/pitwall:merge-order` | — |
 
 Watch: <topic (2)> · …
 ```
@@ -77,13 +77,13 @@ Watch: <topic (2)> · …
 - Sorted by times, most first · at most 6 rows (the rest go to watch)
 - The example quotes the user's own words, short, 1 message — never quote tokens, passwords, unnecessary addresses, personal data
 
-Then ask with `AskUserQuestion` (multiSelect) which ones to do — chosen items: `/ticket` creates an `[improve]` task, then follow the normal round (branch → fix → `/gauge` → PR) · items not chosen: note them as declined
+Then ask with `AskUserQuestion` (multiSelect) which ones to do — chosen items: `/pitwall:ticket` creates an `[improve]` task, then follow the normal round (branch → fix → `/pitwall:gauge` → PR) · items not chosen: note them as declined
 
 Finally `node <pitwall dir>/scripts/secretary-scan.mjs --since auto --mark > /dev/null` (records that reporting has reached this point · state lives in `secretary.json` next to that machine's transcripts)
 
-## 6. Short mode (called from `/stop`)
+## 6. Short mode (called from `/pitwall:stop`)
 
-Do steps 1–4 but report only **propose** topics not reported before, one line per topic + "run `/secretary` to choose" · none → say nothing · no `--mark` (leave marking to the full `/secretary`)
+Do steps 1–4 but report only **propose** topics not reported before, one line per topic + "run `/pitwall:secretary` to choose" · none → say nothing · no `--mark` (leave marking to the full `/pitwall:secretary`)
 
 ## Never
 

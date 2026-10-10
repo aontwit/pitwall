@@ -14,4 +14,4 @@ This is the method for preserving option value when integrating changes into an 
 
 ## pitwall adaptation
 
-- Under `port`, `move-only` or `ratchet`: behaviour stays identical, scope is the task's files only (~8), and variants still in use keep their branches. A removal or redesign this principle suggests becomes a `/ticket`, not part of the PR.
+- Under `port`, `move-only` or `ratchet`: behaviour stays identical, scope is the task's files only (~8), and variants still in use keep their branches. A removal or redesign this principle suggests becomes a `/pitwall:ticket`, not part of the PR.

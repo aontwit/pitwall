@@ -42,9 +42,9 @@ Read-only unless the brief says otherwise. Read-only means no writes at all: nev
 
 ## As a verifier
 
-You did not write the code and never see how it was written: the brief holds only what `/gauge` "Independent verifier" item 2 lists (scope and steps live there). Do not read the writer's brief, `decisions.tsv`, review tables or the PR body.
+You did not write the code and never see how it was written: the brief holds only what `/pitwall:gauge` "Independent verifier" item 2 lists (scope and steps live there). Do not read the writer's brief, `decisions.tsv`, review tables or the PR body.
 
 - First: `git status --porcelain` is empty, `git rev-parse HEAD` equals the brief's head SHA and the patch-id command gives the brief's patch-id. Any mismatch → report it and run nothing.
 - Read-only for the source: never edit a tracked file and never run a git command that changes state (`commit`, `stash`, `checkout`, `switch`, `reset`, `worktree add`). The outputs of the profile's own check commands, dev server and browser are the only writes.
 - Never do one of the profile's human-only steps (wallet popup, 2FA, payment confirm …) and never ask the human for one.
-- Report: head SHA + patch-id + status on the first line, then the Verify table in the `/gauge` "Report" format. One line per failing row on what failed; no fixes.
+- Report: head SHA + patch-id + status on the first line, then the Verify table in the `/pitwall:gauge` "Report" format. One line per failing row on what failed; no fixes.

@@ -1,6 +1,6 @@
 # playbook: move-only — a refactor whose behavior must stay the same
 
-Use for moving / restructuring code where the output must not change (e.g. wiring keyed by variant, moving a service, splitting a module) — follow this instead of the overlapping steps in `/lap` section 4
+Use for moving / restructuring code where the output must not change (e.g. wiring keyed by variant, moving a service, splitting a module) — follow this instead of the overlapping steps in `/pitwall:lap` section 4
 
 ## 1. Lock behavior before changing anything (first commit)
 
@@ -16,7 +16,7 @@ Use for moving / restructuring code where the output must not change (e.g. wirin
 
 ## 3. Level B
 
-- Per the time in the profile — stuck → change approach / build the conditions per "states to build" · ⏳ only for items that need a human-only step (`/lap` gauging)
+- Per the time in the profile — stuck → change approach / build the conditions per "states to build" · ⏳ only for items that need a human-only step (`/pitwall:lap` gauging)
 - The test from step 1 is the main level A evidence of "the same as before" — level B is only extra confirmation
 
 ## 4. Correcting the plan along the way

@@ -1,0 +1,38 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Tests (doctor, refs, PR-body check, secretary scan)
+        run: npm test
+
+      - name: English only
+        run: bash scripts/check-english.sh
+
+      - name: No internal names
+        env:
+          NEUTRAL_DENY: ${{ secrets.NEUTRAL_DENY }}
+          FORK_PR: ${{ github.event.pull_request.head.repo.fork }}
+        run: |
+          if [ -z "$NEUTRAL_DENY" ]; then
+            # secrets are not passed to fork PRs; everything else must have the list
+            if [ "$FORK_PR" = "true" ]; then echo "::warning::fork PR, deny list not available"; exit 0; fi
+            echo "::error::secret NEUTRAL_DENY is not set"; exit 1
+          fi
+          bash scripts/check-neutral.sh
+
+      - name: Validate plugin and marketplace
+        run: |
+          npx -y @anthropic-ai/claude-code@2.1.294 plugin validate ./plugin --strict
+          npx -y @anthropic-ai/claude-code@2.1.294 plugin validate . --strict

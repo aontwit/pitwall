@@ -1,6 +1,6 @@
 # playbook: bug-fix — reproduce first, fix, then prove it on the same screen
 
-Use for tasks that fix wrong behavior (task `[bug]`, a plan row that says it fixes a bug) — follow this instead of the overlapping steps in `/lap` section 4
+Use for tasks that fix wrong behavior (task `[bug]`, a plan row that says it fixes a bug) — follow this instead of the overlapping steps in `/pitwall:lap` section 4
 
 Main risk: fixing from reading the code, then calling it done because typecheck / tests pass — a test says a branch works, it does not say the bug is gone from the page the user sees (it has happened: a PR was opened without anyone seeing the bug happen or go away)
 
@@ -8,9 +8,9 @@ Main risk: fixing from reading the code, then calling it done because typecheck 
 
 - Open **the same screen where the bug happens** (browser per the profile, the loop's dev server) on base and make the bug happen, collect evidence: console message / request / on-screen text / screenshot
 - Cannot reproduce directly → build the conditions yourself: recipes in the profile's "states to build", a temporary mock config, add logs and read them while running — keep trying until the bug happens · it counts as reproduced when the symptom **matches the report** (same message / screen), not just a similar error
-- You may ask a human for help **only with the profile's human-only steps** via the pair run of `/gauge` — write a specific one-line reason why you cannot do it yourself, and only after doing everything you can yourself
+- You may ask a human for help **only with the profile's human-only steps** via the pair run of `/pitwall:gauge` — write a specific one-line reason why you cannot do it yourself, and only after doing everything you can yourself
 - Tried every way and it still does not happen → **park as a question** with what was tried — never fix by guessing
-- Repro needs a human-only step but the user is away → park "waiting for pair run" — **steps 1 and 4 must never be ⏳** (`/lap`)
+- Repro needs a human-only step but the user is away → park "waiting for pair run" — **steps 1 and 4 must never be ⏳** (`/pitwall:lap`)
 
 ## 2. Find the root cause
 

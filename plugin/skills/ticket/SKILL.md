@@ -1,30 +1,30 @@
 ---
 name: ticket
-description: Ticket — the tracker adapter of pitwall. Create / find / update the tracker task for each piece of work (plan work = subtask under the phase's parent task; review = merged) so work the PM didn't hand out, improvements you found yourself, and every task the agent loop does show up where the team scores it. v1 trackers: `clickup`, `none` (no tasks, the PR is the record). Use when the user runs /ticket, "สร้าง task", "เปิด task ใน sprint" — /lap calls this skill itself · repo values live in .claude/agent-loop.md
+description: Ticket — the tracker adapter of pitwall. Create / find / update the tracker task for each piece of work (plan work = subtask under the phase's parent task; review = merged) so work the PM didn't hand out, improvements you found yourself, and every task the agent loop does show up where the team scores it. Trackers in v1 are `clickup` and `none` (no tasks, the PR is the record). Use when the user runs /pitwall:ticket, "สร้าง task", "เปิด task ใน sprint" — /pitwall:lap calls this skill itself · repo values live in .claude/agent-loop.md
 user-invocable: true
 ---
 
-# /ticket — the tracker task for each piece of work
+# /pitwall:ticket — the tracker task for each piece of work
 
 Read the `tracker` section of `.claude/agent-loop.md` first — its first row is `tracker: clickup | none` (no section = `none`)
 
 ## Tracker `none`
 
-No tracker tasks: the PR is the record of the work · `/ticket …` typed by the user → say "this repo has no tracker (profile `tracker: none`)" and stop (`/ticket agent` too) · every call from the loop → do nothing, return
+No tracker tasks: the PR is the record of the work · `/pitwall:ticket …` typed by the user → say "this repo has no tracker (profile `tracker: none`)" and stop (`/pitwall:ticket agent` too) · every call from the loop → do nothing, return
 
 Everything below is the `clickup` adapter (values from the profile: workspace / space / sprint folder, tag, QA, names)
 
 Arguments:
-- `/ticket <subject + details>` = create a task in the current sprint with status `to do`
-- `/ticket agent <subject + details>` = create it and also put it in the loop's queue (it must pass the `/queue` criteria)
-- called from `/lap` = find the task for that work; none → create it (sections 3–4) · update it per event (section 5)
+- `/pitwall:ticket <subject + details>` = create a task in the current sprint with status `to do`
+- `/pitwall:ticket agent <subject + details>` = create it and also put it in the loop's queue (it must pass the `/pitwall:queue` criteria)
+- called from `/pitwall:lap` = find the task for that work; none → create it (sections 3–4) · update it per event (section 5)
 
 Operations the playbooks call by name:
 
 | Operation | clickup |
 |---|---|
-| Find open tasks (`/queue`) | section 2 → `clickup_filter_tasks list_ids=[sprint]` with the profile's tag, status `to do`, assignee me or empty |
-| Read a parent with its subtasks (`/lap` tracker sync) | `clickup_get_task include=["subtasks"]` |
+| Find open tasks (`/pitwall:queue`) | section 2 → `clickup_filter_tasks list_ids=[sprint]` with the profile's tag, status `to do`, assignee me or empty |
+| Read a parent with its subtasks (`/pitwall:lap` tracker sync) | `clickup_get_task include=["subtasks"]` |
 | Create / status / comment | sections 4–5 |
 
 ## 1. Common values
@@ -68,7 +68,7 @@ Description of a subtask / standalone task (body in the profile's tracker langua
 <short scope + main files · plan work: link the row in the phase file instead of copying it>
 
 ## Done when
-- <checkable criteria — level A/B/C of `/gauge`>
+- <checkable criteria — level A/B/C of `/pitwall:gauge`>
 ```
 
 No points / estimate — the team scores it at sprint review · manual: not enough information to write "Done when" → ask the user 1 question before creating
@@ -80,7 +80,7 @@ Comment templates below are in English; write them in the profile's tracker lang
 | Event | subtask / standalone task | parent task |
 |---|---|---|
 | PR opened | **keep `in progress`** + 1-line comment `PR #<n> opened (waiting for merge) — <what it does> · no testing needed yet` → store `prCommentId` in state | don't touch |
-| PR merged (sync at the start of a `/lap` round) | → `review` + ✅ on the PR comment: the API has no reactions, so use `clickup_update_comment` to prepend `✅ merged <YYYY-MM-DD> — ` to the existing text | see the next row |
+| PR merged (sync at the start of a `/pitwall:lap` round) | → `review` + ✅ on the PR comment: the API has no reactions, so use `clickup_update_comment` to prepend `✅ merged <YYYY-MM-DD> — ` to the existing text | see the next row |
 | the parent has **≥ 1** subtask and **every one** is in `review` or later | — | → `review` + comment to QA: `merged to <base>: PR #a, #b · <effect on users / regression scope> · please test on dev: <level C steps from the PR> [@<QA>](#user_mention#<id>)` |
 | PR closed without merge | keep `in progress` + comment the reason + report to the user | don't touch |
 | park | → `pending` + 1–2 line comment with the reason / question | don't touch |
@@ -88,9 +88,9 @@ Comment templates below are in English; write them in the profile's tracker lang
 - **Changing status: `clickup_update_task` sends only `task_id` + `status`** — never send `assignees` in the same call (the tool replaces the whole list)
 - **Assignee rule (after every create or status change):** there must be ≥ 1 assignee and me must be one — me missing → `clickup_update_task assignees=[<everyone already there> + me]` (never remove anyone, including QA)
 
-## 6. `/ticket agent`
+## 6. `/pitwall:ticket agent`
 
-Create per section 4 (status `to do`), then check the `/queue` criteria — pass → add to `queue` in state: `{ "id": "t-<task id>", "source": "tracker", "trackerId": "<task id>", "playbook": null }` · fail → say which criteria failed (the task stays in the sprint for a human to do)
+Create per section 4 (status `to do`), then check the `/pitwall:queue` criteria — pass → add to `queue` in state: `{ "id": "t-<task id>", "source": "tracker", "trackerId": "<task id>", "playbook": null }` · fail → say which criteria failed (the task stays in the sprint for a human to do)
 
 ## Report
 

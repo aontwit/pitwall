@@ -2,7 +2,7 @@
 
 # playbook: feature — own the design, delegate the code, prove it, open the PR
 
-Use for a direct request to build / add / change behaviour (outside the loop) · "Direct work" in `SKILL.md` applies (rule 4): below 95% sure → ask, never guess · inside `/lap` the task's playbook and `lap.md` section 4 lead instead
+Use for a direct request to build / add / change behaviour (outside the loop) · "Direct work" in `SKILL.md` applies (rule 4): below 95% sure → ask, never guess · inside `/pitwall:lap` the task's playbook and `lap.md` section 4 lead instead
 
 ## 1. Research
 
@@ -35,13 +35,13 @@ A dimension that does not apply keeps its item as `n/a: <reason>`, never dropped
 
 Each unit ends with a check before the next starts (principle `sequence-verifiable-units`) · commit each unit
 
-## 7. `/gauge` — cannot be skipped
+## 7. `/pitwall:gauge` — cannot be skipped
 
 Wrong surface or "inconclusive" is not a pass — say so · an item stays open only if it is one of the 3 wait cases (`SKILL.md` rule 2) · logic with a branch / money path / a bug just fixed → a test per the repo's test rules (profile `repo rules`)
 
 ## 8. Review
 
-The profile's review panel (`agents per task`), one prompt with the every-task checklist + any extra-review checklist that matches the change, consensus table per `lap.md` reviewing · act-on `CRITICAL` / `WARNING` in the changed files → fix + `/gauge` again · new durable knowledge → update the repo's docs / knowledge base in the same change, when the repo rules ask for it
+The profile's review panel (`agents per task`), one prompt with the every-task checklist + any extra-review checklist that matches the change, consensus table per `lap.md` reviewing · act-on `CRITICAL` / `WARNING` in the changed files → fix + `/pitwall:gauge` again · new durable knowledge → update the repo's docs / knowledge base in the same change, when the repo rules ask for it
 
 ## 9. Open the PR
 

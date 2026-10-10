@@ -1,10 +1,10 @@
 # playbook: init — write this repo's profile
 
-Use for `/pitwall init` · writes `.claude/agent-loop.md` (and `PLAN.md` when the repo has no tracker and no plan) · reads first, then asks once, then writes · never commits, pushes or edits settings files — the user reviews the result and commits it
+Use for `/pitwall:init` · writes `.claude/agent-loop.md` (and `PLAN.md` when the repo has no tracker and no plan) · reads first, then asks once, then writes · never commits, pushes or edits settings files — the user reviews the result and commits it
 
 ## 0. Already set up?
 
-`.claude/agent-loop.md` exists → `playbooks/doctor.md` · OK → say so and stop (`/pitwall init redo` starts over) · missing / unfilled sections → fill only those, through steps 1–4
+`.claude/agent-loop.md` exists → `playbooks/doctor.md` · OK → say so and stop (`/pitwall:init redo` starts over) · missing / unfilled sections → fill only those, through steps 1–4
 
 ## 1. Read the repo (no questions yet)
 
@@ -49,4 +49,4 @@ Never ask what a file answered; never fill a business value (prices, limits, cre
 
 ## 5. Check + report
 
-`playbooks/doctor.md` → must end in "profile OK" · report in the profile's user language: values read (with source) · values answered · defaults taken · files written · next: review and commit the files, then `/pitwall queue`
+`playbooks/doctor.md` → must end in "profile OK" · report in the profile's user language: values read (with source) · values answered · defaults taken · files written · next: review and commit the files, then `/pitwall:queue`

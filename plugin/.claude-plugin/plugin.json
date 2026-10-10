@@ -1,0 +1,10 @@
+{
+  "name": "pitwall",
+  "version": "0.1.0",
+  "description": "Agent loop for Claude Code: queue the work, ask once, let the agent build and prove each PR, merge yourself.",
+  "author": { "name": "aontwit" },
+  "homepage": "https://github.com/aontwit/pitwall",
+  "repository": "https://github.com/aontwit/pitwall",
+  "license": "MIT",
+  "keywords": ["agent-loop", "autonomous", "pull-requests", "verification"]
+}

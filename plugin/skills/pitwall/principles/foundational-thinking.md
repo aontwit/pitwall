@@ -19,5 +19,5 @@ Subtraction comes before scaffolding. Remove dead code first, then lay foundatio
 
 ## pitwall adaptation
 
-- Under `port`, `move-only` or `ratchet`: behaviour stays identical, scope is the task's files only (~8), and variants still in use keep their branches. A removal or redesign this principle suggests becomes a `/ticket`, not part of the PR.
+- Under `port`, `move-only` or `ratchet`: behaviour stays identical, scope is the task's files only (~8), and variants still in use keep their branches. A removal or redesign this principle suggests becomes a `/pitwall:ticket`, not part of the PR.
 - "Three similar statements beat a premature abstraction" yields to the repo rules when they set a duplication threshold (e.g. extract at the second copy unless the copies will diverge — ask).

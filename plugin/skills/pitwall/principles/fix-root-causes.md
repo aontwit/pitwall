@@ -21,5 +21,5 @@ When something "fails after restart," suspect stale persistent state first: conf
 
 ## pitwall adaptation
 
-- Under the `port` playbook, copy the source behaviour (bugs and workarounds included) and record them under "found in source"; the fix is a separate `/ticket` (security holes excepted — `playbooks/port.md`). Under `bug-fix`, this principle governs.
-- "Fix all instances" stops at the task's file budget (~8 files); further instances become a `/ticket`.
+- Under the `port` playbook, copy the source behaviour (bugs and workarounds included) and record them under "found in source"; the fix is a separate `/pitwall:ticket` (security holes excepted — `playbooks/port.md`). Under `bug-fix`, this principle governs.
+- "Fix all instances" stops at the task's file budget (~8 files); further instances become a `/pitwall:ticket`.

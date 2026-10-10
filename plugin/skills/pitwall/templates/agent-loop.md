@@ -1,6 +1,6 @@
 # Agent loop — profile of this repo
 
-Repo values that pitwall (`/pitwall`, `/gauge`, `/ticket`) reads. The skills hold none of these. Sections follow the "Profile contract" in the pitwall `SKILL.md`; `/pitwall doctor` checks them. Replace every `{{…}}` with a value or `none` — `/pitwall doctor` fails while one is left.
+Repo values that pitwall (`/pitwall`, `/pitwall:gauge`, `/pitwall:ticket`) reads. The skills hold none of these. Sections follow the "Profile contract" in the pitwall `SKILL.md`; `/pitwall:doctor` checks them. Replace every `{{…}}` with a value or `none` — `/pitwall:doctor` fails while one is left.
 
 ## repo
 
@@ -28,7 +28,7 @@ Repo values that pitwall (`/pitwall`, `/gauge`, `/ticket`) reads. The skills hol
 | commit / PR title | `<type>: <summary>` (type = feat / fix / refactor / test / chore) |
 | hooks | {{pre-commit / pre-push commands, or none}} — never `--no-verify` |
 | resolve conflicts yourself | {{docs paths the agent may merge itself, e.g. `docs/**/*.md` · everything else → a human}} |
-| ignored checks | {{CI checks that never pass and must not block `/merge-order`, or none}} |
+| ignored checks | {{CI checks that never pass and must not block `/pitwall:merge-order`, or none}} |
 
 ## checks (level A)
 

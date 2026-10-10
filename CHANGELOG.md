@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- `drive` keeps looping: every wakeup prompt is `/loop /pitwall:lap` (a bare `/pitwall:lap` ran once and stopped)
+- `drive` starts only with a pickable task, not a queue of blocked ones
+- `gauge`: one dev server per checkout, short polls for long waits
+- `lap`: an install blocked by a locked file moves to a separate worktree
 - `bug-fix`: a bug that cannot be reproduced because the behaviour is already correct ends in a no-code PR with the evidence, not a park; `lap` allows that one case
 - `init` lists the plan file under "resolve conflicts yourself", since every PR appends to it
 

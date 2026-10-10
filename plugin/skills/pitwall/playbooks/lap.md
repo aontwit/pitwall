@@ -64,7 +64,7 @@ Go through `queue` in order (if `firstTask` is set, take that one first, then de
 - have an open PR for this task (`gh pr list --state open --json headRefName` by the branch pattern in the profile)
 - `waitFor` / dependency not merged yet → skip this round (don't park), put the reason in the report
 
-Nothing left → report "queue empty / waiting for merge: <list>"; loop → `ScheduleWakeup 1800s prompt "/pitwall:lap"`, end; single round → end
+Nothing left → report "queue empty / waiting for merge: <list>"; loop → `ScheduleWakeup 1800s prompt "/loop /pitwall:lap" noop:true`, end; single round → end
 
 Got a task → playbook: not set by the queue and it's a bug fix (task `[bug]`) → `bug-fix` · tracker ≠ `none` → `pitwall:ticket` skill sections 2–4: `plan` → find/create the phase's parent task + a subtask for the row (`in progress`) · `tracker` → set `in progress`
 → state: currentTask, trackerId, parentId, playbook, taskStartedAt=now, step="research", agents=[] · new `parentId` → add to `parents` · this task's tick-box answers (`answers[<id>]` from the briefing in `queue.md`) are requirements of the brief
@@ -81,6 +81,7 @@ Tracker set but unavailable → work can continue, but write in the PR "not logg
 
 - **research**: `Explore` reads the brief + the context the plan cites + the current code + the reference code (read-only branch in the profile) — finds it's already done → skip to docs with file:line evidence
 - **brief** with 6 sections (task / context / files / requirements / do not touch / done when = DoD + the `/pitwall:gauge` rows), written to the scratchpad
+- an install that fails on a file another program holds (an editor locking `node_modules`) → change method: do the task in a separate git worktree with its own dependencies, never fight the lock in the main checkout
 - **coding**: task > ~150 lines or > 3 files → send the brief to the profile's matching `code role` row (subagent type + model from "agents per task", a fresh agent per task) and name the task's domain checklist file in the brief · smaller than that, main may do it itself
   record every time in `agents[]`: `{ agent, model, step, task, files, result }` (main is recorded as `main` too) · then read `git diff` of every file: a file outside the brief → `git checkout -- <file>`
 - **checking**: `/pitwall:gauge` set A — FAIL → re-brief the same agent with the error, 1 time — FAIL again → **park**
@@ -126,7 +127,7 @@ agents that used a separate worktree (isolation) → remove the worktree + its l
 
 - single-round mode → report, then end
 - `stopRequested:true` → running:false, `ScheduleWakeup stop:true`, summary report
-- otherwise `ScheduleWakeup delaySeconds:60 prompt:"/pitwall:lap" noop:false`
+- otherwise `ScheduleWakeup delaySeconds:60 prompt:"/loop /pitwall:lap" noop:false` — the prompt is the whole `/loop` input, so the next firing re-enters `/loop` (a bare `/pitwall:lap` runs once and the loop ends)
 - the profile has a "multi-machine" section → **send** state every round (before scheduling / stopping)
 - short report every round (in the profile's user language): task, PR link, task link, gauge status, Edited files table, what was parked with reasons · ≥ 2 PRs waiting for merge → include the output of `/pitwall:merge-order` (table + "next" line) instead of describing the order yourself
 

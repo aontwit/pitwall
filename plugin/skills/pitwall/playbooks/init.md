@@ -10,7 +10,7 @@ Use for `/pitwall:init` · writes `.claude/agent-loop.md` (and `PLAN.md` when th
 
 Each value keeps its source for the report (file:line or command)
 
-Read the **base as the loop will see it**, not the working tree: `git fetch origin -q`, settle `base` first (row below), then read every file in the table with `git show origin/<base>:<path>` · the local base is behind (`git rev-list --count <base>..origin/<base>` > 0) → say so in the report (the first `/pitwall:lap` pulls it, and a value read from the stale tree would be wrong: lockfile, scripts, ports)
+Read the **base as the loop will see it**, not the working tree: `git fetch origin -q`, settle `base` first (row below), then read every file in the table with `git show origin/<base>:<path>` (Git Bash on Windows rewrites `origin/x:path` — prefix `MSYS_NO_PATHCONV=1`) · the local base is behind (`git rev-list --count <base>..origin/<base>` > 0) → say so in the report (the first `/pitwall:lap` pulls it, and a value read from the stale tree would be wrong: lockfile, scripts, ports)
 
 | Value | Read from |
 |---|---|

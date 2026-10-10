@@ -17,7 +17,7 @@ Rules:
 | Level | Who checks |
 |---|---|
 | A | the agent can run it itself, headless |
-| B | the agent can do it if there is a dev server + browser per the profile (browser entry — usually the human's default browser, not Playwright) — use the port / pages / time from the profile · no browser → steps for a human · stuck past the time limit → change the method first, don't hand it to a human |
+| B | one dev server per checkout — two servers in one checkout share its build output and leak each other's env values into the evidence; a second server needs its own worktree · a wait longer than the browser tool allows per call → poll in short calls, never one long call · the agent can do it if there is a dev server + browser per the profile (browser entry — usually the human's default browser, not Playwright) — use the port / pages / time from the profile · no browser → steps for a human · stuck past the time limit → change the method first, don't hand it to a human |
 | C | needs a human: real transactions / irreversible actions, the profile's human-only steps (done together as the pair run below), comparing with the design, UX feel |
 
 ## Level C together (pair run) — the human only does the human-only steps, the agent drives the whole flow

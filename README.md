@@ -137,6 +137,16 @@ pitwall is pre-1.0. It has run end to end on two repos outside the one it came f
 
 Pick one with `--scope`, for example `claude plugin install pitwall@pitwall --scope project`. Update to a new release with `/plugin marketplace update pitwall`.
 
+`--scope project` writes only `enabledPlugins`. A teammate's clone does not know where `pitwall@pitwall` comes from until the marketplace is in the same file, so add it before you commit:
+
+```json
+"extraKnownMarketplaces": {
+  "pitwall": { "source": { "source": "github", "repo": "aontwit/pitwall" } }
+}
+```
+
+Once a teammate accepts the workspace trust dialog, Claude Code registers the marketplace and loads pitwall from it, because the marketplace lists the plugin by a relative path ([Require plugins per repository](https://code.claude.com/docs/en/plugins/org#require-plugins-per-repository)). `/pitwall:init` flags a project-scope install that is missing this entry.
+
 Then, in each repo:
 
 ```

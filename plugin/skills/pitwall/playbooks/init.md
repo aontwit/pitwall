@@ -56,4 +56,4 @@ Never ask what a file answered; never fill a business value (prices, limits, cre
 
 ## 5. Check + report
 
-`playbooks/doctor.md` → must end in "profile OK" · report in the profile's user language: values read (with source) · values answered · defaults taken · files written · next: commit `.claude/agent-loop.md` (and the plan file) to the base yourself — the loop never pushes to the base, and `/pitwall:lap` stops on an untracked file in the tree — then `/pitwall:queue`
+`playbooks/doctor.md` → must end in "profile OK" · report in the profile's user language: values read (with source) · values answered · defaults taken · files written · next: commit `.claude/agent-loop.md` (and the plan file) to the base yourself — the loop never pushes to the base, and `/pitwall:lap` stops on an untracked file in the tree — then `/pitwall:plan` when the plan has no rows yet (or the next phase is `TBD`), otherwise `/pitwall:queue`

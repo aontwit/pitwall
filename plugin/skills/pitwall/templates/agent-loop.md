@@ -75,6 +75,8 @@ PR-body check: `node <pitwall dir>/scripts/check-pr-body.mjs --file <body file>`
 | open questions | {{where they go}} |
 | not queued | {{rows / phases the loop must skip, or none}} |
 | playbook per row type | {{e.g. refactor that must stay identical → move-only, bug → bug-fix}} |
+| spec | {{the file that says what the product is, or none — `/pitwall:plan` writes decisions there}} |
+| question banks | {{repo files with domain questions for `/pitwall:plan` (e.g. art, economy), or none}} |
 
 ## tracker
 

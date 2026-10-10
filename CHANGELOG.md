@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- `/pitwall:plan`: the front of the loop. It interviews the owner in rounds of 2–3 tick-box questions, recording each answer in the spec or plan before the next round, and writes plan rows `queue` can pick. Modes: `new` (whole product), `phase` (open a `TBD` phase), `amend` (a decision changed). It ends with a docs-only PR. Optional profile `plan` keys: `spec` and `question banks`, so domain questions (art, economy …) live in the repo and not in the skill
+- `init` points to `/pitwall:plan` when the plan has no rows yet
+
 ## 0.3.0 — 2026-10-10
 
 Fixes and a GitHub Issues tracker from the first run on a repo outside JavaScript / TypeScript (Godot).

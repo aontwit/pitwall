@@ -10,6 +10,8 @@ Use for `/pitwall:init` · writes `.claude/agent-loop.md` (and `PLAN.md` when th
 
 Each value keeps its source for the report (file:line or command)
 
+Read the **base as the loop will see it**, not the working tree: `git fetch origin -q`, settle `base` first (row below), then read every file in the table with `git show origin/<base>:<path>` · the local base is behind (`git rev-list --count <base>..origin/<base>` > 0) → say so in the report (the first `/pitwall:lap` pulls it, and a value read from the stale tree would be wrong: lockfile, scripts, ports)
+
 | Value | Read from |
 |---|---|
 | install + check commands | lockfile → package manager (`package-lock.json` npm · `pnpm-lock.yaml` pnpm · `yarn.lock` yarn · `bun.lock*` bun), frozen install form · scripts that exist in `package.json` (typecheck / lint / test / build) · other stacks: `Makefile`, `pyproject.toml`, `Cargo.toml`, `go.mod` · a check with no command → `none`, never invent one |
@@ -51,4 +53,4 @@ Never ask what a file answered; never fill a business value (prices, limits, cre
 
 ## 5. Check + report
 
-`playbooks/doctor.md` → must end in "profile OK" · report in the profile's user language: values read (with source) · values answered · defaults taken · files written · next: review and commit the files, then `/pitwall:queue`
+`playbooks/doctor.md` → must end in "profile OK" · report in the profile's user language: values read (with source) · values answered · defaults taken · files written · next: commit `.claude/agent-loop.md` (and the plan file) to the base yourself — the loop never pushes to the base, and `/pitwall:lap` stops on an untracked file in the tree — then `/pitwall:queue`

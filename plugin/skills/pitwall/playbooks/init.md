@@ -13,7 +13,7 @@ Each value keeps its source for the report (file:line or command)
 | Value | Read from |
 |---|---|
 | install + check commands | lockfile → package manager (`package-lock.json` npm · `pnpm-lock.yaml` pnpm · `yarn.lock` yarn · `bun.lock*` bun), frozen install form · scripts that exist in `package.json` (typecheck / lint / test / build) · other stacks: `Makefile`, `pyproject.toml`, `Cargo.toml`, `go.mod` · a check with no command → `none`, never invent one |
-| base | `git symbolic-ref --short refs/remotes/origin/HEAD` (strip `origin/`), else `gh repo view --json defaultBranchRef -q .defaultBranchRef.name` |
+| base | the branch most of the last 30 merged **work** PRs target — count only PRs whose head is not itself a target (a `<base> → release` PR is a release, not work): `gh pr list --state merged --limit 30 --json headRefName,baseRefName` → drop rows whose `headRefName` is any row's `baseRefName` → most common `baseRefName` · compare with `git symbolic-ref --short refs/remotes/origin/HEAD` (strip `origin/`) · they differ, or no work PRs yet → it becomes a step 3 question with both as options |
 | protected branches | `gh api repos/{owner}/{repo}/branches?protected=true -q '.[].name'` (403 / empty → ask) |
 | hooks | `.husky/`, `lefthook.yml`, `git config core.hooksPath` |
 | CI checks | `.github/workflows/*.yml` job names |
@@ -34,6 +34,7 @@ Copy `<pitwall dir>/templates/agent-loop.md` and fill every `{{…}}` that step 
 Only what step 1 could not settle, plus the rows a human must confirm — AskUserQuestion, ≤ 4 questions per call, ≤ 4 options, recommended first, in the language step 1 found:
 - tracker: `clickup` / `none`
 - user language · PR / commit language
+- base, when step 1 found two candidates (the merged-PR target first, as recommended)
 - protected branches (when the API did not answer)
 - level B: dev server + port, which browser, human-only steps (wallet popup, 2FA, payment confirm, none)
 - no tracker and no plan → where the plan goes: `PLAN.md` at the root (recommended) / another path
@@ -46,6 +47,7 @@ Never ask what a file answered; never fill a business value (prices, limits, cre
 - no tracker and no plan → copy `<pitwall dir>/templates/plan.md` to the chosen path; the profile `plan` section points at it
 - no verification skill → `verification skill: none`; level B items with no browser fall to C, say so in the report
 - `permissions`: write the list into the profile; adding it to the settings file is the user's step
+- `git check-ignore -v .claude/agent-loop.md <plan file>` matches → the file cannot be committed as is: say which `.gitignore` line hides it and the line that un-ignores it (e.g. `!.claude/agent-loop.md`) — adding it is the user's call
 
 ## 5. Check + report
 

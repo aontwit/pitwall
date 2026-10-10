@@ -47,18 +47,18 @@ Per PR with `mergeable = CONFLICTING`, head starting with `agent/` (agent branch
 1. Conflicting files (read-only): `git fetch -q origin && git merge-tree --write-tree --name-only --no-messages origin/<base> origin/<head> | tail -n +2`
 2. Any file outside the profile's "resolve conflicts yourself" → **do not touch** 🔴 `conflict in code: <file>` for a human
 3. Separate worktree (does not disturb the main checkout / dev server): the local branch has commits not yet pushed (`git rev-list origin/<head>..<head>` not empty) → stop 🔴 · otherwise `git worktree add -B <head> <scratchpad>/wt-merge origin/<head>` (this worktree uses a real `node_modules` — run the profile's install command the first time, in case a pre-push hook builds)
-4. `git merge --no-edit origin/<base>` → every conflicting hunk: **keep both sides, base's first, then the branch's** (= `git merge-file --union`) — for append-only logs this matches what humans pick on the web · a blank line before every `## ` heading, then check what union can get wrong:
+4. `git merge --no-edit origin/<base>` → `node <pitwall dir>/scripts/resolve-docs-conflict.mjs <conflicting files>` — every hunk keeps **both sides, base's first, then the branch's** (what humans pick on the web for append-only logs), a line both sides hold once, and a task row both sides hold once, ticked if either side ticked · exit 1 = it found what union cannot decide and left that file as it was → fix it by this table, or `git merge --abort` → 🔴:
 
-| After union you find | Fix |
+| The script reports | Fix |
 |---|---|
-| Duplicate open-question number (two rows with the same number) | The branch's row → next free number, and fix the `#<number>` the branch refers to in files the branch changed (`git diff --name-only origin/<base>...origin/<head>`) |
-| Two checklist rows with the same id (both sides edited the same row) | Merge into one row: ticked if either side ticked, base's text + what the branch added |
-| Two status board lines for the same line | Merge into one line that states both things |
-| Unsure the merge is right | `git merge --abort` → 🔴 `conflict needs a human: <file:line>` |
+| Two rows with the same id, e.g. an open-question number | The branch's row → next free number, and fix the `#<number>` the branch refers to in files the branch changed (`git diff --name-only origin/<base>...origin/<head>`) |
+| One status board line changed two ways | Merge into one line that states both things |
+| diff3 markers / unsure the merge is right | `git merge --abort` → 🔴 `conflict needs a human: <file:line>` |
 
 5. Check: `git grep -n -e '^<<<<<<<' -e '^>>>>>>>' -e '^=======$' -- <files>` is empty · `git diff --check` passes · referenced paths / task numbers exist (docs of `/pitwall:gauge`)
-6. `git commit --no-edit` (message `Merge remote-tracking branch 'origin/<base>' into <head>` — looks the same as the web button) → `git push -u origin <head>` (hooks run) → `git worktree remove <scratchpad>/wt-merge`
-7. Note in the report: `resolved conflict: #n (<file>) — kept both sides` · `mergeable` is recomputed slowly → ⏳, then running `/pitwall:merge-order` again will show 🟢
+6. `git commit --no-edit` (message `Merge remote-tracking branch 'origin/<base>' into <head>` — looks the same as the web button) · the repo's commit-msg hook refuses that message → commit with the profile's commit pattern instead (docs type, e.g. `chore(plan): merge <base> into <head>`), never `--no-verify` → `git push -u origin <head>` (hooks run) → `git worktree remove <scratchpad>/wt-merge`
+7. The verdict survives: the patch-id leaves out these files (`/pitwall:gauge` "Independent verifier") — no re-verify for a docs-only resolution
+8. Note in the report: `resolved conflict: #n (<file>) — kept both sides` · `mergeable` is recomputed slowly → ⏳, then running `/pitwall:merge-order` again will show 🟢
 
 Child PRs in a stack need nothing — the conflict shows up when it is retargeted to base, and is fixed in that round
 
@@ -105,6 +105,7 @@ Next: merge #101 → then press "Delete branch" in that PR (GitHub moves #102 to
 - The **Create a merge commit** button (keeps stack history intact) — **never Squash / Rebase** PRs in a stack: the parent's commits get rewritten → the child sees the parent's commits twice and conflicts
 - Merge one at a time, in order · press only PRs whose base = the profile's base (check the PR header before pressing)
 - After merging, press **Delete branch** right away → GitHub moves the child PR to base
+- After each merge, the other open agent PRs usually conflict in the plan's log and rows → run `/pitwall:merge-order` again (2b fixes them in a minute), or leave it to the next `/pitwall:lap` round
 - After merging → the next `/pitwall:lap` round syncs the task to `review` itself (or `/pitwall:ticket`)
 
 ## Never

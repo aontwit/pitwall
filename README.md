@@ -116,11 +116,21 @@ Every command is `/pitwall:<command>`. Or say what you want in plain words, Engl
 /plugin install pitwall@pitwall
 ```
 
+| Scope | Who gets it | Use it for |
+|-------|-------------|------------|
+| user (default) | you, in every repo | your own work |
+| project | everyone who clones the repo (written to `.claude/settings.json`, which you commit) | a team that shares one profile |
+| local | you, in one repo | trying it out |
+
+Pick one with `--scope`, for example `claude plugin install pitwall@pitwall --scope project`. Update to a new release with `/plugin marketplace update pitwall`.
+
 Then, in each repo:
 
 ```
 /pitwall:init
 ```
+
+Commit `.claude/agent-loop.md` (and `PLAN.md`, if init wrote one) to your base branch before the first `/pitwall:lap`: the loop never pushes to the base, and a lap stops on untracked files.
 
 ## Requirements
 

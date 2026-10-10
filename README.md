@@ -111,7 +111,7 @@ Every command is `/pitwall:<command>`. Or say what you want in plain words, Engl
 
 ## Status
 
-pitwall is pre-1.0. It has run end to end on two repos outside the one it came from (TypeScript, GitHub, `tracker: none`, Windows).
+pitwall is pre-1.0. It has run end to end on two repos outside the one it came from (TypeScript, GitHub, `tracker: none`, Windows). `/pitwall:init` and `/pitwall:doctor` have also run on a Godot (GDScript) game repo.
 
 | Proven | Not proven yet |
 |--------|----------------|
@@ -120,7 +120,7 @@ pitwall is pre-1.0. It has run end to end on two repos outside the one it came f
 | `/pitwall:lap` end to end: repro, fix, checks, browser evidence, two-model review, independent verifier, PR (3 PRs) | `/pitwall:merge-order` and the sync after a PR merges |
 | `/pitwall:drive` start, a self-scheduled wakeup that re-enters the loop, `/pitwall:stop` between rounds | `tracker: clickup` in plugin form |
 | routing from Thai and English requests (eval) | the `port`, `move-only` and `ratchet` playbooks, multi-machine hand-off |
-| | repos outside JavaScript / TypeScript, macOS and Linux |
+| | a `/pitwall:lap` on a repo outside JavaScript / TypeScript, macOS and Linux |
 
 ## Installation
 
@@ -136,6 +136,16 @@ pitwall is pre-1.0. It has run end to end on two repos outside the one it came f
 | local | you, in one repo | trying it out |
 
 Pick one with `--scope`, for example `claude plugin install pitwall@pitwall --scope project`. Update to a new release with `/plugin marketplace update pitwall`.
+
+`--scope project` writes only `enabledPlugins`. A teammate's clone does not know where `pitwall@pitwall` comes from until the marketplace is in the same file, so add it before you commit:
+
+```json
+"extraKnownMarketplaces": {
+  "pitwall": { "source": { "source": "github", "repo": "aontwit/pitwall" } }
+}
+```
+
+Once a teammate accepts the workspace trust dialog, Claude Code registers the marketplace and loads pitwall from it, because the marketplace lists the plugin by a relative path ([Require plugins per repository](https://code.claude.com/docs/en/plugins/org#require-plugins-per-repository)). `/pitwall:init` flags a project-scope install that is missing this entry.
 
 Then, in each repo:
 

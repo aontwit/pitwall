@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- A wakeup round that opens a PR, parks a task or stops the loop sends one push notification, so an away user hears about it
 - `drive` keeps looping: every wakeup prompt is `/loop /pitwall:lap` (a bare `/pitwall:lap` ran once and stopped)
 - `drive` starts only with a pickable task, not a queue of blocked ones
 - `gauge`: one dev server per checkout, short polls for long waits

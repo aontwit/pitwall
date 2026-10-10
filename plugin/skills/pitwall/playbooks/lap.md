@@ -129,6 +129,7 @@ agents that used a separate worktree (isolation) → remove the worktree + its l
 - `stopRequested:true` → running:false, `ScheduleWakeup stop:true`, summary report
 - otherwise `ScheduleWakeup delaySeconds:60 prompt:"/loop /pitwall:lap" noop:false` — the prompt is the whole `/loop` input, so the next firing re-enters `/loop` (a bare `/pitwall:lap` runs once and the loop ends)
 - the profile has a "multi-machine" section → **send** state every round (before scheduling / stopping)
+- a round the user did not start (a wakeup) that opened a PR, parked a task, or stopped the loop → also send one push notification, when the harness has one (Claude Code: `PushNotification`): `<repo>: PR <link> <status>` / `parked <id>: <reason>` / `loop stopped: <why>` · nothing happened (sync only, queue empty) → no notification
 - short report every round (in the profile's user language): task, PR link, task link, gauge status, Edited files table, what was parked with reasons · ≥ 2 PRs waiting for merge → include the output of `/pitwall:merge-order` (table + "next" line) instead of describing the order yourself
 
 ## Never

@@ -1,6 +1,12 @@
 # pitwall
 
-An agent loop for Claude Code. Queue the work, answer every question once, let the agent drive, then merge the PRs yourself. 1 entry skill, 15 playbooks, 20 principles, and an independent verifier on every PR.
+[![CI](https://github.com/aontwit/pitwall/actions/workflows/ci.yml/badge.svg)](https://github.com/aontwit/pitwall/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/github/license/aontwit/pitwall)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/aontwit/pitwall?style=social)](https://github.com/aontwit/pitwall/stargazers)
+
+The agent loop that queues your work, proves every PR, and leaves the merge to you.
+
+Ask every question once, up front. Then the agent builds one task per round, proves it, gets a verdict from a verifier that did not write the code, and opens the PR. 15 playbooks, 20 principles. Runs in Claude Code today; Codex, Cursor and Gemini CLI are planned.
 
 > **Quick start:** `/plugin marketplace add aontwit/pitwall`, then `/plugin install pitwall@pitwall`, then run `/pitwall:init` in your repo.
 

@@ -8,7 +8,7 @@
     {
       "name": "pitwall",
       "source": "./plugin",
-      "description": "Agent loop for Claude Code: queue the work, ask once, let the agent build and prove each PR, merge yourself."
+      "description": "The agent loop that queues your work, proves every PR, and leaves the merge to you."
     }
   ]
 }

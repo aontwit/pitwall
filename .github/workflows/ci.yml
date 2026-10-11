@@ -6,6 +6,18 @@ on:
   pull_request:
 
 jobs:
+  doctor-macos:
+    # macOS /bin/bash is 3.2: no mapfile, no ${x,,}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: /bin/bash --version | head -1 && node tests/doctor.test.mjs
+        env:
+          DOCTOR_BASH: /bin/bash
+
   check:
     runs-on: ubuntu-latest
     steps:
@@ -36,6 +48,10 @@ jobs:
             echo "::error::secret NEUTRAL_DENY is not set"; exit 1
           fi
           bash scripts/check-neutral.sh
+
+      - name: Docs site builds (it renders the playbooks and principles)
+        working-directory: site
+        run: npm ci && npm run build
 
       - name: Validate plugin and marketplace
         run: |

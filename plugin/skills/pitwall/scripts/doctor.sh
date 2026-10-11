@@ -12,23 +12,25 @@ if [ ! -f "$profile" ]; then
   exit 3
 fi
 
+# bash 3.2-safe (macOS /bin/bash): no mapfile, no ${x,,}, no arrays under set -u
+lower() { tr '[:upper:]' '[:lower:]'; }
 # Contract rows: "| <section> | <holds> |" between the "## Profile contract" heading and the next "## "
-mapfile -t rows < <(awk '/^## Profile contract/{on=1;next} on&&/^## /{exit} on&&/^\| [a-z]/{sub(/^\| /,""); sub(/ \|.*/,""); print}' "$skill")
-mapfile -t headings < <(grep -E '^## ' "$profile" | sed 's/^## *//; s/\r$//')
+rows="$(awk '/^## Profile contract/{on=1;next} on&&/^## /{exit} on&&/^\| [a-z]/{sub(/^\| /,""); sub(/ \|.*/,""); print}' "$skill")"
+headings="$(grep -E '^## ' "$profile" | tr -d '\r' | sed 's/^## *//' | lower)"
 
 # a heading counts when it is the section name, alone or followed by " (…)" / " — …"
 has() {
   local h
-  for h in "${headings[@]}"; do
-    h="${h,,}"
+  while IFS= read -r h; do
     [[ "$h" == "$1" || "$h" == "$1 "* ]] && return 0
-  done
+  done <<< "$headings"
   return 1
 }
 
 problems=0
-for row in "${rows[@]}"; do
-  name="${row%% (*}"; name="${name,,}"
+while IFS= read -r row; do
+  [ -n "$row" ] || continue
+  name="$(printf '%s' "${row%% (*}" | lower)"
   if has "$name"; then
     echo "ok       $name"
   elif [[ "$row" == *"(optional"* ]]; then
@@ -36,9 +38,9 @@ for row in "${rows[@]}"; do
   else
     echo "MISSING  $name"; problems=$((problems+1))
   fi
-done
+done <<< "$rows"
 
-if has tracker && ! grep -qE 'tracker: *`?(clickup|github|none)\b' "$profile"; then
+if has tracker && ! grep -qE 'tracker: *`?(clickup|github|none)([^a-z0-9_]|$)' "$profile"; then
   echo "BAD      tracker: the section must say \`tracker: clickup\`, \`tracker: github\` or \`tracker: none\`"; problems=$((problems+1))
 fi
 

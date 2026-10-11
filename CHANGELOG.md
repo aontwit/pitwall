@@ -2,10 +2,12 @@
 
 ## Unreleased
 
+- Docs site (`site/`, Astro, TypeScript only): a hero with an F1 car drawn in light, a lap explained as an exploded engine, and a drive mode with a speed gauge; the docs pages render the README, playbooks and principles straight from the repo. CI builds it, so a playbook change that breaks the site fails the PR
 - `merge-order`: a PR moved to a new base after its parent merged counts as ⏳ `CI not run on the new base` until a run exists, because GitHub starts no `pull_request` run on a base change and the old run (against the parent branch) still shows green. For an `agent/*` head, `merge-order` pushes an empty commit, which starts the run and keeps the patch-id. `init` flags a workflow without the `edited` trigger and gives the lines to add. Found on Guild Register: #13 showed 🟢 from a run against its old base
 - `/pitwall:plan`: the front of the loop. It interviews the owner in rounds of 2–3 tick-box questions, recording each answer in the spec or plan before the next round, and writes plan rows `queue` can pick. Modes: `new` (whole product), `phase` (open a `TBD` phase), `amend` (a decision changed). It ends with a docs-only PR. Optional profile `plan` keys: `spec` and `question banks`, so domain questions (art, economy …) live in the repo and not in the skill
 - `init` points to `/pitwall:plan` when the plan has no rows yet
 - Docs conflicts between sibling agent PRs: `scripts/resolve-docs-conflict.mjs` does `merge-order` 2b's union (base's lines first, a task row once and ticked if either side ticked) and refuses what union cannot decide. The patch-id leaves out the profile's "resolve conflicts yourself" files, so fixing a plan-log conflict no longer makes the verdict stale and forces a re-verify. A commit-msg hook that refuses git's merge message gets the profile's commit pattern instead. Found on Guild Register: every merge left the other open PRs conflicting in the plan's rows and log
+- `doctor.sh` runs on macOS's bash 3.2 (no `mapfile`, `${x,,}` or empty arrays under `set -u`); it used to exit 1 with no `MISSING` line, so `init` could not reach "profile OK" on a stock Mac. A macOS CI job runs it with `/bin/bash`
 
 ## 0.3.0 — 2026-10-10
 

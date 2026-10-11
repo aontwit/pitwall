@@ -1,0 +1,170 @@
+---
+// Top-right MENU, as in the reference: one quiet control that opens a full-screen panel.
+import { defaultLang, href, t } from '../i18n/ui';
+
+const tr = t(defaultLang);
+const main = [
+  { label: tr('menu.home'), to: href('/') },
+  { label: tr('nav.overview'), to: href('docs/') },
+  { label: tr('nav.playbooks'), to: href('docs/playbooks/lap/') },
+  { label: tr('nav.principles'), to: href('docs/principles/prove-it-works/') },
+  { label: tr('nav.github'), to: 'https://github.com/aontwit/pitwall' },
+];
+const small = [
+  { label: tr('menu.changelog'), to: 'https://github.com/aontwit/pitwall/blob/main/CHANGELOG.md' },
+  { label: tr('credits.models'), to: href('docs/#credits') },
+];
+---
+
+<div class="menu" data-menu>
+  <button type="button" class="menu-toggle label" aria-expanded="false" aria-controls="site-menu" data-menu-toggle data-label-open={tr('menu.open')} data-label-close={tr('menu.close')}>
+    <span data-menu-label>{tr('menu.open')}</span>
+    <span class="burger" aria-hidden="true"><span></span><span></span><span></span></span>
+  </button>
+  <nav id="site-menu" class="menu-panel" aria-label="Site" inert>
+    <div class="menu-ring" aria-hidden="true"></div>
+    <ol class="menu-main">
+      {
+        main.map((m, i) => (
+          <li style={`--i: ${i}`}>
+            <a class="label" href={m.to}>
+              <span class="menu-n">{String(i + 1).padStart(2, '0')}</span>
+              {m.label}
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+    <ul class="menu-small">
+      {
+        small.map((m) => (
+          <li>
+            <a class="label" href={m.to}>{m.label}</a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+</div>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-menu]');
+  const toggle = root?.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const label = root?.querySelector<HTMLElement>('[data-menu-label]');
+  const panel = root?.querySelector<HTMLElement>('.menu-panel');
+
+  const setOpen = (open: boolean): void => {
+    if (!root || !toggle || !panel) return;
+    root.toggleAttribute('data-open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+    panel.inert = !open;
+    if (label) label.textContent = (open ? toggle.dataset['labelClose'] : toggle.dataset['labelOpen']) ?? '';
+    document.documentElement.style.overflow = open ? 'hidden' : '';
+    if (open) panel.querySelector<HTMLAnchorElement>('a')?.focus({ preventScroll: true });
+    else toggle.focus({ preventScroll: true });
+  };
+
+  toggle?.addEventListener('click', () => setOpen(!root?.hasAttribute('data-open')));
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && root?.hasAttribute('data-open')) setOpen(false);
+  });
+  // a link to a section of the current page closes the panel so the page can scroll there
+  panel?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
+</script>
+
+<style>
+  .menu-toggle {
+    position: relative;
+    z-index: 51;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 6px 0;
+    border: 0;
+    background: none;
+    color: var(--t-60);
+    font-size: 20px;
+    cursor: pointer;
+    transition: color 0.5s var(--ease-move);
+  }
+  .menu-toggle:hover, [data-open] .menu-toggle { color: var(--text); }
+  .burger { display: grid; gap: 4px; width: 24px; }
+  .burger span {
+    height: 1.5px;
+    background: currentColor;
+    transition: translate 0.5s var(--ease-move), rotate 0.5s var(--ease-move), opacity 0.3s;
+  }
+  [data-open] .burger span:nth-child(1) { translate: 0 5.5px; rotate: 45deg; }
+  [data-open] .burger span:nth-child(2) { opacity: 0; }
+  [data-open] .burger span:nth-child(3) { translate: 0 -5.5px; rotate: -45deg; }
+
+  .menu-panel {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: grid;
+    align-content: center;
+    padding: 96px var(--edge) var(--edge) clamp(24px, 12vw, 200px);
+    background: rgb(10 10 14 / 0.94);
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s var(--ease-move), visibility 0s 0.5s;
+  }
+  [data-open] .menu-panel { opacity: 1; visibility: visible; transition: opacity 0.5s var(--ease-move); }
+
+  .menu-ring {
+    position: absolute;
+    right: -20vmin;
+    top: 50%;
+    width: 110vmin;
+    aspect-ratio: 1;
+    translate: 0 -50%;
+    border-radius: 50%;
+    border: 1.5px solid rgb(255 255 255 / 0.18);
+    box-shadow: -24px 0 80px -20px rgb(225 6 0 / 0.35);
+    scale: 0.92;
+    transition: scale 1.4s var(--ease-reveal);
+    pointer-events: none;
+  }
+  [data-open] .menu-ring { scale: 1; }
+
+  .menu-main { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .menu-main li {
+    opacity: 0;
+    translate: 0 18px;
+    transition: opacity 0.6s var(--ease-reveal), translate 0.8s var(--ease-reveal);
+  }
+  [data-open] .menu-main li {
+    opacity: 1;
+    translate: 0 0;
+    transition-delay: calc(0.08s + var(--i) * 0.06s);
+  }
+  .menu-main a {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 18px;
+    font-size: clamp(36px, 6vw, 64px);
+    letter-spacing: 0.08em;
+    line-height: 1.15;
+    color: var(--t-60);
+    text-decoration: none;
+    transition: color 0.4s var(--ease-move), translate 0.4s var(--ease-move);
+  }
+  .menu-main a:hover, .menu-main a:focus-visible { color: var(--text); translate: 8px 0; box-shadow: none; }
+  .menu-n { font-size: 14px; letter-spacing: var(--track-eyebrow); color: var(--accent); }
+
+  .menu-small {
+    list-style: none;
+    margin: 48px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px;
+    opacity: 0;
+    transition: opacity 0.6s var(--ease-reveal) 0.4s;
+  }
+  [data-open] .menu-small { opacity: 1; }
+  .menu-small a { font-size: 15px; color: var(--t-40); text-decoration: none; }
+  .menu-small a:hover { color: var(--text); }
+</style>

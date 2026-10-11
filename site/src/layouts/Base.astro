@@ -1,0 +1,33 @@
+---
+import '../styles/global.css';
+import { defaultLang, href, type Lang } from '../i18n/ui';
+
+interface Props {
+  title: string;
+  description?: string | undefined;
+  lang?: Lang;
+}
+
+const { title, description = 'The agent loop that queues your work, proves every PR, and leaves the merge to you.', lang = defaultLang } = Astro.props;
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" href={href('favicon.svg')} type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Bebas+Neue&family=JetBrains+Mono:wght@400;500&display=swap"
+    />
+    <slot name="head" />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

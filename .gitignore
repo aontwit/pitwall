@@ -1,3 +1,13 @@
 # word list of internal names: it is itself internal (CI reads it from a secret)
 .neutral-deny
 plugin/evals/results/
+
+# docs site
+site/node_modules/
+site/dist/
+site/.astro/
+.playwright-mcp/
+
+# Blender source for the hero models (28 MB, textures included)
+site/design/*.blend
+site/design/*.blend1

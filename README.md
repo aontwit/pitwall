@@ -189,6 +189,8 @@ claude plugin eval plugin --scaffold --ablation none   # routing eval, calls the
 
 The principles, the `feature`, `investigation` and `opening-a-pr` playbooks and the subagent are adapted from pstack by Lauren Tan (MIT). Every adapted file keeps its source line, and the license is in `plugin/skills/pitwall/principles/LICENSE-pstack`.
 
+The docs site's 3D models are [Formula 1 Car](https://sketchfab.com/models/e89589184eac42c08028db5cba3f6499) by spsvision and [V6 car engine](https://sketchfab.com/models/7309cf5e6b07435c962f954513ca170e) by Blendoriano, both [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). They are reduced for the web: the car has new wheels, and the engine keeps only its assembled parts.
+
 ## License
 
 MIT

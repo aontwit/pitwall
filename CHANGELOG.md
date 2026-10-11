@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The independent verifier may FAIL only on a set A item, a DoD item, a spec rule the task implements (wrong, or with no test that fails when it breaks) or a repo rule the diff breaks; the rest is INFO. It lists every FAIL item in one pass, and the fresh verifier after a re-brief checks the failed rows and the new commits, not the whole PR again. Found on Guild Register: each new verifier found a different untested edge, so one row took 5 verifiers and two parks
 - `lap` writes a plan Progress log row only when the profile has no tracker. With a tracker the issue is the progress record, and the log row every PR appended at the same place made each open sibling PR conflict on every merge, so GitHub ran no CI for them until someone resolved it. Found on Guild Register: 6 conflicts in one day, the last one holding back CI on a PR
 
 ## 0.4.0 — 2026-10-11

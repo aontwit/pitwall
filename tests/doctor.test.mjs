@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const doctor = "plugin/skills/pitwall/scripts/doctor.sh";
+const bash = process.env.DOCTOR_BASH ?? "bash"; // CI sets /bin/bash on macOS (bash 3.2)
 const skill = readFileSync("plugin/skills/pitwall/SKILL.md", "utf8");
 const contract = skill.split("## Profile contract")[1].split("\n## ")[0];
 const required = [...contract.matchAll(/^\| ([a-z][^|(]*?) \|/gm)]
@@ -17,7 +18,7 @@ const dir = mkdtempSync(join(tmpdir(), "pitwall-doctor-"));
 const run = (body) => {
   const file = join(dir, "agent-loop.md");
   writeFileSync(file, body);
-  return spawnSync("bash", [doctor, file], { encoding: "utf8" });
+  return spawnSync(bash, [doctor, file], { encoding: "utf8" });
 };
 const full = required.map((s) => `## ${s}\n\nx\n`).join("\n");
 
@@ -29,10 +30,10 @@ assert.match(noLanguage.stdout, /MISSING  language/, "names the missing section"
 assert.equal(run(full + "\n## tracker\n\nnothing\n").status, 1, "tracker section without clickup|none fails");
 assert.equal(run(full + "\n## tracker\n\n`tracker: none`\n").status, 0, "tracker: none passes");
 assert.equal(run(full + "\n## tracker\n\n`tracker: github`\n").status, 0, "tracker: github passes");
-assert.equal(spawnSync("bash", [doctor, join(dir, "missing.md")]).status, 3, "no profile → exit 3");
+assert.equal(spawnSync(bash, [doctor, join(dir, "missing.md")]).status, 3, "no profile → exit 3");
 assert.equal(run(full + "\n| base | `{{base}}` |\n").status, 1, "a {{…}} placeholder left in the profile fails");
 assert.equal(
-  spawnSync("bash", [doctor, "plugin/skills/pitwall/templates/agent-loop.md"]).status,
+  spawnSync(bash, [doctor, "plugin/skills/pitwall/templates/agent-loop.md"]).status,
   1,
   "the shipped template is not a valid profile until filled",
 );

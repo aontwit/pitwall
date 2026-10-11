@@ -32,6 +32,8 @@ Every PR whose base is not a destination: `gh pr list --state merged --head <bas
 
 After retargeting, pull step 1's data again (`mergeable` is recomputed slowly → treat `UNKNOWN` as ⏳, not 🔴)
 
+A retarget starts no CI run: GitHub's `pull_request` trigger leaves out `edited` by default, so the checks still shown are the run against the old parent branch (step 4 marks them ⏳) · an `agent/*` head whose workflow has no base-change trigger (the `init` line in step 4 of `playbooks/init.md`) → push an empty commit in the step 2b worktree, `git commit --allow-empty` with the profile's commit pattern (docs / chore type, e.g. `chore(ci): run checks on the new base`), never `--no-verify`: it starts a run on the new base and keeps the patch-id, so the verdict survives · anyone else's head → say in the report that its checks need a new run
+
 ### Child PRs in a stack are always Draft
 
 GitHub cannot merge a Draft PR — this stops a child being pressed before its parent (it has happened: a 3-PR stack was merged bottom-up, the children's work landed in the parent branch, not base, and had to be opened again)
@@ -74,11 +76,11 @@ Parent → child: start from the PR whose base = destination, then follow `headR
 | ⏸ waiting for base | base is still an open PR (it is Draft — cannot be merged until its turn) |
 | 🟡 can merge, but pending | base = destination, not blocked, but the body's "Not done yet (before merge)" section still has `- [ ]` (count that section only · the "merge in stack order" item does not count) or the title starts with `[PARTIAL]` · or no passing verdict (`item: "verdict"`, VERIFIED / PARTIAL) of this PR (`pr` / `branch`) at its current patch-id: older patch-ids only → `needs re-verify`, none at all → `no verifier verdict` (PRs the agent did not open stay here by design — the loop never verifies them) |
 | 🟢 can merge now | base = destination, not blocked, no `- [ ]` pending, a passing verdict at the PR's current patch-id |
-| ⏳ | a check is still running (PENDING / IN_PROGRESS — not counting ignored checks) or `mergeable = UNKNOWN` |
+| ⏳ | a check is still running (PENDING / IN_PROGRESS — not counting ignored checks) · `mergeable = UNKNOWN` · the checks predate the PR's last base change: `gh api repos/<owner>/<repo>/issues/<n>/timeline --paginate --jq '[.[]\|select(.event=="base_ref_changed")\|.created_at]\|max'` is later than the newest `startedAt` in `statusCheckRollup` → `CI not run on the new base` (a retarget reruns nothing, step 2) |
 
 Release PRs (head = destination, the separate release table) need no verdict — the verdict clauses above skip them, as `/pitwall:gauge` "Record results + tick the PR yourself" item 2 does
 
-Child PRs in a stack have no checks yet (CI usually runs only on PRs into base) — checks run after retarget, not a problem
+Child PRs in a stack: a workflow limited to PRs into base shows no checks yet; one that runs on every PR shows checks against the parent branch · either way the retarget starts no run, so after it they count as ⏳ until a run on the new base exists (step 2)
 
 🟡 does not mean do not merge — the user decides whether the pending items can wait until after merge (e.g. testing on dev)
 
@@ -104,7 +106,7 @@ Next: merge #101 → then press "Delete branch" in that PR (GitHub moves #102 to
 
 - The **Create a merge commit** button (keeps stack history intact) — **never Squash / Rebase** PRs in a stack: the parent's commits get rewritten → the child sees the parent's commits twice and conflicts
 - Merge one at a time, in order · press only PRs whose base = the profile's base (check the PR header before pressing)
-- After merging, press **Delete branch** right away → GitHub moves the child PR to base
+- After merging, press **Delete branch** right away → GitHub moves the child PR to base (still Draft, and its CI does not rerun — run `/pitwall:merge-order` again, step 2 handles both)
 - After each merge, the other open agent PRs usually conflict in the plan's log and rows → run `/pitwall:merge-order` again (2b fixes them in a minute), or leave it to the next `/pitwall:lap` round
 - After merging → the next `/pitwall:lap` round syncs the task to `review` itself (or `/pitwall:ticket`)
 

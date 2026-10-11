@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 — 2026-10-11
+
+`/pitwall:plan` for the front of the loop, a docs site, and fixes: sibling agent PRs no longer need hand work when the plan docs conflict, checks from an old base count as not run, `doctor` runs on macOS's bash 3.2.
 
 - Docs site (`site/`, Astro, TypeScript only): a hero with an F1 car drawn in light, a lap explained as an exploded engine, and a drive mode with a speed gauge; the docs pages render the README, playbooks and principles straight from the repo. CI builds it, so a playbook change that breaks the site fails the PR
 - `merge-order`: a PR moved to a new base after its parent merged counts as ⏳ `CI not run on the new base` until a run exists, because GitHub starts no `pull_request` run on a base change and the old run (against the parent branch) still shows green. For an `agent/*` head, `merge-order` pushes an empty commit, which starts the run and keeps the patch-id. `init` flags a workflow without the `edited` trigger and gives the lines to add. Found on Guild Register: #13 showed 🟢 from a run against its old base

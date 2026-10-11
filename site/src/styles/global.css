@@ -1,0 +1,82 @@
+/* Tokens: structure from acoustics.autoneum.com (see site/design/), palette is pitwall's own. */
+:root {
+  color-scheme: dark;
+  --bg: rgb(21 21 30);
+  --bg-deep: #0b0b10;
+  --text: #ffffff;
+  /* hierarchy by opacity, one hue (a fader, not a grey ramp) */
+  --t-80: rgb(255 255 255 / 0.8);
+  --t-60: rgb(255 255 255 / 0.6);
+  --t-40: rgb(255 255 255 / 0.4);
+  --t-30: rgb(255 255 255 / 0.3);
+  --line: rgb(255 255 255 / 0.12);
+  /* the one accent: F1 red, on carbon black and white */
+  --accent: #e10600;
+  --accent-muted: #ff5a4e;
+
+  --font-display: 'Bebas Neue', 'Arial Narrow', sans-serif;
+  --font-body: 'Barlow', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --track-label: 0.15em;
+  --track-eyebrow: 0.35em;
+  --track-lede: 0.18em;
+
+  --edge: clamp(20px, 3.6vw, 56px);
+  --ring-glow: inset 0 0 0 2px var(--text), 0 0 8px 4px rgb(255 255 255 / 0.15), inset 0 0 8px 4px rgb(255 255 255 / 0.15);
+
+  --ease-reveal: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --ease-move: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { margin: 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* in-page links glide to their section */
+  html { scroll-behavior: smooth; }
+  /* page to page: a short cross-fade, native, no router */
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.35s; }
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 400 17px/1.7 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; }
+
+[hidden] { display: none !important; }
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-glow);
+  border-radius: 2px;
+}
+
+.label {
+  font-family: var(--font-display);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  font-weight: 400;
+}
+
+.wordmark {
+  font: 400 26px/1 var(--font-display);
+  letter-spacing: 0.08em;
+  text-decoration: none;
+}
+.wordmark span { color: var(--accent); }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

@@ -1,0 +1,74 @@
+{
+  "source": "https://acoustics.autoneum.com/",
+  "tokens": {
+    "spacing": {
+      "scale": [8, 16, 24, 42, 68, 107],
+      "base_unit": 8,
+      "note": "single 100vh stage, no scroll; values are positions measured from the 1440x900 screenshot, not a CSS scale"
+    },
+    "typography": {
+      "families": ["Bebas", "DIN", "Montserrat"],
+      "scale": [
+        { "role": "screen-title", "size": "28px", "weight": "400", "family": "Bebas", "letter_spacing": "0.18em", "line_height": "50.4px", "transform": "uppercase" },
+        { "role": "nav-label", "size": "20px", "weight": "400", "family": "Bebas", "letter_spacing": "0.15em", "transform": "uppercase" },
+        { "role": "option-label", "size": "16px", "weight": "400", "family": "Bebas", "letter_spacing": "0.15em", "transform": "uppercase" },
+        { "role": "eyebrow", "size": "14px", "weight": "400", "family": "Bebas", "letter_spacing": "0.35em", "line_height": "18.2px", "transform": "uppercase" },
+        { "role": "status", "size": "13px", "weight": "400", "family": "DIN", "letter_spacing": "0.2em", "line_height": "20.8px", "transform": "uppercase" },
+        { "role": "lede", "size": "10px", "weight": "400", "family": "DIN", "letter_spacing": "0.18em", "line_height": "18px", "transform": "uppercase" },
+        { "role": "utility", "size": "11px", "weight": "400", "family": "Montserrat", "letter_spacing": "0.15em", "transform": "uppercase" }
+      ]
+    },
+    "colors": [
+      { "role": "background", "value": "rgb(16, 21, 26)" },
+      { "role": "overlay", "value": "#090909" },
+      { "role": "text-primary", "value": "#FFFFFF" },
+      { "role": "text-tiers", "value": "#FFFFFF at opacity 1 / 0.8 / 0.6 / 0.4 / 0.3" },
+      { "role": "accent", "value": "#BAC529" },
+      { "role": "accent-muted-text", "value": "#C2CB88" }
+    ],
+    "radius": ["2px", "15px", "9999px"],
+    "shadows": [
+      "0 0 0 2px #FFFFFF",
+      "inset 0 0 0 2px #FFFFFF, 0 0 8px 4px rgba(255,255,255,0.15), inset 0 0 8px 4px rgba(255,255,255,0.15)"
+    ],
+    "motion": [
+      { "usage": "reveal", "value": "opacity 2s cubic-bezier(0.215, 0.61, 0.355, 1)" },
+      { "usage": "transform", "value": "transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)" },
+      { "usage": "fade", "value": "opacity 0.5s cubic-bezier(0.455, 0.03, 0.515, 0.955)" }
+    ],
+    "image_ratios": [
+      { "usage": "stage", "ratio": "full viewport WebGL2 canvas (1800x1125 at 1.25 dpr)" }
+    ],
+    "grid": { "max_width": "none", "columns": 0, "gutter": "42px edge inset", "note": "corner-anchored chrome around a centred circular stage" }
+  },
+  "taste": [
+    {
+      "name": "Drawn in light, not modelled",
+      "trigger": "When the product (a car) had to carry the whole first screen",
+      "decision": "Chose a dark stage where the car exists only as glowing strokes over a shaded, textured 3D model",
+      "reason": "Because the subject is sound, which nobody can see; light-trails read as energy moving through the body, which a photoreal car would hide behind paint",
+      "evidence": ["rgb(16, 21, 26) stage", "WebGL2 canvas full-bleed", "car outline in white + #BAC529 strokes with a faint floor reflection", "no <img> on the page"]
+    },
+    {
+      "name": "The circle is the navigation",
+      "trigger": "When five sequential steps (Body style → Engine → Presets → Customize → Calculate) needed a progress UI",
+      "decision": "Chose nodes strung along a ~960px ring around the car over a top tab bar or a linear sidebar",
+      "reason": "Because the ring frames the object and the journey at once; the eye never leaves the car to check where it is",
+      "evidence": ["5 circular nodes ~68px apart on the left arc", "option label 'HATCHBACK' pinned to the right arc", "active node: inset 2px white ring + 8px/4px white glow at 0.15"]
+    },
+    {
+      "name": "One accent, the rest is white at volume levels",
+      "trigger": "When the UI needed hierarchy across title, active, upcoming and disabled states",
+      "decision": "Chose pure #FFFFFF at opacity 1 / 0.8 / 0.6 / 0.4 / 0.3 plus a single lime #BAC529 over a grey ramp or a multi-colour state palette",
+      "reason": "Because opacity on a dark stage dims like a fader on a mixing desk; every state stays the same hue, so the lime reads as 'this is the brand / this is selected' and nothing else competes",
+      "evidence": ["text colours: only rgb(255,255,255)", "MENU and CONTACT US at 0.6", "future steps at ~0.3", "lime only on logo, active language, muted #C2CB88 on the selected option"]
+    },
+    {
+      "name": "Instrument-panel labelling",
+      "trigger": "When setting even the explanatory sentence under the title",
+      "decision": "Chose uppercase tracked type everywhere (10px DIN at 0.18em for the lede) over sentence-case body copy",
+      "reason": "Because short tracked caps read like labels on hardware; the page asks you to tune, not to read",
+      "evidence": ["Bebas 28px / 0.18em title", "Bebas 14px / 0.35em eyebrow 'STEP 1'", "DIN 10px / 1.8px lede", "no element uses text-transform: none except the cookie bar"]
+    }
+  ]
+}

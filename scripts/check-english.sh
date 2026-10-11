@@ -13,8 +13,9 @@ if [ "${1:-}" = "--msg" ]; then
   exit 0
 fi
 
+# -I: binaries (models, wasm) hold Thai lead bytes by chance; under LC_ALL=C only files with NUL bytes count as binary
 hits="$(git ls-files -z --cached --others --exclude-standard -- ':!tests/' ':!plugin/evals/' \
-  | xargs -0 env LC_ALL=C grep -naE "$thai" -- 2>/dev/null \
+  | xargs -0 env LC_ALL=C grep -nIE "$thai" -- 2>/dev/null \
   | LC_ALL=C grep -vE '^[^:]+:[0-9]+:description: ' || true)"
 if [ -n "$hits" ]; then
   printf '%s\n' "$hits" | cut -c1-160

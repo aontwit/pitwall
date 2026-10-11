@@ -58,6 +58,7 @@ export const NAV: NavGroup[] = [
   {
     group: 'Proof & review',
     items: [
+      pb('gauge', 'Gauge', 'Pick proof by what changed: checks, a browser, or numbered steps for a human.', '/pitwall:gauge'),
       pb('opening-a-pr', 'Opening a PR', 'Commit, push and open the PR with its evidence; the one home of the PR rules.'),
       pb('secretary', 'Secretary', 'Read past sessions and report what keeps repeating.', '/pitwall:secretary'),
     ],
@@ -90,7 +91,7 @@ export const mdPath = (item: Pick<NavItem, 'kind' | 'id'>): string => (item.kind
 
 /** Path of the source file in the repo. */
 export const sourcePath = (item: Pick<NavItem, 'kind' | 'id'>): string =>
-  item.kind === 'overview' ? 'README.md' : `plugin/skills/pitwall/${item.kind}/${item.id}.md`;
+  item.kind === 'overview' ? 'README.md' : item.id === 'gauge' ? 'plugin/skills/gauge/SKILL.md' : `plugin/skills/pitwall/${item.kind}/${item.id}.md`;
 
 export const groupOf = (item: NavItem): string => NAV.find((g) => g.items.includes(item))?.group ?? '';
 

@@ -576,11 +576,16 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
     // ---- labels follow their parts on screen ----
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
+    // a label never leaves the screen: on a narrow one it slides in from the edge (read every width, then write)
+    const widths = explode > 0.01 ? new Map([...opts.labels].map(([key, el]) => [key, el.offsetWidth + 34 + 12])) : undefined;
     for (const [key, el] of opts.labels) {
       const part = parts.get(key);
       if (!part) continue;
       part.node.getWorldPosition(tmp).project(camera);
-      el.style.transform = `translate(${((tmp.x + 1) / 2) * w}px, ${((1 - tmp.y) / 2) * h}px)`;
+      let x = ((tmp.x + 1) / 2) * w;
+      const room = widths?.get(key) ?? 0;
+      x = el.dataset['side'] === 'left' ? Math.max(x, room) : Math.min(x, w - room);
+      el.style.transform = `translate(${x}px, ${((1 - tmp.y) / 2) * h}px)`;
       el.style.opacity = String(Math.max(0, explode * 1.4 - 0.4));
     }
 

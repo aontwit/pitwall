@@ -96,6 +96,7 @@ const arc = (from: number, to: number) => {
 <Base title="pitwall — the agent loop">
   <div class="stage" data-stage-root>
     <canvas class="scene" aria-hidden="true"></canvas>
+    <div class="poster" aria-hidden="true" style={`background-image: url(${href('hero-poster.jpg')})`}></div>
     <div class="ring" aria-hidden="true"></div>
 
     <header class="chrome top">
@@ -229,13 +230,25 @@ const arc = (from: number, to: number) => {
   let scene: Scene | undefined;
   const canvas = root?.querySelector<HTMLCanvasElement>('.scene');
   const labels = new Map([...document.querySelectorAll<HTMLElement>('[data-part]')].map((el) => [el.dataset['part'] ?? '', el]));
-  if (canvas && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  // Ask the browser first: with WebGL off (hardware acceleration disabled, a blocked GPU) three.js would
+  // only fail loudly. A browser without it, or a reader who asked for less motion, gets the still image.
+  const webgl = ((): boolean => {
+    try {
+      const gl = document.createElement('canvas').getContext('webgl2');
+      gl?.getExtension('WEBGL_lose_context')?.loseContext();
+      return gl !== null;
+    } catch {
+      return false;
+    }
+  })();
+  if (canvas && webgl && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
     try {
       scene = mountCar(canvas, { base: href(''), labels });
     } catch {
-      // no WebGL: the CSS ring and the stepper still work
+      scene = undefined; // a context that still failed to start
     }
   }
+  root?.classList.toggle('static-hero', !scene);
 
   const select = (n: number): void => {
     steps.forEach((s, i) => s.setAttribute('aria-pressed', String(i === n)));
@@ -371,6 +384,21 @@ const arc = (from: number, to: number) => {
     width: 100%;
     height: 100%;
     display: block;
+  }
+
+  /* the still image for browsers without WebGL and for reduced motion */
+  .poster {
+    position: absolute;
+    inset: 0;
+    background: center 52% / cover no-repeat;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s var(--ease-reveal);
+  }
+  .static-hero .poster { opacity: 1; }
+  .static-hero .drive-ctl { display: none; } /* no scene, nothing to drive */
+  @media (max-aspect-ratio: 1/1) {
+    .poster { background-size: 150vw auto; }
   }
 
   .ring {

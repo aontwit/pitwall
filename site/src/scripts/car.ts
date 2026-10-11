@@ -262,7 +262,7 @@ class Wind {
     else out.set([x, 0.25 + (l.lane * 0.5 + 0.5) * (top - 0.25) * 0.8, Math.sign(l.lane || 1) * (side + 0.04 + behind * 0.05)], o);
   }
 
-  update(dt: number, flow: number, opacity: number): void {
+  update(dt: number, flow: number, opacity: number, stretch = 1): void {
     this.mat.opacity = opacity;
     this.object.visible = opacity > 0.01 && this.profile !== undefined;
     if (!this.object.visible || !this.profile) return;
@@ -276,8 +276,82 @@ class Wind {
       }
       const head = x1 + 0.2 - l.phase * span;
       // the tail trails toward where the head came from, but never past the nose
-      for (let j = 0; j < Wind.POINTS; j++) this.at(Math.min(head + (j / (Wind.POINTS - 1)) * l.len, x1 + 0.05), l, l.pos, j * 3);
+      for (let j = 0; j < Wind.POINTS; j++) this.at(Math.min(head + (j / (Wind.POINTS - 1)) * l.len * stretch, x1 + 0.05), l, l.pos, j * 3);
       l.line.geometry.getAttribute('position').needsUpdate = true;
+    }
+  }
+}
+
+/**
+ * Specks that stream past the car at its real speed: the floor's and the air's. Positions are random, not a
+ * grid, because a grid strobes once a speck moves more than half a gap per frame (it reads as standing still
+ * or rolling backwards). At speed each speck also draws the streak a camera shutter would catch, bright at the
+ * speck and fading toward where it came from, so floor and air move by one rule and agree.
+ */
+class Stream {
+  readonly object = new THREE.Group();
+  readonly dots: THREE.PointsMaterial;
+  readonly streaks = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+  private readonly pos: Float32Array;
+  private readonly col: Float32Array;
+  private readonly line: Float32Array;
+  private readonly lineCol: Float32Array;
+  private readonly lines: THREE.LineSegments;
+
+  /** `ellipse`: fade the specks out toward the edge of the box's inscribed ellipse (the floor's soft rim). */
+  constructor(
+    private readonly n: number,
+    private readonly box: { x: number; y: number; z: number; y0: number },
+    size: number,
+    private readonly ellipse: boolean,
+  ) {
+    this.pos = new Float32Array(n * 3);
+    this.col = new Float32Array(n * 3).fill(1);
+    for (let i = 0; i < n; i++) this.pos.set([(Math.random() - 0.5) * box.x, box.y0 + Math.random() * box.y, (Math.random() - 0.5) * box.z], i * 3);
+    this.line = new Float32Array(n * 6);
+    this.lineCol = new Float32Array(n * 6);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(this.pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(this.col, 3));
+    this.dots = new THREE.PointsMaterial({ vertexColors: true, size, transparent: true, opacity: 0, depthWrite: false });
+    const points = new THREE.Points(geo, this.dots);
+    const lineGeo = new THREE.BufferGeometry();
+    lineGeo.setAttribute('position', new THREE.BufferAttribute(this.line, 3));
+    lineGeo.setAttribute('color', new THREE.BufferAttribute(this.lineCol, 3));
+    this.lines = new THREE.LineSegments(lineGeo, this.streaks);
+    points.frustumCulled = this.lines.frustumCulled = false;
+    this.object.add(points, this.lines);
+    this.place(0, 0, 0, 0);
+  }
+
+  /** Move every speck by (dx, dz), wrap it inside the box, and draw its streak back to where it was (x - sx, z - sz). */
+  place(dx: number, dz: number, sx: number, sz: number): void {
+    const { x: bx, z: bz } = this.box;
+    for (let i = 0; i < this.n; i++) {
+      const o = i * 3;
+      let x = (this.pos[o] ?? 0) + dx;
+      let z = (this.pos[o + 2] ?? 0) + dz;
+      if (x < -bx / 2) x += bx;
+      else if (x > bx / 2) x -= bx;
+      if (z < -bz / 2) z += bz;
+      else if (z > bz / 2) z -= bz;
+      const y = this.pos[o + 1] ?? 0;
+      this.pos[o] = x;
+      this.pos[o + 2] = z;
+      const c = this.ellipse ? THREE.MathUtils.clamp((1 - Math.hypot(x / (bx / 2), z / (bz / 2))) / 0.35, 0, 1) : 1;
+      this.col.fill(c, o, o + 3);
+      const l = o * 2; // written one by one: an array literal here is 4,600 allocations a frame
+      this.line[l] = x;
+      this.line[l + 1] = y;
+      this.line[l + 2] = z;
+      this.line[l + 3] = x - sx;
+      this.line[l + 4] = y;
+      this.line[l + 5] = z - sz;
+      this.lineCol.fill(c, o * 2, o * 2 + 3); // the tail stays black: additive blending fades it out
+    }
+    for (const m of [this.object.children[0], this.lines] as THREE.Mesh[]) {
+      m.geometry.getAttribute('position').needsUpdate = true;
+      m.geometry.getAttribute('color').needsUpdate = true;
     }
   }
 }
@@ -382,23 +456,12 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
     ),
     new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.12 }),
   );
-  const GAP = 0.45;
-  const dots: number[] = [];
-  for (let x = -14; x <= 14; x += GAP) for (let z = -9; z <= 9; z += GAP) if ((x / 14) ** 2 + (z / 9) ** 2 < 1) dots.push(x, 0.002, z);
-  const floorGeo = new THREE.BufferGeometry();
-  floorGeo.setAttribute('position', new THREE.Float32BufferAttribute(dots, 3));
-  const floorMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.016, transparent: true, opacity: 0, depthWrite: false });
-  const floorDots = new THREE.Points(floorGeo, floorMat);
-
-  // dust fills the whole view (not one patch) and streams past when moving
-  const DUST = { n: 2600, x: 70, y: 26, z: 70 };
-  const dustPos = new Float32Array(DUST.n * 3);
-  for (let i = 0; i < DUST.n; i++) dustPos.set([(Math.random() - 0.5) * DUST.x, Math.random() * DUST.y - 4, (Math.random() - 0.5) * DUST.z], i * 3);
-  const dustGeo = new THREE.BufferGeometry();
-  dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
-  const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.03, transparent: true, opacity: 0.32, depthWrite: false }));
-  dust.frustumCulled = false;
-  scene.add(platform, floorDots, dust);
+  // the floor under the car and the air around it, both streaming past at the car's real speed
+  const floor = new Stream(2000, { x: 28, y: 0, z: 18, y0: 0.002 }, 0.016, true);
+  // dust fills the whole view (not one patch)
+  const dust = new Stream(2600, { x: 70, y: 26, z: 70, y0: -4 }, 0.03, false);
+  dust.dots.opacity = 0.32;
+  scene.add(platform, floor.object, dust.object);
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
@@ -433,6 +496,8 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
   let active = 0;
   let driving = false;
   let explode = 0;
+  let floorBase = 0; // the floor's opacity, shared out between the specks and their streaks
+  const SHUTTER = 1 / 60; // s: one frame of travel, so a streak never runs into the next speck's
   let flow = 0; // integrated speed: drives the paint bands, the floor and the dust
   const controls: Controls = { throttle: 0, brake: 0, steer: 0 };
   const car = { speed: 0, heading: 0, steer: 0, spin: 0, roll: 0, pitch: 0 };
@@ -467,7 +532,10 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
 
     // ---- drive: speed and steering; the car turns on the spot and the world streams past ----
     if (driving) {
-      const drag = 0.25 + 0.00042 * car.speed * car.speed;
+      // drag alone slows an F1 car about 1 g at top speed when the driver lifts (Autosport: over 0.9 g at 200 mph)
+      const drag = 0.25 + 0.0011 * car.speed * car.speed;
+      // engine braking off throttle, so a lift at any speed is felt: 100 km/h to rest in about 9 s
+      const engine = car.speed > 0 ? (1 - controls.throttle) * 2.5 : 0;
       // power falls off toward top speed, and on throttle the engine also beats the drag, so the car pulls
       // all the way to TOP: about 200 km/h at 5 s, 300 at 10 s, 336 at 20 s (without it, it stalled at 295);
       // a seamless shift barely cuts it, so there is no lurch, only a nudge
@@ -475,8 +543,10 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
       if (box.gear === 8 && box.rpm >= LIMIT) push = Math.min(push, 0); // on the limiter
       // carbon brakes with downforce: about 1.1 g when slow, near 5 g at top speed
       const brake = controls.brake * (11 + 0.0042 * car.speed * car.speed);
-      car.speed = THREE.MathUtils.clamp(car.speed + (push - brake - drag) * dt, 0, TOP);
-      box.decel += (brake - box.decel) * Math.min(1, dt * 10);
+      car.speed = THREE.MathUtils.clamp(car.speed + (push - brake - drag - engine) * dt, 0, TOP);
+      // the nose dips for every slowing force once off throttle, not only for the brakes
+      const slowing = brake + (1 - controls.throttle) * (drag + engine);
+      box.decel += (slowing - box.decel) * Math.min(1, dt * 10);
       box.heat = THREE.MathUtils.clamp(box.heat + controls.brake * car.speed * dt * 0.03 - dt * 0.25, 0, 1);
 
       box.shift = Math.max(0, box.shift - dt);
@@ -511,7 +581,8 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
     // the nose dips under braking and lifts a touch under power
     car.pitch += (-box.decel * 0.0011 + controls.throttle * sn * 0.004 - car.pitch) * Math.min(1, dt * 6);
     car.spin -= (car.speed / RADIUS) * dt * 0.25; // slowed down, or the eye reads a blur as standing still
-    flow += dt * (0.35 + car.speed * 0.22);
+    // a slow drift keeps the parked hero alive; while driving the bands move only with the car, so a car on the brakes or at rest shows still tyres
+    flow += dt * ((driving ? 0 : 0.35) + car.speed * 0.22);
     carRoot.rotation.set(car.roll, car.heading, driving ? car.pitch : 0, 'YXZ');
     brakeGlow.opacity = box.heat * 0.95;
     brakeGlow.color.setRGB(1, 0.18 + box.heat * 0.3, 0.05);
@@ -531,7 +602,7 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
       camHeading += Math.atan2(Math.sin(car.heading - camHeading), Math.cos(car.heading - camHeading)) * Math.min(1, dt * 2.6);
       const behind = 5.6 + sn * 0.8 + box.kick * 0.3 - box.decel * 0.012; // a shift pushes the car away, braking lets the camera close in
       target.set(-behind * fit, 1.55 - sn * 0.2, 0).applyAxisAngle(up, camHeading);
-      target.y += (Math.random() - 0.5) * 0.02 * sn * sn; // road buzz at speed
+      target.y += (Math.random() - 0.5) * 0.04 * sn * sn; // road buzz at speed
       tmp.set(5, 0.6, 0).applyAxisAngle(up, camHeading);
       camPos.lerp(target, 1 - Math.exp(-dt * 8));
       camLook.lerp(tmp, 1 - Math.exp(-dt * 8));
@@ -547,7 +618,8 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
     }
     camera.position.copy(camPos);
     camera.lookAt(camLook);
-    const fov = driving ? 48 + sn * 10 : 30;
+    // the lens widens with speed, as in a racing game: the world rushes in at the edges and the car pulls away a little
+    const fov = driving ? 48 + sn ** 1.3 * 22 : 30;
     if (Math.abs(camera.fov - fov) > 0.01) {
       camera.fov += (fov - camera.fov) * Math.min(1, dt * 3);
       camera.updateProjectionMatrix();
@@ -592,27 +664,26 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
     }
 
     // ---- what streams past: wind lines on the body, floor dots, dust ----
-    wind.update(dt, 0.12 + sn * 1.8, xray || !driving ? 0 : 0.1 + sn * 0.8);
+    // about half the real air speed over an 8 m run (a line at full air speed crosses the car in 5 frames
+    // and is never seen), and longer at speed: a streak, as a camera shutter draws it
+    wind.update(dt, 0.12 + sn * 5.5, xray || !driving ? 0 : 0.1 + sn * 0.8, 1 + sn * 1.6);
     const back = tmp.set(-Math.cos(car.heading), 0, Math.sin(car.heading)); // the car's rear, in world space
     const travel = car.speed * dt;
-    floorDots.position.addScaledVector(back, travel);
-    floorDots.position.x = ((floorDots.position.x % GAP) + GAP) % GAP;
-    floorDots.position.z = ((floorDots.position.z % GAP) + GAP) % GAP;
-    floorMat.opacity += ((driving ? 0.12 + sn * 0.25 : 0) - floorMat.opacity) * k;
+    floorBase += ((driving ? 0.12 + sn * 0.25 : 0) - floorBase) * k;
     platform.visible = !driving; // no stage line under the HUD while driving
-    for (let i = 0; i < DUST.n; i++) {
-      const o = i * 3;
-      let x = (dustPos[o] ?? 0) + back.x * travel * 0.6;
-      let z = (dustPos[o + 2] ?? 0) + back.z * travel * 0.6;
-      if (x < -DUST.x / 2) x += DUST.x;
-      else if (x > DUST.x / 2) x -= DUST.x;
-      if (z < -DUST.z / 2) z += DUST.z;
-      else if (z > DUST.z / 2) z -= DUST.z;
-      dustPos[o] = x;
-      dustPos[o + 2] = z;
+    const blur = THREE.MathUtils.smoothstep(car.speed, 8, 20); // the specks become streaks from 30 to 70 km/h
+    const smear = Math.min(2, car.speed * SHUTTER);
+    floor.dots.opacity = floorBase * (1 - blur * 0.6);
+    floor.streaks.opacity = floorBase * blur;
+    dust.streaks.opacity = 0.32 * blur * 0.8;
+    if (travel > 0 || floorBase > 0.001) {
+      floor.place(back.x * travel, back.z * travel, back.x * smear, back.z * smear);
+      // the parked dust turns slowly, so its group is rotated: move it in the group's own frame, or the air
+      // drifts at an angle to the floor and the two disagree about where the car is going
+      const air = back.applyAxisAngle(up, -dust.object.rotation.y);
+      dust.place(air.x * travel, air.z * travel, air.x * smear, air.z * smear);
     }
-    dustGeo.getAttribute('position').needsUpdate = travel > 0;
-    if (!driving) dust.rotation.y = t * 0.008;
+    if (!driving) dust.object.rotation.y = t * 0.008;
 
     composer.render();
     frame = requestAnimationFrame(tick);

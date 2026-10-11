@@ -6,6 +6,18 @@ on:
   pull_request:
 
 jobs:
+  doctor-macos:
+    # macOS /bin/bash is 3.2: no mapfile, no ${x,,}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: /bin/bash --version | head -1 && node tests/doctor.test.mjs
+        env:
+          DOCTOR_BASH: /bin/bash
+
   check:
     runs-on: ubuntu-latest
     steps:

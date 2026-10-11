@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `lap` writes a plan Progress log row only when the profile has no tracker. With a tracker the issue is the progress record, and the log row every PR appended at the same place made each open sibling PR conflict on every merge, so GitHub ran no CI for them until someone resolved it. Found on Guild Register: 6 conflicts in one day, the last one holding back CI on a PR
+
 ## 0.4.0 — 2026-10-11
 
 `/pitwall:plan` for the front of the loop, a docs site, and fixes: sibling agent PRs no longer need hand work when the plan docs conflict, checks from an old base count as not run, `doctor` runs on macOS's bash 3.2.

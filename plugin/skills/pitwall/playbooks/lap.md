@@ -108,7 +108,7 @@ Tracker set but unavailable → work can continue, but write in the PR "not logg
 
 ## 5. Docs (step=docs)
 
-`tracker` → skip · `plan` → in the phase file on this branch: a queue item with `newRow` → add that row first (it is not on base yet), then tick `[x]` (don't tick if a repeat has not reached its target) · add a Progress log row `| <today> | <id> <summary> | agent PR | <short evidence + what still needs level C testing> |` · first task of the phase → change the status board to in progress · plan disagrees with the actual code → fix the plan at that spot + "Plan correction" in the PR
+`tracker` → skip · `plan` → in the phase file on this branch: a queue item with `newRow` → add that row first (it is not on base yet), then tick `[x]` (don't tick if a repeat has not reached its target) · profile `tracker` = `none` only → add a Progress log row `| <today> | <id> <summary> | agent PR | <short evidence + what still needs level C testing> |` — with a tracker, the issue (its PR comment and status) is the progress record, and a row that every PR appends at the same place makes each open sibling PR conflict whenever one merges (GitHub then also runs no CI for them until it is resolved) · first task of the phase → change the status board to in progress · plan disagrees with the actual code → fix the plan at that spot + "Plan correction" in the PR
 
 ## 6. Commit + PR (step=committing)
 

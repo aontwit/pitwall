@@ -33,8 +33,8 @@ function docsMarkdown() {
 }
 
 export default defineConfig({
-  site: 'https://aontwit.github.io',
-  base: '/pitwall',
+  // served from a custom domain (the CNAME is set in the repo's Pages settings), so no /pitwall base
+  site: 'https://pitwall.apiwit.xyz',
   trailingSlash: 'always',
   devToolbar: { enabled: false },
   i18n: {

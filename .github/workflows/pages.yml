@@ -1,6 +1,6 @@
 name: pages
 
-# Builds the docs site (site/) and publishes it to GitHub Pages: https://aontwit.github.io/pitwall/
+# Builds the docs site (site/) and publishes it to GitHub Pages: https://pitwall.apiwit.xyz/ (custom domain, set in the repo's Pages settings)
 # The site renders the plugin's own markdown, so a change to a playbook redeploys it too.
 on:
   push:

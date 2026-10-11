@@ -13,6 +13,7 @@ const en = {
   'hero.install': 'Quick start',
   'hero.copy': 'Copy',
   'hero.copied': 'Copied',
+  'hero.star': 'Star on GitHub',
   'hero.stage': 'Stage',
   'docs.source': 'Source in the repo',
   'drive.start': 'Drive',

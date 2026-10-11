@@ -5,9 +5,10 @@ import { defaultLang, href, t } from '../i18n/ui';
 import plugin from '../../../plugin/.claude-plugin/plugin.json';
 
 const tr = t(defaultLang);
-const install = '/plugin marketplace add aontwit/pitwall';
+const repo = 'https://github.com/aontwit/pitwall';
+// the three steps from the README's quick start, each copied on its own (Claude Code runs one command at a time)
+const install = ['/plugin marketplace add aontwit/pitwall', '/plugin install pitwall@pitwall', '/pitwall:init'];
 
-const gh = 'https://github.com/aontwit/pitwall/blob/main/';
 type Option = { command: string; to: string };
 const doc = (command: string, to: string): Option => ({ command, to: href(to) });
 
@@ -53,7 +54,7 @@ const stages: { label: string; icon: keyof typeof ICONS; title: string; lede: st
     title: 'Evidence, not claims',
     lede: 'Checks run, the page is driven in a browser, and a verifier that did not write the code gives a verdict pinned to the patch-id.',
     options: [
-      { command: '/pitwall:gauge', to: `${gh}plugin/skills/gauge/SKILL.md` },
+      doc('/pitwall:gauge', 'docs/playbooks/gauge/'),
       doc('prove-it-works', 'docs/principles/prove-it-works/'),
     ],
   },
@@ -91,9 +92,24 @@ const arc = (from: number, to: number) => {
   const b = at(to, 90);
   return `M ${a.x} ${a.y} A 90 90 0 ${to - from > 270 ? 1 : 0} 1 ${b.x} ${b.y}`;
 };
+// what search engines read the page as
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'pitwall',
+  description: 'A Claude Code plugin: the agent loop that queues your work, proves every PR, and leaves the merge to you.',
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Claude Code',
+  softwareVersion: plugin.version,
+  license: 'https://opensource.org/licenses/MIT',
+  url: Astro.site?.toString(),
+  sameAs: 'https://github.com/aontwit/pitwall',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
 ---
 
-<Base title="pitwall — the agent loop">
+<Base title="pitwall — a Claude Code plugin that proves every PR">
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
   <div class="stage" data-stage-root>
     <canvas class="scene" aria-hidden="true"></canvas>
     <div class="poster" aria-hidden="true" style={`background-image: url(${href('hero-poster.jpg')})`}></div>
@@ -104,12 +120,13 @@ const arc = (from: number, to: number) => {
       <Menu />
     </header>
 
-    <div class="intro" aria-live="polite">
+    <div class="intro">
+      <h1 class="pitch">The agent loop for Claude Code. It queues your work, proves every PR, and leaves the merge to you.</h1>
       {
         stages.map((s, i) => (
-          <section data-panel hidden={i !== 0}>
+          <section data-panel hidden={i !== 0} aria-live="polite">
             <p class="eyebrow label">{tr('hero.stage')} {i + 1}</p>
-            <h1 class="title label">{s.title}</h1>
+            <h2 class="title label">{s.title}</h2>
             <p class="lede">{s.lede}</p>
           </section>
         ))
@@ -211,13 +228,26 @@ const arc = (from: number, to: number) => {
       <a class="corner label" href="https://github.com/aontwit/pitwall/blob/main/CHANGELOG.md">v{plugin.version}</a>
       <div class="start">
         <p class="eyebrow label">{tr('hero.install')}</p>
-        <div class="install">
-          <code>{install}</code>
-          <button type="button" class="copy label" data-copy={install} data-done={tr('hero.copied')}>{tr('hero.copy')}</button>
+        <ol class="install">
+          {
+            install.map((cmd) => (
+              <li>
+                <code>{cmd}</code>
+                <button type="button" class="copy label" data-copy={cmd} data-done={tr('hero.copied')}>
+                  <span data-copy-label>{tr('hero.copy')}</span><span class="visually-hidden"> {cmd}</span>
+                </button>
+              </li>
+            ))
+          }
+        </ol>
+        <div class="actions">
+          <a class="cta label" href={href('docs/')}>{tr('hero.cta')}</a>
+          <a class="star label" href={repo}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" /></svg>
+            {tr('hero.star')}
+          </a>
         </div>
-        <a class="cta label" href={href('docs/')}>{tr('hero.cta')}</a>
       </div>
-      <span></span>
     </footer>
   </div>
 </Base>
@@ -377,12 +407,24 @@ const arc = (from: number, to: number) => {
     b.addEventListener('pointercancel', release);
   });
 
-  document.querySelector<HTMLButtonElement>('[data-copy]')?.addEventListener('click', async (e) => {
-    const btn = e.currentTarget as HTMLButtonElement;
-    const label = btn.textContent;
-    await navigator.clipboard.writeText(btn.dataset['copy'] ?? '');
-    btn.textContent = btn.dataset['done'] ?? label;
-    setTimeout(() => (btn.textContent = label), 1600);
+  document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
+    const text = btn.querySelector<HTMLElement>('[data-copy-label]');
+    if (!text) return;
+    const label = text.textContent;
+    let reset = 0;
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(btn.dataset['copy'] ?? '');
+        text.textContent = btn.dataset['done'] ?? label;
+      } catch {
+        // clipboard blocked (permissions, insecure context): select the command so the reader can copy it
+        const code = btn.parentElement?.querySelector('code');
+        if (code) getSelection()?.selectAllChildren(code);
+        text.textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? 'Press ⌘C' : 'Press Ctrl+C';
+      }
+      clearTimeout(reset);
+      reset = window.setTimeout(() => (text.textContent = label), 2400);
+    });
   });
 </script>
 
@@ -456,7 +498,7 @@ const arc = (from: number, to: number) => {
     transition: color 0.5s var(--ease-move);
   }
   .corner:hover { color: var(--text); }
-  .corner { font-size: 16px; }
+  .corner { font-size: 16px; justify-self: start; } /* the link is the version, not the grid column */
 
   .intro {
     position: absolute;
@@ -468,6 +510,13 @@ const arc = (from: number, to: number) => {
     z-index: 2;
   }
   .intro section:not([hidden]) { animation: reveal 2s var(--ease-reveal); }
+  .pitch {
+    margin: 0 auto 22px;
+    max-width: 44ch;
+    font: 500 clamp(16px, 1.4vw, 19px)/1.45 var(--font-body);
+    color: var(--t-80);
+    text-wrap: balance;
+  }
   .eyebrow {
     margin: 0;
     font-size: 14px;
@@ -574,19 +623,41 @@ const arc = (from: number, to: number) => {
   }
   .options li:first-child .dot, .options a:hover .dot { box-shadow: 0 0 0 2px var(--accent-muted), 0 0 12px 2px rgb(225 6 0 / 0.45); }
 
-  .start { text-align: center; display: grid; justify-items: center; gap: 10px; }
+  .start { grid-column: 2; text-align: center; display: grid; justify-items: center; gap: 10px; min-width: 0; }
   .install {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 4px 4px 16px;
+    list-style: none;
+    margin: 0;
+    padding: 4px;
+    display: grid;
+    gap: 2px;
+    max-width: 100%;
     border-radius: 15px;
     background: rgb(11 11 16 / 0.7);
     box-shadow: 0 0 0 1px var(--line);
     backdrop-filter: blur(6px);
+    counter-reset: step;
   }
-  .install code { font: 400 13px/1 var(--font-mono); color: var(--t-80); }
-  .copy, .cta {
+  .install li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding-left: 12px;
+    counter-increment: step;
+  }
+  .install li::before { content: counter(step); font: 400 12px/1 var(--font-mono); color: var(--t-40); }
+  .install code {
+    font: 400 13px/1.5 var(--font-mono);
+    color: var(--t-80);
+    text-align: left;
+    white-space: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    /* a line too long for the row fades out at the edge, so it reads as scrollable rather than cut */
+    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+  }
+  .install code::selection { background: var(--accent); color: var(--text); }
+  .copy, .cta, .star {
     border: 0;
     border-radius: 15px;
     padding: 6px 14px;
@@ -594,16 +665,15 @@ const arc = (from: number, to: number) => {
     cursor: pointer;
     transition: background 0.5s var(--ease-move), color 0.5s var(--ease-move);
   }
-  .copy { background: rgb(255 255 255 / 0.08); color: var(--text); }
+  .copy { min-width: 74px; background: rgb(255 255 255 / 0.08); color: var(--text); white-space: nowrap; }
   .copy:hover { background: rgb(255 255 255 / 0.16); }
-  .cta {
-    margin-top: 4px;
-    padding: 8px 22px;
-    color: var(--text);
-    text-decoration: none;
-    box-shadow: 0 0 0 1.5px var(--accent);
-  }
+  .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 4px; }
+  .cta, .star { padding: 8px 22px; color: var(--text); text-decoration: none; }
+  .cta { box-shadow: 0 0 0 1.5px var(--accent); }
   .cta:hover { background: var(--accent); color: var(--bg-deep); }
+  .star { display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 0 0 1.5px rgb(255 255 255 / 0.32); }
+  .star:hover { background: rgb(255 255 255 / 0.08); box-shadow: 0 0 0 1.5px rgb(255 255 255 / 0.6); }
+  .star svg { width: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; }
 
   /* not enough room outside the ring: the option label goes inside it */
   @media (max-width: 1100px) {
@@ -825,15 +895,15 @@ const arc = (from: number, to: number) => {
   }
 
   @media (max-width: 760px) {
-    .stage { --r: 46vw; --cy: 50%; min-height: 680px; }
+    /* phone: the loop and Drive share one rail above the install steps, left to right */
+    .stage { --r: 46vw; --cy: 50%; --rail: 222px; min-height: 760px; }
     .intro { top: 72px; }
     .stepper ol {
       position: absolute;
-      bottom: 190px;
-      inset-inline: 0;
+      bottom: var(--rail);
+      left: var(--edge);
       display: flex;
-      justify-content: center;
-      gap: 10px;
+      gap: 6px;
       z-index: 2;
     }
     .stepper li { position: static; translate: none; --node: 38px; }
@@ -843,11 +913,18 @@ const arc = (from: number, to: number) => {
     .options { display: none; }
     .hud { right: auto; left: 50%; bottom: auto; top: 64px; translate: -50% 0; scale: 0.85; transform-origin: top center; }
     .hint { display: none; }
-    .drive-ctl { bottom: calc(var(--edge) + 150px); }
+    /* centred on the step nodes: rail + label row (32px) + half a node (19px) - half the button (26px) */
+    .drive-ctl { bottom: calc(var(--rail) + 25px); }
     .keys { display: none; }
-    .drive-toggle { width: 60px; font-size: 13px; }
+    .drive-toggle { width: 52px; font-size: 13px; }
     .corner { display: none; }
-    .bottom { justify-content: center; }
-    .install code { font-size: 11px; }
+    .bottom { grid-template-columns: minmax(0, 1fr); }
+    .start { grid-column: 1; }
+    .install { width: 100%; }
+    .install code { font-size: 12px; }
+    .copy { min-width: 64px; padding: 6px 10px; font-size: 14px; }
+    .cta, .star { padding: 8px 16px; }
+    .part { white-space: normal; }
+    .part-step { max-width: 34vw; }
   }
 </style>

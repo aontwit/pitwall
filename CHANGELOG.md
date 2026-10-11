@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Docs site home page: the first line now says what pitwall is ("The agent loop for Claude Code …") as the page's one `h1`. Before, the only heading was the stage title, so a first visit never learned it was a Claude Code plugin. Quick start lists all three install steps, each with its own Copy button, and a blocked clipboard selects the command and says "Press Ctrl+C" instead of failing silently. A Star on GitHub link sits next to Read the docs. On phones the stepper and Drive share one row, so Drive no longer covers Merge and Pit in no longer covers Go. Engine labels on the Lap stage stay on screen
+- Docs site for search: `sitemap.xml`, `robots.txt`, a `SoftwareApplication` JSON-LD block, and a title that names Claude Code. `/pitwall:gauge` gets a docs page (it ships as its own skill, so the site linked to its file on GitHub)
 - The independent verifier may FAIL only on a set A item, a DoD item, a spec rule the task implements (wrong, or with no test that fails when it breaks) or a repo rule the diff breaks; the rest is INFO. It lists every FAIL item in one pass, and the fresh verifier after a re-brief checks the failed rows and the new commits, not the whole PR again. Found on Guild Register: each new verifier found a different untested edge, so one row took 5 verifiers and two parks
 - `lap` writes a plan Progress log row only when the profile has no tracker. With a tracker the issue is the progress record, and the log row every PR appended at the same place made each open sibling PR conflict on every merge, so GitHub ran no CI for them until someone resolved it. Found on Guild Register: 6 conflicts in one day, the last one holding back CI on a PR
 

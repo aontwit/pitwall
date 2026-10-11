@@ -8,7 +8,15 @@ const frontmatter = z.object({ name: z.string().optional(), description: z.strin
 
 export const collections = {
   overview: defineCollection({ loader: glob({ pattern: 'README.md', base: '..' }), schema: frontmatter }),
-  playbooks: defineCollection({ loader: glob({ pattern: '*.md', base: `${skill}/playbooks` }), schema: frontmatter }),
+  // gauge ships as its own skill, but reads as a playbook in the docs
+  playbooks: defineCollection({
+    loader: glob({
+      pattern: ['pitwall/playbooks/*.md', 'gauge/SKILL.md'],
+      base: '../plugin/skills',
+      generateId: ({ entry }) => (entry === 'gauge/SKILL.md' ? 'gauge' : entry.replace(/^.*\/|\.md$/g, '')),
+    }),
+    schema: frontmatter,
+  }),
   principles: defineCollection({ loader: glob({ pattern: '*.md', base: `${skill}/principles` }), schema: frontmatter }),
   // written for people: what a command does, with examples; the playbook stays the agent's full spec
   guides: defineCollection({ loader: glob({ pattern: '*.md', base: './src/content/guides' }), schema: z.object({ playbook: z.string() }) }),

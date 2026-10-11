@@ -592,7 +592,7 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
     floorDots.position.x = ((floorDots.position.x % GAP) + GAP) % GAP;
     floorDots.position.z = ((floorDots.position.z % GAP) + GAP) % GAP;
     floorMat.opacity += ((driving ? 0.12 + sn * 0.25 : 0) - floorMat.opacity) * k;
-    platform.visible = !driving || sn < 0.05;
+    platform.visible = !driving; // no stage line under the HUD while driving
     for (let i = 0; i < DUST.n; i++) {
       const o = i * 3;
       let x = (dustPos[o] ?? 0) + back.x * travel * 0.6;

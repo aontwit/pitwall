@@ -704,10 +704,11 @@ const arc = (from: number, to: number) => {
   .stage > :is(.intro, .stepper, .options, .bottom, .parts) { transition: opacity 0.6s var(--ease-move); }
   .is-driving > :is(.intro, .stepper, .options, .bottom, .parts) { opacity: 0; pointer-events: none; }
   .is-driving .keys .cap { color: var(--t-60); }
-  .ring { transition: width 1.4s var(--ease-reveal), box-shadow 1.4s var(--ease-reveal); }
+  .ring { transition: width 1.4s var(--ease-reveal), box-shadow 1.4s var(--ease-reveal), border-color 0.6s var(--ease-move); }
   .is-driving > .ring {
     width: min(150vh, 96vw);
     mask-image: none;
+    border-color: transparent; /* the porthole keeps its dark surround, but no line runs through the HUD */
     box-shadow: 0 0 0 100vmax rgb(4 4 7 / 0.6), inset 0 0 140px 30px rgb(0 0 0 / 0.55), -24px 0 80px -12px rgb(225 6 0 / 0.45), 24px 0 80px -12px rgb(225 6 0 / 0.3);
   }
   .start { transition: opacity 0.6s var(--ease-move); }

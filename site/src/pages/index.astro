@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import Menu from '../components/Menu.astro';
 import { defaultLang, href, t } from '../i18n/ui';
 import plugin from '../../../plugin/.claude-plugin/plugin.json';
 
@@ -10,21 +11,33 @@ const gh = 'https://github.com/aontwit/pitwall/blob/main/';
 type Option = { command: string; to: string };
 const doc = (command: string, to: string): Option => ({ command, to: href(to) });
 
-const stages: { label: string; title: string; lede: string; options: Option[] }[] = [
+// Stroke icons for the stage nodes, 24×24.
+const ICONS = {
+  plan: 'M9 3.5h6v3H9zM7.5 5H5.5v15.5h13V5h-2M8.5 11h7M8.5 14.5h7M8.5 18h4',
+  queue: 'M4 6.5h2M4 12h2M4 17.5h2M9 6.5h11M9 12h11M9 17.5h11',
+  lap: 'M3 10.5v5M3 13h2.5M5.5 9.5h3V8h6v1.5h2l2.5 2.5h1.5v-1.5h1.5v6h-1.5V15h-1.5L16 17.5H8.5l-3-3z',
+  verify: 'M5 12.5l4.5 4.5L19 7.5',
+  merge: 'M7 7v12M7 9.5c0 5.5 10 3.5 10 7.5M5 5a2 2 0 1 0 4 0a2 2 0 1 0-4 0M15 19a2 2 0 1 0 4 0a2 2 0 1 0-4 0',
+} as const;
+
+const stages: { label: string; icon: keyof typeof ICONS; title: string; lede: string; options: Option[] }[] = [
   {
     label: 'Plan',
+    icon: 'plan',
     title: 'Interview, then write the rows',
     lede: 'Short rounds of tick-box questions. Every answer lands in the spec before the next round, and the plan ends as rows the queue can pick.',
     options: [doc('/pitwall:init', 'docs/playbooks/init/'), doc('/pitwall:plan', 'docs/playbooks/plan/')],
   },
   {
     label: 'Queue',
+    icon: 'queue',
     title: 'Ask every question once',
     lede: 'Pick the tasks the agent can finish alone, then ask everything only a human can decide, up front, as tick boxes. Nobody gets asked at 2am.',
     options: [doc('/pitwall:queue', 'docs/playbooks/queue/')],
   },
   {
     label: 'Lap',
+    icon: 'lap',
     title: 'The engine: one task per round',
     lede: 'Branch from base, code by playbook, prove it, review it, open the PR. The round never waits on a human for something it can decide.',
     options: [
@@ -36,6 +49,7 @@ const stages: { label: string; title: string; lede: string; options: Option[] }[
   },
   {
     label: 'Verify',
+    icon: 'verify',
     title: 'Evidence, not claims',
     lede: 'Checks run, the page is driven in a browser, and a verifier that did not write the code gives a verdict pinned to the patch-id.',
     options: [
@@ -45,6 +59,7 @@ const stages: { label: string; title: string; lede: string; options: Option[] }[
   },
   {
     label: 'Merge',
+    icon: 'merge',
     title: 'Humans merge',
     lede: 'Open PRs are ordered by stack and readiness. The agent never merges, force-pushes or touches a protected branch.',
     options: [doc('/pitwall:merge-order', 'docs/playbooks/merge-order/'), doc('opening-a-pr', 'docs/playbooks/opening-a-pr/')],
@@ -85,10 +100,7 @@ const arc = (from: number, to: number) => {
 
     <header class="chrome top">
       <a class="wordmark" href={href('/')}><span>pit</span>wall</a>
-      <nav class="links label" aria-label="Site">
-        <a href={href('docs/')}>{tr('nav.docs')}</a>
-        <a href="https://github.com/aontwit/pitwall">{tr('nav.github')}</a>
-      </nav>
+      <Menu />
     </header>
 
     <div class="intro" aria-live="polite">
@@ -110,7 +122,9 @@ const arc = (from: number, to: number) => {
             <li style={`--i: ${i}`}>
               <button type="button" data-step aria-pressed={i === 0 ? 'true' : 'false'}>
                 <span class="step-label label">{s.label}</span>
-                <span class="node">{i + 1}</span>
+                <span class="node">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d={ICONS[s.icon]} /></svg>
+                </span>
               </button>
             </li>
           ))
@@ -173,9 +187,20 @@ const arc = (from: number, to: number) => {
       </div>
     </div>
 
-    <button type="button" class="drive-toggle label" data-drive data-on={tr('drive.start')} data-off={tr('drive.exit')} aria-pressed="false">
-      {tr('drive.start')}
-    </button>
+    <div class="drive-ctl">
+      <div class="keys" aria-hidden="true">
+        <span class="cap" data-cap="up"><svg viewBox="0 0 10 10"><path d="M2 6.5L5 3.5L8 6.5" /></svg></span>
+        <span class="cap" data-cap="left"><svg viewBox="0 0 10 10"><path d="M6.5 2L3.5 5L6.5 8" /></svg></span>
+        <span class="cap" data-cap="down"><svg viewBox="0 0 10 10"><path d="M2 3.5L5 6.5L8 3.5" /></svg></span>
+        <span class="cap" data-cap="right"><svg viewBox="0 0 10 10"><path d="M3.5 2L6.5 5L3.5 8" /></svg></span>
+      </div>
+      <button type="button" class="drive-toggle" data-drive data-on={tr('drive.start')} data-off={tr('drive.exit')} aria-pressed="false">
+        <svg class="drive-chevrons" viewBox="0 0 100 100" aria-hidden="true">
+          <path d="M45 6L50 1L55 6" /><path d="M6 45L1 50L6 55" /><path d="M94 45L99 50L94 55" />
+        </svg>
+        <span class="label" data-drive-label>{tr('drive.start')}</span>
+      </button>
+    </div>
 
     <footer class="chrome bottom">
       <a class="corner label" href="https://github.com/aontwit/pitwall/blob/main/CHANGELOG.md">v{plugin.version}</a>
@@ -187,7 +212,7 @@ const arc = (from: number, to: number) => {
         </div>
         <a class="cta label" href={href('docs/')}>{tr('hero.cta')}</a>
       </div>
-      <a class="corner label" href={href('docs/#credits')}>{tr('credits.models')}</a>
+      <span></span>
     </footer>
   </div>
 </Base>
@@ -234,12 +259,15 @@ const arc = (from: number, to: number) => {
   let driving = false;
   let hudFrame = 0;
 
-  const push = (): void =>
+  const caps = [...document.querySelectorAll<HTMLElement>('[data-cap]')];
+  const push = (): void => {
+    caps.forEach((c) => c.classList.toggle('on', held.has(c.dataset['cap'] ?? '')));
     scene?.input({
       throttle: held.has('up') ? 1 : 0,
       brake: held.has('down') ? 1 : 0,
       steer: (held.has('left') ? 1 : 0) - (held.has('right') ? 1 : 0),
     });
+  };
 
   const drawHud = (): void => {
     if (!scene) return;
@@ -262,7 +290,8 @@ const arc = (from: number, to: number) => {
     if (pads) pads.hidden = !on || !matchMedia('(pointer: coarse)').matches;
     if (toggle) {
       toggle.setAttribute('aria-pressed', String(on));
-      toggle.textContent = (on ? toggle.dataset['off'] : toggle.dataset['on']) ?? '';
+      const label = toggle.querySelector<HTMLElement>('[data-drive-label]');
+      if (label) label.textContent = (on ? toggle.dataset['off'] : toggle.dataset['on']) ?? '';
     }
     cancelAnimationFrame(hudFrame);
     if (on) hudFrame = requestAnimationFrame(drawHud);
@@ -366,16 +395,20 @@ const arc = (from: number, to: number) => {
     align-items: center;
     z-index: 2;
   }
-  .top { top: var(--edge); }
-  .bottom { bottom: var(--edge); align-items: flex-end; }
+  .top { top: var(--edge); z-index: 60; } /* above the stage UI, so the open menu covers it */
+  .bottom {
+    bottom: var(--edge);
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: end;
+  }
 
-  .links { display: flex; gap: 28px; font-size: 20px; }
-  .links a, .corner {
+  .corner {
     color: var(--t-60);
     text-decoration: none;
     transition: color 0.5s var(--ease-move);
   }
-  .links a:hover, .corner:hover { color: var(--text); }
+  .corner:hover { color: var(--text); }
   .corner { font-size: 16px; }
 
   .intro {
@@ -413,45 +446,51 @@ const arc = (from: number, to: number) => {
   .stepper ol { list-style: none; margin: 0; padding: 0; }
   .stepper li {
     --a: calc(198deg - var(--i) * 9deg);
+    --node: 48px;
     position: absolute;
     left: calc(50% + var(--r) * cos(var(--a)));
     top: calc(var(--cy) + var(--r) * sin(var(--a)));
-    translate: -100% -50%;
+    /* the node's centre, not the button's edge, lands on the ring */
+    translate: calc(-100% + var(--node) / 2) -50%;
     z-index: 2;
   }
   .stepper button {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 18px;
     padding: 0;
     border: 0;
     background: none;
     color: var(--text);
     cursor: pointer;
-    translate: 26px 0; /* centre the node on the ring */
+  }
+  .stepper button:focus-visible { box-shadow: none; }
+  .step-label {
+    font-size: 20px;
     opacity: 0.3;
     transition: opacity 0.6s var(--ease-move);
   }
-  .stepper button:hover, .stepper button:focus-visible { opacity: 0.8; box-shadow: none; }
-  .stepper button[aria-pressed='true'] { opacity: 1; }
-  .step-label { font-size: 20px; }
+  .stepper button:hover .step-label, .stepper button:focus-visible .step-label { opacity: 0.75; }
+  [aria-pressed='true'] .step-label { opacity: 1; }
   .node {
     display: grid;
     place-items: center;
-    width: 40px;
+    width: var(--node);
     aspect-ratio: 1;
     border-radius: 50%;
-    background: var(--bg);
-    box-shadow: 0 0 0 2px rgb(255 255 255 / 0.5);
-    font: 500 12px/1 var(--font-mono);
-    color: var(--t-60);
-    transition: width 0.6s var(--ease-move), box-shadow 0.6s var(--ease-move);
+    /* opaque, so the ring never shows through */
+    background: rgb(19 19 27);
+    box-shadow: 0 0 0 1.5px rgb(255 255 255 / 0.32);
+    color: var(--t-40);
+    transition: box-shadow 0.6s var(--ease-move), color 0.6s var(--ease-move), scale 0.6s var(--ease-move);
   }
+  .node svg { width: 22px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .stepper button:hover .node { color: var(--t-80); box-shadow: 0 0 0 1.5px rgb(255 255 255 / 0.6); }
   .stepper button:focus-visible .node { box-shadow: var(--ring-glow); }
   [aria-pressed='true'] .node {
-    width: 52px;
+    scale: 1.14;
     color: var(--text);
-    box-shadow: var(--ring-glow);
+    box-shadow: var(--ring-glow), 0 0 34px 10px rgb(255 255 255 / 0.1);
   }
 
   .options {
@@ -556,33 +595,80 @@ const arc = (from: number, to: number) => {
   }
 
   /* ---------- drive mode ---------- */
-  .drive-toggle {
+  /* bottom-right: one control with room around it, as in the reference */
+  .drive-ctl {
     position: absolute;
     right: var(--edge);
-    bottom: calc(var(--edge) + 36px);
+    bottom: var(--edge);
     z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 22px;
+  }
+  .keys {
+    display: grid;
+    grid-template-columns: repeat(3, 24px);
+    grid-template-rows: repeat(2, 24px);
+    gap: 4px;
+  }
+  .cap {
+    display: grid;
+    place-items: center;
+    border-radius: 3px;
+    box-shadow: 0 0 0 1px var(--t-30);
+    color: var(--t-40);
+    transition: box-shadow 0.25s, color 0.25s, background 0.25s;
+  }
+  .cap svg { width: 10px; fill: none; stroke: currentColor; stroke-width: 1.4; }
+  .cap[data-cap='up'] { grid-column: 2; }
+  .cap[data-cap='left'] { grid-column: 1; grid-row: 2; }
+  .cap[data-cap='down'] { grid-column: 2; grid-row: 2; }
+  .cap[data-cap='right'] { grid-column: 3; grid-row: 2; }
+  .cap.on { color: var(--text); background: rgb(255 255 255 / 0.08); box-shadow: 0 0 0 1px var(--text), 0 0 10px rgb(255 255 255 / 0.25); }
+  .drive-toggle {
+    position: relative;
+    display: grid;
+    place-items: center;
     width: 76px;
     aspect-ratio: 1;
+    padding: 0;
     border: 0;
     border-radius: 50%;
-    background: var(--bg);
+    background: rgb(19 19 27);
     color: var(--text);
-    font-size: 16px;
+    font-size: 15px;
     cursor: pointer;
-    box-shadow: var(--ring-glow), 0 0 24px 4px rgb(225 6 0 / 0.25);
+    box-shadow: 0 0 0 1.5px rgb(255 255 255 / 0.55), 0 0 26px 4px rgb(225 6 0 / 0.18);
     transition: box-shadow 0.5s var(--ease-move);
   }
-  .drive-toggle:hover { box-shadow: var(--ring-glow), 0 0 30px 8px rgb(225 6 0 / 0.45); }
+  .drive-toggle:hover, .drive-toggle:focus-visible { box-shadow: var(--ring-glow), 0 0 30px 8px rgb(225 6 0 / 0.35); }
   .drive-toggle[aria-pressed='true'] { color: var(--accent-muted); }
+  .drive-chevrons {
+    position: absolute;
+    inset: -14px;
+    fill: none;
+    stroke: var(--t-40);
+    stroke-width: 1.4;
+    overflow: visible;
+    transition: stroke 0.5s var(--ease-move), scale 0.5s var(--ease-move);
+  }
+  .drive-toggle:hover .drive-chevrons { stroke: var(--text); scale: 1.06; }
 
-  .stage > :is(.intro, .stepper, .options, .ring, .bottom, .parts) { transition: opacity 0.6s var(--ease-move); }
-  .is-driving > :is(.intro, .stepper, .options, .ring, .bottom, .parts) { opacity: 0; pointer-events: none; }
+  .stage > :is(.intro, .stepper, .options, .bottom, .parts) { transition: opacity 0.6s var(--ease-move); }
+  .is-driving > :is(.intro, .stepper, .options, .bottom, .parts) { opacity: 0; pointer-events: none; }
+  .is-driving .keys .cap { color: var(--t-60); }
+  .ring { transition: width 1.4s var(--ease-reveal), box-shadow 1.4s var(--ease-reveal); }
+  .is-driving > .ring {
+    width: min(150vh, 96vw);
+    mask-image: none;
+    box-shadow: 0 0 0 100vmax rgb(4 4 7 / 0.6), inset 0 0 140px 30px rgb(0 0 0 / 0.55), -24px 0 80px -12px rgb(225 6 0 / 0.45), 24px 0 80px -12px rgb(225 6 0 / 0.3);
+  }
   .start { transition: opacity 0.6s var(--ease-move); }
   .is-engine .start { opacity: 0; pointer-events: none; }
 
   .hud {
     position: absolute;
-    right: calc(var(--edge) + 96px);
+    left: var(--edge);
     bottom: var(--edge);
     z-index: 3;
     display: grid;
@@ -664,7 +750,6 @@ const arc = (from: number, to: number) => {
 
   @media (max-width: 760px) {
     .stage { --r: 46vw; --cy: 50%; min-height: 680px; }
-    .links { font-size: 17px; gap: 18px; }
     .intro { top: 72px; }
     .stepper ol {
       position: absolute;
@@ -675,15 +760,16 @@ const arc = (from: number, to: number) => {
       gap: 10px;
       z-index: 2;
     }
-    .stepper li { position: static; translate: none; }
-    .stepper button { flex-direction: column-reverse; gap: 6px; translate: none; }
+    .stepper li { position: static; translate: none; --node: 38px; }
+    .stepper button { flex-direction: column-reverse; gap: 8px; }
     .step-label { font-size: 14px; }
-    .node { width: 34px; }
-    [aria-pressed='true'] .node { width: 40px; }
+    .node svg { width: 18px; }
     .options { display: none; }
     .hud { right: auto; left: 50%; bottom: auto; top: 64px; translate: -50% 0; scale: 0.85; transform-origin: top center; }
     .hint { display: none; }
-    .drive-toggle { width: 64px; font-size: 14px; bottom: calc(var(--edge) + 150px); }
+    .drive-ctl { bottom: calc(var(--edge) + 150px); }
+    .keys { display: none; }
+    .drive-toggle { width: 60px; font-size: 13px; }
     .corner { display: none; }
     .bottom { justify-content: center; }
     .install code { font-size: 11px; }

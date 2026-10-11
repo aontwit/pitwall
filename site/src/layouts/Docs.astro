@@ -1,0 +1,635 @@
+---
+// Docs page layout: a calm manual, after the docs developers say they like to read (Better Auth, Impeccable).
+// Sentence-case headings, 18px body, grouped navigation, copy buttons, prev / next, ⌘K search, light and dark.
+import type { CollectionEntry } from 'astro:content';
+import { render } from 'astro:content';
+import Base from './Base.astro';
+import Menu from '../components/Menu.astro';
+import Search from '../components/Search.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
+import { href } from '../i18n/ui';
+import { FLAT, NAV, docPath, groupOf, mdPath, sourcePath, type NavItem } from '../docs/nav';
+
+interface Props {
+  entry: CollectionEntry<'overview' | 'playbooks' | 'principles'>;
+  item: NavItem;
+  /** A page written for people; when present the playbook folds below it. */
+  guide?: CollectionEntry<'guides'> | undefined;
+  /** false keeps the page out of the search index (the preview route). */
+  index?: boolean;
+}
+
+const { entry, item, guide, index = true } = Astro.props;
+const { Content, headings } = await render(entry);
+const guided = guide ? await render(guide) : undefined;
+const toc = (guided?.headings ?? headings).filter((h) => h.depth === 2);
+const at = FLAT.indexOf(item);
+const prev = at > 0 ? FLAT[at - 1] : undefined;
+const next = at >= 0 && at < FLAT.length - 1 ? FLAT[at + 1] : undefined;
+const here = href(docPath(item));
+const repo = 'https://github.com/aontwit/pitwall/blob/main/';
+const pageMd = new URL(href(mdPath(item)), Astro.site).toString();
+const askClaude = `https://claude.ai/new?q=${encodeURIComponent(`Read ${pageMd} and answer my questions about pitwall.`)}`;
+---
+
+<Base title={`${item.label} · pitwall docs`} description={item.summary}>
+  <script is:inline slot="head">
+    // before first paint: the saved choice, else the system's
+    (() => {
+      let t = null;
+      try { t = localStorage.getItem('pitwall-theme'); } catch {}
+      document.documentElement.dataset.theme = t === 'light' || t === 'dark' ? t : matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    })();
+  </script>
+
+  <div class="docs">
+    <header class="bar">
+      <a class="wordmark" href={href('/')}><span>pit</span>wall</a>
+      <span class="bar-docs label">Docs</span>
+      <Search />
+      <div class="bar-end">
+        <a class="icon-link" href="https://github.com/aontwit/pitwall" aria-label="GitHub">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.4 1.1 2.9.8.1-.7.4-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-5a3.9 3.9 0 0 1 1-2.7 3.6 3.6 0 0 1 .1-2.7s.8-.3 2.8 1a9.6 9.6 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7a3.9 3.9 0 0 1 1 2.7c0 3.9-2.3 4.7-4.6 5 .4.3.7.9.7 1.9V21c0 .3.2.6.7.5A10 10 0 0 0 12 2z" /></svg>
+        </a>
+        <ThemeToggle />
+        <Menu />
+      </div>
+    </header>
+
+    <div class="shell">
+      <aside class="side">
+        <button type="button" class="side-toggle" aria-expanded="false" aria-controls="docs-nav" data-side-toggle>
+          <span class="label">{groupOf(item)}</span>
+          <span class="side-current">{item.label}</span>
+        </button>
+        <nav id="docs-nav" aria-label="Docs">
+          {
+            NAV.map((g) => (
+              <section>
+                <p class="group label">{g.group}</p>
+                <ul>
+                  {g.items.map((i) => (
+                    <li>
+                      <a class="item" href={href(docPath(i))} aria-current={href(docPath(i)) === here ? 'page' : undefined}>
+                        {i.command ? <code>{i.command.replace('/pitwall:', '')}</code> : i.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))
+          }
+        </nav>
+      </aside>
+
+      <main class="page">
+        <div data-pagefind-body={index ? '' : undefined}>
+          <header class="page-head">
+            <p class="crumb label" data-pagefind-ignore>{groupOf(item)}</p>
+            <h1 data-pagefind-meta="title">{item.label}</h1>
+            {item.command && <code class="cmd-chip">{item.command}</code>}
+            {item.summary && <p class="summary">{item.summary}</p>}
+            <div class="actions" data-pagefind-ignore>
+              <button type="button" class="action" data-copy-md={href(mdPath(item))}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></svg>
+                <span data-label>Copy as Markdown</span>
+              </button>
+              <a class="action" href={askClaude} target="_blank" rel="noopener">Ask Claude about this page ↗</a>
+              <a class="action" href={`${repo}${sourcePath(item)}`}>View source ↗</a>
+            </div>
+          </header>
+          {
+            guided ? (
+              <>
+                <div class="prose">
+                  <guided.Content />
+                </div>
+                <details class="spec" id="agent-playbook">
+                  <summary>
+                    {item.kind === 'overview' ? (
+                      <>
+                        <span class="spec-title">The full README</span>
+                        <span class="spec-note">Everything in the repo's README: team installs, the profile, status, development.</span>
+                      </>
+                    ) : (
+                      <>
+                        <span class="spec-title">The playbook the agent follows</span>
+                        <span class="spec-note">The full spec for <code>{item.command ?? item.label}</code>. This page sums it up; when the two differ, the playbook wins.</span>
+                      </>
+                    )}
+                  </summary>
+                  <div class="prose">
+                    <Content />
+                  </div>
+                </details>
+              </>
+            ) : (
+              <div class="prose">
+                <Content />
+              </div>
+            )
+          }
+        </div>
+
+        <nav class="pager" aria-label="Previous and next">
+          {
+            prev && (
+              <a class="pager-link" href={href(docPath(prev))}>
+                <span class="label">← Previous</span>
+                <strong>{prev.label}</strong>
+              </a>
+            )
+          }
+          {
+            next && (
+              <a class="pager-link next" href={href(docPath(next))}>
+                <span class="label">Next →</span>
+                <strong>{next.label}</strong>
+              </a>
+            )
+          }
+        </nav>
+      </main>
+
+      {
+        toc.length > 1 && (
+          <nav class="toc" aria-label="On this page" data-toc>
+            <p class="group label">On this page</p>
+            <ul>
+              {toc.map((h) => (
+                <li>
+                  <a href={`#${h.slug}`}>{h.text}</a>
+                </li>
+              ))}
+              {guided && (
+                <li>
+                  <a href="#agent-playbook">{item.kind === 'overview' ? 'Full README' : 'Agent playbook'}</a>
+                </li>
+              )}
+            </ul>
+          </nav>
+        )
+      }
+    </div>
+  </div>
+</Base>
+
+<script>
+  // copy buttons on code blocks
+  document.querySelectorAll<HTMLPreElement>('.prose pre').forEach((pre) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'copy-code';
+    btn.textContent = 'Copy';
+    btn.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(pre.querySelector('code')?.innerText ?? pre.innerText);
+      btn.textContent = 'Copied';
+      setTimeout(() => (btn.textContent = 'Copy'), 1400);
+    });
+    pre.append(btn);
+  });
+
+  // a # link beside each section heading
+  document.querySelectorAll<HTMLHeadingElement>('.prose :is(h2, h3)[id]').forEach((h) => {
+    const a = document.createElement('a');
+    a.className = 'anchor';
+    a.href = `#${h.id}`;
+    a.setAttribute('aria-label', `Link to ${h.textContent ?? 'section'}`);
+    a.textContent = '#';
+    h.append(a);
+  });
+
+  // copy the page as markdown, for an agent or a chat
+  document.querySelector<HTMLButtonElement>('[data-copy-md]')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget as HTMLButtonElement;
+    const label = btn.querySelector<HTMLElement>('[data-label]');
+    const text = await (await fetch(btn.dataset['copyMd'] ?? '')).text();
+    await navigator.clipboard.writeText(text);
+    if (label) {
+      label.textContent = 'Copied';
+      setTimeout(() => (label.textContent = 'Copy as Markdown'), 1400);
+    }
+  });
+
+  // small screens: the navigation folds behind its current-page button
+  const side = document.querySelector<HTMLButtonElement>('[data-side-toggle]');
+  side?.addEventListener('click', () => {
+    const open = side.getAttribute('aria-expanded') !== 'true';
+    side.setAttribute('aria-expanded', String(open));
+  });
+
+  // the section being read is marked in "On this page": the last listed heading that has scrolled past the bar
+  const toc = document.querySelector<HTMLElement>('[data-toc]');
+  if (toc) {
+    const links = [...toc.querySelectorAll<HTMLAnchorElement>('a')];
+    const targets = links.map((a) => document.getElementById(decodeURIComponent(a.hash.slice(1))));
+    let queued = false;
+    const mark = (): void => {
+      queued = false;
+      let current = 0;
+      // at the very bottom the last sections can never reach the bar: take the last one on screen
+      const bottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+      const line = bottom ? window.innerHeight * 0.75 : 120;
+      targets.forEach((h, i) => {
+        if (h && h.getBoundingClientRect().top < line) current = i;
+      });
+      links.forEach((a, i) => a.toggleAttribute('aria-current', i === current));
+    };
+    window.addEventListener('scroll', () => {
+      if (!queued) requestAnimationFrame(mark);
+      queued = true;
+    }, { passive: true });
+    mark();
+  }
+</script>
+
+<style is:global>
+  /* docs palette: carbon dark and paper light, one red */
+  :root[data-theme='dark'] {
+    --d-bg: rgb(21 21 30);
+    --d-surface: rgb(27 27 38);
+    --d-code: rgb(14 14 20);
+    --d-text: rgb(236 236 241);
+    --d-muted: rgb(236 236 241 / 0.74);
+    --d-faint: rgb(236 236 241 / 0.5);
+    --d-line: rgb(255 255 255 / 0.09);
+    --d-line-strong: rgb(255 255 255 / 0.16);
+    --d-hover: rgb(255 255 255 / 0.05);
+    --d-accent: #ff4b3e;
+    --d-accent-soft: rgb(225 6 0 / 0.12);
+    color-scheme: dark;
+  }
+  :root[data-theme='light'] {
+    --d-bg: rgb(250 250 249);
+    --d-surface: rgb(255 255 255);
+    --d-code: rgb(245 245 244);
+    --d-text: rgb(20 20 24);
+    --d-muted: rgb(20 20 24 / 0.72);
+    --d-faint: rgb(20 20 24 / 0.5);
+    --d-line: rgb(0 0 0 / 0.08);
+    --d-line-strong: rgb(0 0 0 / 0.14);
+    --d-hover: rgb(0 0 0 / 0.04);
+    --d-accent: #d10600;
+    --d-accent-soft: rgb(225 6 0 / 0.07);
+    color-scheme: light;
+  }
+  :root[data-theme] body { background: var(--d-bg); color: var(--d-text); }
+
+  /* code colours follow the theme (Shiki dual themes) */
+  /* colour only on the tokens; the background belongs to the block, or every line gets a stripe */
+  :root[data-theme='light'] .prose pre span { color: var(--shiki-light) !important; }
+  :root[data-theme='light'] .prose pre { color: var(--shiki-light) !important; background-color: var(--d-code) !important; }
+</style>
+
+<style>
+  .docs { min-height: 100svh; }
+
+  /* ---------- top bar ---------- */
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    height: 64px;
+    padding: 0 var(--edge);
+    border-bottom: 1px solid var(--d-line);
+  }
+  .bar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: color-mix(in srgb, var(--d-bg) 86%, transparent);
+    backdrop-filter: blur(10px);
+  }
+  .wordmark { color: var(--d-text); font-size: 24px; }
+  .bar-docs { padding-left: 16px; border-left: 1px solid var(--d-line-strong); font-size: 16px; color: var(--d-faint); margin-right: auto; }
+  .bar-end { display: flex; align-items: center; gap: 6px; }
+  .bar-end :global(.menu-toggle) { color: var(--d-muted); font-size: 18px; margin-left: 12px; }
+  .icon-link { display: grid; place-items: center; width: 36px; aspect-ratio: 1; border-radius: 50%; color: var(--d-muted); }
+  .icon-link:hover { color: var(--d-text); background: var(--d-hover); }
+  .icon-link svg { width: 19px; fill: currentColor; }
+
+  /* ---------- three columns ---------- */
+  .shell {
+    display: grid;
+    grid-template-columns: 248px minmax(0, 1fr) 220px;
+    gap: 56px;
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 0 var(--edge);
+  }
+
+  .side { position: sticky; top: 64px; align-self: start; max-height: calc(100svh - 64px); overflow-y: auto; padding: 28px 0 48px; }
+  .side, .toc { scrollbar-width: thin; scrollbar-color: var(--d-line-strong) transparent; }
+  .side-toggle { display: none; }
+  .side section + section { margin-top: 22px; }
+  .group { margin: 0 0 6px; font-size: 13px; letter-spacing: var(--track-label); color: var(--d-faint); }
+  .side ul, .toc ul { list-style: none; margin: 0; padding: 0; }
+  .item {
+    display: block;
+    margin-left: -10px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 14.5px;
+    line-height: 1.4;
+    color: var(--d-muted);
+    text-decoration: none;
+    transition: color 0.2s, background 0.2s;
+  }
+  .item:hover { color: var(--d-text); background: var(--d-hover); }
+  .item[aria-current='page'] { color: var(--d-text); background: var(--d-accent-soft); box-shadow: inset 2px 0 0 var(--d-accent); font-weight: 500; }
+  .item code { font: 400 13.5px var(--font-mono); }
+
+  /* ---------- the page ---------- */
+  .page { min-width: 0; max-width: 760px; padding: 44px 0 96px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .page { animation: arrive 0.45s var(--ease-move) backwards; }
+  }
+  @keyframes arrive { from { opacity: 0; translate: 0 6px; } }
+
+  .crumb { margin: 0 0 10px; font-size: 14px; letter-spacing: var(--track-eyebrow); color: var(--d-accent); }
+  h1 {
+    margin: 0;
+    font: 400 clamp(40px, 5vw, 56px) / 1 var(--font-display);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .cmd-chip {
+    display: inline-block;
+    margin-top: 14px;
+    padding: 3px 9px;
+    border-radius: 6px;
+    background: var(--d-accent-soft);
+    color: var(--d-accent);
+    font: 500 14px var(--font-mono);
+  }
+  .summary { margin: 14px 0 0; max-width: 60ch; font-size: 19px; line-height: 1.55; color: var(--d-muted); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 0; padding-bottom: 28px; border-bottom: 1px solid var(--d-line); }
+  .action {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 11px;
+    border: 0;
+    border-radius: 7px;
+    background: none;
+    box-shadow: inset 0 0 0 1px var(--d-line-strong);
+    color: var(--d-muted);
+    font: 500 13px var(--font-body);
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.2s, box-shadow 0.2s;
+  }
+  .action:hover { color: var(--d-text); box-shadow: inset 0 0 0 1px var(--d-faint); }
+  .action svg { width: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+
+  /* ---------- prose: written to be read ---------- */
+  .prose { padding-top: 8px; font-size: 18px; line-height: 1.7; color: var(--d-muted); }
+  .prose :global(h1) { display: none; } /* the page head shows the title */
+  .prose :global(h2),
+  .prose :global(h3) {
+    position: relative;
+    color: var(--d-text);
+    font-family: var(--font-body);
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    line-height: 1.3;
+    scroll-margin-top: 88px;
+  }
+  .prose :global(h2) { margin: 52px 0 14px; font-size: 26px; }
+  .prose :global(h3) { margin: 34px 0 10px; font-size: 20px; }
+  .prose :global(.anchor) {
+    margin-left: 10px;
+    color: var(--d-faint);
+    font-weight: 400;
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .prose :global(:is(h2, h3):hover .anchor), .prose :global(.anchor:focus-visible) { opacity: 1; }
+  .prose :global(p) { margin: 0 0 18px; }
+  .prose :global(strong) { color: var(--d-text); font-weight: 600; }
+  .prose :global(a) { color: var(--d-text); text-decoration: underline; text-decoration-color: var(--d-accent); text-underline-offset: 3px; }
+  .prose :global(a:hover) { color: var(--d-accent); }
+  .prose :global(ul), .prose :global(ol) { margin: 0 0 18px; padding-left: 1.3em; }
+  .prose :global(li) { margin: 6px 0; }
+  .prose :global(li::marker) { color: var(--d-faint); }
+  .prose :global(hr) { border: 0; border-top: 1px solid var(--d-line); margin: 44px 0; }
+  .prose :global(blockquote) {
+    margin: 24px 0;
+    padding: 14px 18px;
+    border-radius: 8px;
+    background: var(--d-accent-soft);
+    box-shadow: inset 3px 0 0 var(--d-accent);
+    color: var(--d-text);
+  }
+  .prose :global(blockquote p:last-child) { margin: 0; }
+  .prose :global(:not(pre) > code) {
+    padding: 2px 6px;
+    border-radius: 5px;
+    background: var(--d-hover);
+    box-shadow: inset 0 0 0 1px var(--d-line);
+    color: var(--d-text);
+    font: 0.84em var(--font-mono);
+  }
+  .prose :global(code.cmd) { background: var(--d-accent-soft); box-shadow: none; color: var(--d-accent); font-weight: 500; }
+  .prose :global(pre) {
+    position: relative;
+    margin: 20px 0 24px;
+    padding: 18px 20px;
+    border-radius: 10px;
+    box-shadow: inset 0 0 0 1px var(--d-line);
+    overflow-x: auto;
+    font: 14px/1.65 var(--font-mono);
+  }
+  .prose :global(.copy-code) {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 4px 9px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--d-surface);
+    box-shadow: inset 0 0 0 1px var(--d-line-strong);
+    color: var(--d-muted);
+    font: 500 12px var(--font-body);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .prose :global(pre:hover .copy-code), .prose :global(.copy-code:focus-visible) { opacity: 1; }
+  .prose :global(table) { display: block; width: 100%; overflow-x: auto; border-collapse: collapse; margin: 20px 0 24px; font-size: 15.5px; line-height: 1.55; }
+  .prose :global(th) { text-align: left; font-weight: 600; color: var(--d-text); }
+  .prose :global(th), .prose :global(td) { padding: 10px 16px 10px 0; border-bottom: 1px solid var(--d-line); vertical-align: top; }
+  .prose :global(td:first-child) { white-space: nowrap; } /* ids and levels stay on one line */
+
+  /* ---------- guide pieces: steps, examples, the folded playbook ---------- */
+  .prose :global(ol.steps) { list-style: none; counter-reset: step; margin: 22px 0 26px; padding: 0; }
+  .prose :global(ol.steps li) {
+    position: relative;
+    counter-increment: step;
+    margin: 0;
+    padding: 0 0 22px 48px;
+  }
+  .prose :global(ol.steps li::before) {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--d-surface);
+    box-shadow: inset 0 0 0 1px var(--d-line-strong);
+    color: var(--d-text);
+    font: 600 13px/1 var(--font-body);
+  }
+  .prose :global(ol.steps li:not(:last-child)::after) {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 34px;
+    bottom: 4px;
+    width: 1px;
+    background: var(--d-line-strong);
+  }
+  .prose :global(ol.steps strong) { display: block; margin-bottom: 2px; }
+
+  .prose :global(.example) {
+    position: relative;
+    margin: 18px 0 28px;
+    padding: 46px 22px 6px;
+    border-radius: 10px;
+    background: var(--d-surface);
+    box-shadow: inset 0 0 0 1px var(--d-line-strong);
+    font-size: 15.5px;
+    line-height: 1.6;
+  }
+  .prose :global(.example::before) {
+    content: attr(data-label);
+    position: absolute;
+    inset: 0 0 auto;
+    padding: 9px 14px 9px 40px;
+    border-bottom: 1px solid var(--d-line);
+    border-radius: 10px 10px 0 0;
+    background: var(--d-hover);
+    color: var(--d-text);
+    font: 600 13.5px var(--font-body);
+  }
+  .prose :global(.example::after) {
+    content: '';
+    position: absolute;
+    left: 16px;
+    top: 15px;
+    width: 12px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: rgb(26 127 55); /* an open PR's green, as on GitHub */
+  }
+  .prose :global(.example table) { font-size: 14px; }
+  .prose :global(.example ul) { margin-bottom: 14px; }
+
+  .spec {
+    margin-top: 48px;
+    border-radius: 10px;
+    box-shadow: inset 0 0 0 1px var(--d-line-strong);
+    scroll-margin-top: 88px;
+  }
+  .spec summary {
+    display: grid;
+    gap: 4px;
+    padding: 16px 20px 16px 46px;
+    list-style: none;
+    cursor: pointer;
+    position: relative;
+  }
+  .spec summary::-webkit-details-marker { display: none; }
+  .spec summary::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 21px;
+    width: 8px;
+    aspect-ratio: 1;
+    border-right: 1.5px solid var(--d-muted);
+    border-bottom: 1.5px solid var(--d-muted);
+    rotate: -45deg;
+    transition: rotate 0.25s var(--ease-move);
+  }
+  .spec[open] summary::before { rotate: 45deg; }
+  .spec summary:hover { background: var(--d-hover); border-radius: 10px; }
+  .spec-title { font-weight: 600; font-size: 17px; color: var(--d-text); }
+  .spec-note { font-size: 14px; color: var(--d-faint); }
+  .spec-note code { font: 0.92em var(--font-mono); color: var(--d-muted); }
+  .spec > .prose { padding: 4px 22px 18px; border-top: 1px solid var(--d-line); font-size: 16px; }
+
+  /* ---------- prev / next ---------- */
+  .pager { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 64px; }
+  .pager-link {
+    display: grid;
+    gap: 4px;
+    padding: 16px 18px;
+    border-radius: 10px;
+    box-shadow: inset 0 0 0 1px var(--d-line-strong);
+    color: var(--d-text);
+    text-decoration: none;
+    transition: box-shadow 0.2s, background 0.2s;
+  }
+  .pager-link:hover { background: var(--d-hover); box-shadow: inset 0 0 0 1px var(--d-accent); }
+  .pager-link .label { font-size: 13px; color: var(--d-faint); }
+  .pager-link strong { font-weight: 600; font-size: 16px; }
+  .pager-link.next { grid-column: 2; text-align: right; }
+
+  /* ---------- on this page ---------- */
+  .toc { position: sticky; top: 64px; align-self: start; padding: 44px 0; max-height: calc(100svh - 64px); overflow-y: auto; }
+  .toc a {
+    display: block;
+    padding: 4px 0 4px 12px;
+    border-left: 1.5px solid var(--d-line);
+    font-size: 13.5px;
+    line-height: 1.45;
+    color: var(--d-faint);
+    text-decoration: none;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .toc a:hover { color: var(--d-text); }
+  .toc a[aria-current] { color: var(--d-text); border-color: var(--d-accent); }
+
+  @media (max-width: 1180px) {
+    .shell { grid-template-columns: 232px minmax(0, 1fr); }
+    .toc { display: none; }
+  }
+  @media (max-width: 860px) {
+    .bar { gap: 12px; }
+    .bar-docs { display: none; }
+    .wordmark { margin-right: auto; }
+    .bar-end :global(.menu-toggle) { margin-left: 4px; }
+    .bar-end :global(.menu-toggle [data-menu-label]) { display: none; }
+    .shell { display: block; }
+    .side { position: static; max-height: none; padding: 12px 0 0; }
+    .side-toggle {
+      display: grid;
+      width: 100%;
+      gap: 2px;
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--d-hover);
+      color: var(--d-text);
+      text-align: left;
+      font: 500 15px var(--font-body);
+      cursor: pointer;
+    }
+    .side-toggle .label { font-size: 12px; color: var(--d-faint); }
+    .side nav { display: none; padding: 16px 4px 8px; }
+    .side-toggle[aria-expanded='true'] + nav { display: block; }
+    .page { padding-top: 28px; }
+    .pager { grid-template-columns: 1fr; }
+    .pager-link.next { grid-column: 1; }
+  }
+</style>

@@ -22,7 +22,7 @@
   --track-eyebrow: 0.35em;
   --track-lede: 0.18em;
 
-  --edge: clamp(16px, 3vw, 42px);
+  --edge: clamp(20px, 3.6vw, 56px);
   --ring-glow: inset 0 0 0 2px var(--text), 0 0 8px 4px rgb(255 255 255 / 0.15), inset 0 0 8px 4px rgb(255 255 255 / 0.15);
 
   --ease-reveal: cubic-bezier(0.215, 0.61, 0.355, 1);
@@ -32,6 +32,14 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 html, body { margin: 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* in-page links glide to their section */
+  html { scroll-behavior: smooth; }
+  /* page to page: a short cross-fade, native, no router */
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.35s; }
+}
 
 body {
   background: var(--bg);

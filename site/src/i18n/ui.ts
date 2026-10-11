@@ -23,6 +23,10 @@ const en = {
   'drive.left': 'Steer left',
   'drive.right': 'Steer right',
   'credits.models': '3D models',
+  'menu.open': 'Menu',
+  'menu.close': 'Close',
+  'menu.home': 'Home',
+  'menu.changelog': 'Changelog',
 } as const;
 
 export const ui: Record<Lang, Record<keyof typeof en, string>> = { en };

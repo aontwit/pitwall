@@ -52,6 +52,7 @@ Never ask what a file answered; never fill a business value (prices, limits, cre
 - no verification skill → `verification skill: none`; level B items with no browser fall to C, say so in the report
 - `permissions`: write the list into the profile; adding it to the settings file is the user's step
 - `.claude/settings.json` on the base has `"pitwall@pitwall": true` under `enabledPlugins` but no `pitwall` key under `extraKnownMarketplaces` → a teammate's clone cannot resolve the plugin: say so in the report, with the entry to add (`"pitwall": { "source": { "source": "github", "repo": "aontwit/pitwall" } }`) — adding it is the user's step, like `permissions`
+- a CI workflow triggered by `pull_request` without `edited` among its `types` → a stacked PR moved to base after its parent merges keeps only the checks from its old base, because GitHub starts no run on a base change: say so in the report, with the trigger to add (`types: [opened, synchronize, reopened, edited]`, and on the job `if: github.event.action != 'edited' || github.event.changes.base`, so edits to the title or body start nothing) — changing the workflow is the user's step
 - `git check-ignore -v .claude/agent-loop.md <plan file>` matches → the file cannot be committed as is: say which `.gitignore` line hides it and the line that un-ignores it (e.g. `!.claude/agent-loop.md`) — adding it is the user's call
 
 ## 5. Check + report

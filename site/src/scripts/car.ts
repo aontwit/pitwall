@@ -467,12 +467,14 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
 
     // ---- drive: speed and steering; the car turns on the spot and the world streams past ----
     if (driving) {
-      // power falls off toward top speed; a seamless shift barely cuts it, so there is no lurch, only a nudge
-      let push = controls.throttle * 14 * (1 - (car.speed / TOP) ** 1.8) * (box.shift > 0 ? 0.85 : 1);
+      const drag = 0.25 + 0.00042 * car.speed * car.speed;
+      // power falls off toward top speed, and on throttle the engine also beats the drag, so the car pulls
+      // all the way to TOP: about 200 km/h at 5 s, 300 at 10 s, 336 at 20 s (without it, it stalled at 295);
+      // a seamless shift barely cuts it, so there is no lurch, only a nudge
+      let push = controls.throttle * (14 * (1 - (car.speed / TOP) ** 1.8) + drag) * (box.shift > 0 ? 0.85 : 1);
       if (box.gear === 8 && box.rpm >= LIMIT) push = Math.min(push, 0); // on the limiter
       // carbon brakes with downforce: about 1.1 g when slow, near 5 g at top speed
       const brake = controls.brake * (11 + 0.0042 * car.speed * car.speed);
-      const drag = 0.25 + 0.00042 * car.speed * car.speed;
       car.speed = THREE.MathUtils.clamp(car.speed + (push - brake - drag) * dt, 0, TOP);
       box.decel += (brake - box.decel) * Math.min(1, dt * 10);
       box.heat = THREE.MathUtils.clamp(box.heat + controls.brake * car.speed * dt * 0.03 - dt * 0.25, 0, 1);

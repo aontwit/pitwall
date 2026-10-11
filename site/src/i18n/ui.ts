@@ -33,5 +33,5 @@ export const ui: Record<Lang, Record<keyof typeof en, string>> = { en };
 
 export const t = (lang: Lang) => (key: keyof typeof en): string => ui[lang][key];
 
-/** Prefix a site path with the deploy base (`/pitwall/`). */
+/** Prefix a site path with the deploy base (`/` on the custom domain). */
 export const href = (path: string): string => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;

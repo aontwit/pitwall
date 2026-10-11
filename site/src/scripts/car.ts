@@ -1,8 +1,8 @@
 // Hero scene: an F1 car in light. The paint is near-black and lit only by a matcap of bright strips
 // that slowly turns, so streaks run along the car's real surfaces (the technique the reference uses).
 // On the engine stage the body goes see-through and the power unit comes apart, one part per step of a lap.
-// Drive mode, as in the reference: the car stays on its stage and turns on the spot while the paint bands,
-// wind lines, floor dots and dust stream past; a speed gauge reads the speed.
+// Drive mode: a chase camera behind the car, as in a racing game. The car stays at the centre of the world
+// and the floor, dust and wind stream past it; an 8-speed seamless gearbox and carbon brakes give it its feel.
 //
 // Models: public/models/car.glb ("Formula 1 Car" by spsvision, CC BY 4.0, decimated, new wheels)
 //         public/models/engine.glb ("V6 car engine" by Blendoriano, CC BY 4.0, assembled parts only)
@@ -15,7 +15,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
-export type Telemetry = { kmh: number; gear: number; rpm: number };
+export type Telemetry = { kmh: number; gear: number; rpm: number; throttle: number; brake: number; shifts: number };
 export type Controls = { throttle: number; brake: number; steer: number };
 export type SceneOptions = {
   base: string; // deploy base, for model and decoder URLs
@@ -267,7 +267,7 @@ class Wind {
     this.object.visible = opacity > 0.01 && this.profile !== undefined;
     if (!this.object.visible || !this.profile) return;
     const { x0, x1 } = this.profile;
-    const span = x1 - x0 + 5;
+    const span = x1 - x0 + 2.5; // short tails: from the chase camera longer ones reach the lens
     for (const l of this.lines) {
       l.phase += dt * flow * l.rate;
       if (l.phase > 1) {
@@ -302,6 +302,8 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
   const wheels: THREE.Object3D[] = [];
   const mirrorWheels: THREE.Object3D[] = [];
   const wind = new Wind(44);
+  const brakeGlow = new THREE.MeshBasicMaterial({ color: 0xff5a1f, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  const mirrorGlow = brakeGlow.clone();
   carRoot.add(wind.object);
 
   const engineScene = new THREE.Scene(); // drawn after the bloom so the metal stays crisp
@@ -325,12 +327,20 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
     if (body) wind.setProfile(bodyProfile(body));
     for (const name of ['wheel_fl', 'wheel_fr', 'wheel_rl', 'wheel_rr']) {
       const w = car.getObjectByName(name);
-      if (w) rimLights(w);
+      if (!w) continue;
+      rimLights(w);
+      // carbon brake discs, glowing through the wheel face: dark until heat makes them glow
+      for (const z of [0.205, -0.205]) {
+        const disc = new THREE.Mesh(new THREE.RingGeometry(0.07, 0.17, 40), brakeGlow);
+        disc.position.z = z;
+        disc.userData['disc'] = true;
+        w.add(disc);
+      }
     }
     const mirror = car.clone(true);
     const dimRim = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.05, blending: THREE.AdditiveBlending, depthWrite: false });
     mirror.traverse((o) => {
-      if (o instanceof THREE.Mesh) o.material = o.userData['rim'] ? dimRim : mirrorPaint;
+      if (o instanceof THREE.Mesh) o.material = o.userData['disc'] ? mirrorGlow : o.userData['rim'] ? dimRim : mirrorPaint;
     });
     mirror.scale.y = -1;
     for (const name of ['wheel_fl', 'wheel_fr', 'wheel_rl', 'wheel_rr']) {
@@ -425,10 +435,12 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
   let explode = 0;
   let flow = 0; // integrated speed: drives the paint bands, the floor and the dust
   const controls: Controls = { throttle: 0, brake: 0, steer: 0 };
-  const car = { speed: 0, heading: 0, steer: 0, spin: 0, roll: 0 };
+  const car = { speed: 0, heading: 0, steer: 0, spin: 0, roll: 0, pitch: 0 };
+  // gearbox and brakes: gear, engine rpm, time left in a shift, the camera kick of the last shift,
+  // a shift counter for the HUD, brake heat 0..1, and the deceleration felt (m/s2, smoothed)
+  const box = { gear: 1, rpm: 4000, shift: 0, kick: 0, shifts: 0, heat: 0, decel: 0 };
+  let camHeading = 0;
   const pose = (n: number): Pose => POSES[n % POSES.length] ?? { pos: v(8, 3, 8), look: v(0, 0.4, 0) };
-  // drive camera: eye level, a front three-quarter view, like the reference; it does not chase
-  const DRIVE_POSE: Pose = { pos: v(8.8, 1.6, 9.5), look: v(-0.2, 0.6, 0) };
   const camPos = pose(0).pos.clone().multiplyScalar(1.5);
   const camLook = pose(0).look.clone();
   const target = new THREE.Vector3();
@@ -440,6 +452,13 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
 
   const TOP = 94; // m/s, about 340 km/h
   const RADIUS = 0.395;
+  // top speed of each of the 8 gears at the limiter, m/s
+  const GEAR_TOP = [80, 115, 150, 185, 220, 255, 295, 345].map((kmh) => kmh / 3.6);
+  const LIMIT = 12000;
+  const IDLE = 4000;
+  const UPSHIFT = 11600;
+  const DOWNSHIFT = 7200;
+  const rpmIn = (gear: number, speed: number): number => Math.max(IDLE, (speed / (GEAR_TOP[gear - 1] ?? TOP)) * LIMIT);
   const tick = (now: number): void => {
     const t = (now - start) / 1000;
     const dt = Math.min((now - last) / 1000, 0.05);
@@ -448,21 +467,53 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
 
     // ---- drive: speed and steering; the car turns on the spot and the world streams past ----
     if (driving) {
-      const accel = controls.throttle * 18 * (1 - car.speed / TOP) - controls.brake * 34 - 1.2 - car.speed * 0.02;
-      car.speed = THREE.MathUtils.clamp(car.speed + accel * dt, 0, TOP);
+      // power falls off toward top speed; a seamless shift barely cuts it, so there is no lurch, only a nudge
+      let push = controls.throttle * 14 * (1 - (car.speed / TOP) ** 1.8) * (box.shift > 0 ? 0.85 : 1);
+      if (box.gear === 8 && box.rpm >= LIMIT) push = Math.min(push, 0); // on the limiter
+      // carbon brakes with downforce: about 1.1 g when slow, near 5 g at top speed
+      const brake = controls.brake * (11 + 0.0042 * car.speed * car.speed);
+      const drag = 0.25 + 0.00042 * car.speed * car.speed;
+      car.speed = THREE.MathUtils.clamp(car.speed + (push - brake - drag) * dt, 0, TOP);
+      box.decel += (brake - box.decel) * Math.min(1, dt * 10);
+      box.heat = THREE.MathUtils.clamp(box.heat + controls.brake * car.speed * dt * 0.03 - dt * 0.25, 0, 1);
+
+      box.shift = Math.max(0, box.shift - dt);
+      box.rpm = rpmIn(box.gear, car.speed);
+      if (controls.throttle > 0 && box.rpm >= UPSHIFT && box.gear < 8 && box.shift === 0) {
+        box.gear += 1;
+        box.shift = 0.05;
+        box.kick = 1;
+        box.shifts += 1;
+      } else if (box.rpm < DOWNSHIFT && box.gear > 1 && box.shift === 0) {
+        box.gear -= 1; // the rpm jumps up in the lower gear: the blip on the way down
+        box.shift = 0.05;
+        box.kick = -0.4;
+        box.shifts += 1;
+      }
+      box.rpm = rpmIn(box.gear, car.speed);
+
       car.steer += (controls.steer * 0.38 - car.steer) * Math.min(1, dt * 7);
-      // as in the reference: holding a direction swings the car round to show its side; letting go brings it back
-      car.heading += (controls.steer * 1.45 - car.heading) * Math.min(1, dt * 1.3);
+      // the car turns only when it moves, and less sharply the faster it goes
+      car.heading += car.steer * Math.min(1, car.speed / 20) * (2.6 / (1 + car.speed / 60)) * dt;
     } else {
       car.speed *= 1 - Math.min(1, dt * 1.5);
       car.steer *= 1 - Math.min(1, dt * 4);
       car.heading += Math.atan2(Math.sin(-car.heading), Math.cos(-car.heading)) * k;
+      box.gear = 1;
+      box.decel *= 1 - Math.min(1, dt * 4);
+      box.heat = Math.max(0, box.heat - dt * 0.25);
     }
+    box.kick *= Math.exp(-dt * 9);
     const sn = car.speed / TOP; // 0..1
     car.roll += (-car.steer * sn * 0.08 - car.roll) * Math.min(1, dt * 4);
+    // the nose dips under braking and lifts a touch under power
+    car.pitch += (-box.decel * 0.0011 + controls.throttle * sn * 0.004 - car.pitch) * Math.min(1, dt * 6);
     car.spin -= (car.speed / RADIUS) * dt * 0.25; // slowed down, or the eye reads a blur as standing still
     flow += dt * (0.35 + car.speed * 0.22);
-    carRoot.rotation.set(car.roll, car.heading, 0, 'YXZ');
+    carRoot.rotation.set(car.roll, car.heading, driving ? car.pitch : 0, 'YXZ');
+    brakeGlow.opacity = box.heat * 0.95;
+    brakeGlow.color.setRGB(1, 0.18 + box.heat * 0.3, 0.05);
+    mirrorGlow.opacity = brakeGlow.opacity * 0.15;
     for (const set of [wheels, mirrorWheels]) {
       set.forEach((w, i) => {
         w.rotation.z = car.spin;
@@ -473,17 +524,28 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
     engineRoot.rotation.y = car.heading;
 
     // ---- camera ----
-    const p = driving ? DRIVE_POSE : pose(active);
-    const sway = driving ? 0 : Math.sin(t * 0.15) * 0.06;
-    target.copy(p.pos).sub(p.look).multiplyScalar(fit * (driving ? 1 - sn * 0.12 : 1)).add(p.look).applyAxisAngle(up, sway);
-    target.x += pointer.x * (driving ? 0.3 : 0.8);
-    target.y -= pointer.y * (driving ? 0.2 : 0.5);
-    if (driving) target.y += Math.sin(t * 31) * 0.012 * sn; // a little road buzz at speed
-    camPos.lerp(target, driving ? 1 - Math.exp(-dt * 2.4) : k);
-    camLook.lerp(p.look, k);
+    if (driving) {
+      // chase camera: behind the car, swinging round a beat after it turns, as in a racing game
+      camHeading += Math.atan2(Math.sin(car.heading - camHeading), Math.cos(car.heading - camHeading)) * Math.min(1, dt * 2.6);
+      const behind = 5.6 + sn * 0.8 + box.kick * 0.3 - box.decel * 0.012; // a shift pushes the car away, braking lets the camera close in
+      target.set(-behind * fit, 1.55 - sn * 0.2, 0).applyAxisAngle(up, camHeading);
+      target.y += (Math.random() - 0.5) * 0.02 * sn * sn; // road buzz at speed
+      tmp.set(5, 0.6, 0).applyAxisAngle(up, camHeading);
+      camPos.lerp(target, 1 - Math.exp(-dt * 8));
+      camLook.lerp(tmp, 1 - Math.exp(-dt * 8));
+    } else {
+      camHeading = car.heading;
+      const p = pose(active);
+      const sway = Math.sin(t * 0.15) * 0.06;
+      target.copy(p.pos).sub(p.look).multiplyScalar(fit).add(p.look).applyAxisAngle(up, sway);
+      target.x += pointer.x * 0.8;
+      target.y -= pointer.y * 0.5;
+      camPos.lerp(target, k);
+      camLook.lerp(p.look, k);
+    }
     camera.position.copy(camPos);
     camera.lookAt(camLook);
-    const fov = 30 + sn * 8;
+    const fov = driving ? 48 + sn * 10 : 30;
     if (Math.abs(camera.fov - fov) > 0.01) {
       camera.fov += (fov - camera.fov) * Math.min(1, dt * 3);
       camera.updateProjectionMatrix();
@@ -563,10 +625,15 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
       Object.assign(controls, c);
     },
     telemetry() {
-      const kmh = car.speed * 3.6;
-      const gear = car.speed < 0.3 ? 0 : Math.min(8, 1 + Math.floor(kmh / 42));
-      const band = gear === 0 ? 0 : (kmh - (gear - 1) * 42) / 42;
-      return { kmh, gear, rpm: gear === 0 ? 4000 + controls.throttle * 3000 : 6000 + Math.min(1, band) * 9000 };
+      const stopped = car.speed < 0.3 && controls.throttle === 0;
+      return {
+        kmh: car.speed * 3.6,
+        gear: stopped ? 0 : box.gear,
+        rpm: stopped ? IDLE : box.rpm,
+        throttle: controls.throttle,
+        brake: controls.brake,
+        shifts: box.shifts,
+      };
     },
     dispose() {
       cancelAnimationFrame(frame);

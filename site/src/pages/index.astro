@@ -174,6 +174,10 @@ const arc = (from: number, to: number) => {
         <text class="unit" x="100" y="162">KM/H</text>
       </svg>
       <p class="gear label" data-gear>N</p>
+      <div class="pedals" aria-hidden="true">
+        <span class="pedal"><span class="pedal-fill brake" data-pedal="brake"></span></span>
+        <span class="pedal"><span class="pedal-fill throttle" data-pedal="throttle"></span></span>
+      </div>
       <p class="hint">{tr('drive.hint')}</p>
     </div>
 
@@ -268,6 +272,9 @@ const arc = (from: number, to: number) => {
   const speed = document.querySelector<SVGTextElement>('[data-speed]');
   const gear = document.querySelector<HTMLElement>('[data-gear]');
   const lights = [...document.querySelectorAll<HTMLElement>('.lights span')];
+  const pedalBrake = document.querySelector<HTMLElement>('[data-pedal="brake"]');
+  const pedalThrottle = document.querySelector<HTMLElement>('[data-pedal="throttle"]');
+  let lastShifts = 0;
   const held = new Set<string>();
   let driving = false;
   let hudFrame = 0;
@@ -284,12 +291,24 @@ const arc = (from: number, to: number) => {
 
   const drawHud = (): void => {
     if (!scene) return;
-    const { kmh, gear: g, rpm } = scene.telemetry();
+    const { kmh, gear: g, rpm, throttle, brake, shifts } = scene.telemetry();
     needle?.setAttribute('transform', `rotate(${-120 + (Math.min(kmh, 360) / 360) * 240} 100 100)`);
     if (speed) speed.textContent = String(Math.round(kmh));
-    if (gear) gear.textContent = g === -1 ? 'R' : g === 0 ? 'N' : String(g);
-    const lit = Math.round(((rpm - 6000) / 9000) * lights.length);
+    if (gear) {
+      gear.textContent = g === 0 ? 'N' : String(g);
+      if (shifts !== lastShifts) {
+        // restart the flash on every shift, up or down
+        gear.classList.remove('shift');
+        void gear.offsetWidth;
+        gear.classList.add('shift');
+        lastShifts = shifts;
+      }
+    }
+    // shift lights fill from 7,000 rpm and are all lit at the 11,600 rpm upshift point
+    const lit = Math.round(((rpm - 7000) / 4600) * lights.length);
     lights.forEach((l, i) => l.classList.toggle('on', i < lit));
+    pedalBrake?.style.setProperty('scale', `1 ${brake}`);
+    pedalThrottle?.style.setProperty('scale', `1 ${throttle}`);
     hudFrame = requestAnimationFrame(drawHud);
   };
 
@@ -738,6 +757,34 @@ const arc = (from: number, to: number) => {
     box-shadow: 0 0 0 1.5px var(--line);
     font-size: 22px;
   }
+  .gear.shift { animation: shift-flash 0.35s var(--ease-move); }
+  @keyframes shift-flash {
+    from { background: var(--accent); box-shadow: 0 0 0 1.5px var(--accent), 0 0 18px rgb(225 6 0 / 0.7); }
+  }
+  .pedals {
+    position: absolute;
+    top: 64px;
+    right: 6px;
+    display: flex;
+    gap: 5px;
+    height: 84px;
+  }
+  .pedal {
+    position: relative;
+    width: 7px;
+    border-radius: 2px;
+    background: rgb(255 255 255 / 0.08);
+    overflow: hidden;
+  }
+  .pedal-fill {
+    position: absolute;
+    inset: 0;
+    transform-origin: bottom;
+    scale: 1 0;
+    transition: scale 0.08s linear;
+  }
+  .pedal-fill.brake { background: var(--accent); box-shadow: 0 0 10px rgb(225 6 0 / 0.7); }
+  .pedal-fill.throttle { background: var(--text); box-shadow: 0 0 10px rgb(255 255 255 / 0.5); }
   .hint {
     margin: 4px 0 0;
     font: 500 10px/1.5 var(--font-body);

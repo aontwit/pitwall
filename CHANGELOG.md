@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.4.1 — 2026-10-12
+
+Fixes from users: `init` asks which language to use and its questions read plainly, the verifier fails only on what the task owns, sibling PRs no longer conflict on the plan log, and the docs site says what pitwall is.
 
 - `init` always asks the user language and the PR / commit language, and asks in the language the user writes in. Before, it took both from `CLAUDE.md` and the commit subjects and asked its questions in that language, so a Thai owner of a repo written in English got the init questions, the briefing and every PR in English. `opening-a-pr` says which words stay in English in a PR body of any language (the ones the PR-body check matches), so a translated `Verify` heading no longer fails the check. The README says how to change a profile value later. Questions use plain labels (`Thai`, not "the language you write in"; no pitwall words), and no option may say "tell me in Other": `plan`'s "is this right?" offers the shakiest summary line turned around as its second option, so the likely fix is one click
 - Docs site drive mode: the car keeps pulling to its top speed (about 300 km/h at 10 s, 336 at 20 s). The engine's push fell to zero at top speed while drag did not, so a held throttle stalled at 295 km/h after 15 s and the needle never reached the red zone

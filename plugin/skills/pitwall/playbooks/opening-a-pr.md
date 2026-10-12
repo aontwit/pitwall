@@ -8,7 +8,7 @@ Use at the end of every playbook that changes code (`lap.md` step=committing, `f
 
 - Commit liberally: small, ordered commits, each one landable and telling the story · a fix that belongs in the commit you just made → amend **only before push**; after push or separable → new commit (never force-push)
 - On the base or a branch the profile's `git` section forbids → `git switch -c <branch per the profile pattern>` before the first commit
-- Commit / PR title per the pattern in the profile's `git` section · commit message, PR title and PR body in the profile `language` section's PR / commit language
+- Commit / PR title per the pattern in the profile's `git` section · commit message, PR title and PR body in the profile `language` section's PR / commit language · whatever that language, these stay in English because the PR-body check matches them: the `Verify` and `Not done yet` headings, the `Verifier` row with `✅ VERIFIED` / `PARTIAL`, and `case 1/2/3`
 - hook fails → fix 1 time → fails again → stop and report (inside the loop: park per `lap.md`) — **never `--no-verify`**
 
 ## 2. Before `gh pr create`

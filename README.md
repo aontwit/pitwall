@@ -138,7 +138,7 @@ pitwall is pre-1.0. It has run end to end on two repos outside the one it came f
 | project | everyone who clones the repo (written to `.claude/settings.json`, which you commit) | a team that shares one profile |
 | local | you, in one repo | trying it out |
 
-Pick one with `--scope`, for example `claude plugin install pitwall@pitwall --scope project`. Update to a new release with `/plugin marketplace update pitwall`.
+Pick one with `--scope`, for example `claude plugin install pitwall@pitwall --scope project`. Update to a new release with `claude plugin marketplace update pitwall` and then `claude plugin update pitwall@pitwall`, and restart Claude Code. The first pitwall command of a session tells you when a newer release is out.
 
 `--scope project` writes only `enabledPlugins`. A teammate's clone does not know where `pitwall@pitwall` comes from until the marketplace is in the same file, so add it before you commit:
 

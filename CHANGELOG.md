@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.2 — 2026-10-12
+
+The loop keeps talking in the user's language from start to end, and pitwall tells you when a new release is out.
+
+- Every line the user sees follows the profile's user language, not only questions and reports: SKILL.md rule 8, and `lap` re-reads the `language` section at the start of every round. Found on Duskreign: the briefing was in Thai, but from `/pitwall:drive` on, the progress lines and round reports came out in English, because the slash command, the wakeup prompt `/loop /pitwall:lap`, the playbooks and the subagent reports are all English
+- Update notice: the first pitwall command of a session checks the latest GitHub release (`scripts/update-check.sh`, through `gh`) and, when it is newer than the installed plugin, tells the user in one line how to update. Silent when up to date, offline or without `gh`
+
 ## 0.4.1 — 2026-10-12
 
 Fixes from users: `init` asks which language to use and its questions read plainly, the verifier fails only on what the task owns, sibling PRs no longer conflict on the plan log, and the docs site says what pitwall is.

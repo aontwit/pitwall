@@ -30,6 +30,7 @@ path in the profile — write it with Write every time it changes
 `step`: `research | brief | coding | checking | reviewing | gauging | docs | committing | verifying`
 
 Start of round:
+0. Read the profile `language` section: every line the user sees this round is in its user language (SKILL.md rule 8) · a wakeup prompt is English, so it is no hint
 1. No state file → the profile has a "multi-machine" section → **receive** state per that section first · still none → tell the user to run `/pitwall:queue` first, end
 2. `running:false` = single-round mode: do 1 task, then don't schedule more
 3. `stopRequested:true` and `currentTask:null` → `running:false`, `ScheduleWakeup stop:true`, summary report of `done` / `parked`, end

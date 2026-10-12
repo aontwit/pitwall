@@ -34,9 +34,9 @@ Copy `<pitwall dir>/templates/agent-loop.md` and fill every `{{…}}` that step 
 
 ## 3. Ask once
 
-Only what step 1 could not settle, plus the rows a human must confirm — AskUserQuestion, ≤ 4 questions per call, ≤ 4 options, recommended first, in the language the user writes to you in, not the repo's (a bare `/pitwall:init` with no earlier message → the repo's):
+Only what step 1 could not settle, plus the rows a human must confirm — AskUserQuestion, ≤ 4 questions per call, ≤ 4 options, recommended first, in the language the user writes to you in, not the repo's (a bare `/pitwall:init` with no earlier message → the repo's) · labels and options per SKILL.md rule 3:
 - tracker: `clickup` / `github` / `none` · `github` → which existing labels mean agent work, `in progress`, `review` and `pending` (labels the repo does not have yet → name them in the report for the user to create; init never creates one), QA login, `milestone: current` (open milestones exist) or `none`
-- user language · PR / commit language — always asked, even when the repo has one language throughout · options, without repeats: the language the user writes in (recommended), the repo's language, English, Thai — so there are always at least two
+- user language · PR / commit language — always asked, even when the repo has one language throughout · two questions, e.g. "Which language should I ask and report in?" and "Which language for PR titles, PR bodies and commit messages?" · options are language names, without repeats: the language the user writes in (recommended), the repo's language, English, Thai — so there are always at least two · each description says what it changes, e.g. "PR title, PR body and commit messages in Thai"
 - base, when step 1 found two candidates (the merged-PR target first, as recommended)
 - protected branches (when the API did not answer)
 - level B: dev server + port, which browser, human-only steps (wallet popup, 2FA, payment confirm, none)

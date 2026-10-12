@@ -23,9 +23,9 @@ Read the profile `plan` section: plan location, `spec`, `question banks` (both o
 
 ## 2. Ask in rounds
 
-- AskUserQuestion with **2–3 questions per round** and ≤ 4 options each. Write them in the profile's user language, put the recommended option first with its marker, and make each description say what the option does to the plan
+- AskUserQuestion with **2–3 questions per round** and ≤ 4 options each. Write them in the profile's user language, put the recommended option first with its marker, and make each description say what the option does to the plan · labels and options per SKILL.md rule 3 (plain words, every option a full answer)
 - Ask only the frontier: questions whose prerequisites are settled. A dependent question waits for the next round. A root question that reshapes everything after it is asked alone. Examples: what the product is, who it is for, the riskiest question
-- From round 2 on, put a 3–6 line summary of the last round in the message and make the first question "is this right?"
+- From round 2 on, put a 3–6 line summary of the last round in the message and make the first question "is this right?": "yes, go on" (recommended) and, as the second option, the summary line you are least sure of turned around ("no: <the other answer>"), so the likely fix is one click; any other fix is typed in Other
 - Record each round (step 3) before you ask the next one
 - Stop when every item on the step 1 list is answered or recorded as open, and the owner confirms the last summary. If the owner says stop, record what is answered and leave the rest open
 - Generic order for mode `new`:

@@ -94,7 +94,7 @@ Every command is `/pitwall:<command>`. Or say what you want in plain words, Engl
 
 ## The profile
 
-`/pitwall:init` writes `.claude/agent-loop.md`. `/pitwall:doctor` checks it.
+`/pitwall:init` writes `.claude/agent-loop.md`. `/pitwall:doctor` checks it. To change a value later (say, PRs in Thai), edit the file, run `/pitwall:doctor` and commit it to your base branch. `/pitwall:init redo` asks everything again.
 
 | Section | Holds |
 |---------|-------|

@@ -25,7 +25,7 @@ Read the **base as the loop will see it**, not the working tree: `git fetch orig
 | verification skill | a `.claude/skills/*/SKILL.md` that launches or drives the app |
 | plan | `PLAN.md`, `TODO.md`, `IMPLEMENTATION_PLAN.md`, `tasks.md`, `docs/**/plan*`, `.taskmaster/` |
 | tracker | tracker tools connected in this session (ClickUp MCP) · GitHub Issues: `gh repo view --json hasIssuesEnabled`, the labels (`gh label list --json name`) and open milestones (`gh api "repos/{owner}/{repo}/milestones?state=open"`) that already exist |
-| language | language of `CLAUDE.md` and of the last 20 commit subjects |
+| language | the language the user writes to you in · language of `CLAUDE.md` and of the last 20 commit subjects — options for step 3, never the answer: a repo written in English says nothing about the language the owner wants to read |
 | `gh` | `gh auth status` — fails → stop: pitwall needs an authenticated `gh` |
 
 ## 2. Draft
@@ -34,9 +34,9 @@ Copy `<pitwall dir>/templates/agent-loop.md` and fill every `{{…}}` that step 
 
 ## 3. Ask once
 
-Only what step 1 could not settle, plus the rows a human must confirm — AskUserQuestion, ≤ 4 questions per call, ≤ 4 options, recommended first, in the language step 1 found:
+Only what step 1 could not settle, plus the rows a human must confirm — AskUserQuestion, ≤ 4 questions per call, ≤ 4 options, recommended first, in the language the user writes to you in, not the repo's (a bare `/pitwall:init` with no earlier message → the repo's) · labels and options per SKILL.md rule 3:
 - tracker: `clickup` / `github` / `none` · `github` → which existing labels mean agent work, `in progress`, `review` and `pending` (labels the repo does not have yet → name them in the report for the user to create; init never creates one), QA login, `milestone: current` (open milestones exist) or `none`
-- user language · PR / commit language
+- user language · PR / commit language — always asked, even when the repo has one language throughout · two questions, e.g. "Which language should I ask and report in?" and "Which language for PR titles, PR bodies and commit messages?" · options are language names, without repeats: English (recommended), the language the user writes in, the repo's language, Thai — so there are always at least two · each description says what it changes, e.g. "PR title, PR body and commit messages in Thai"
 - base, when step 1 found two candidates (the merged-PR target first, as recommended)
 - protected branches (when the API did not answer)
 - level B: dev server + port, which browser, human-only steps (wallet popup, 2FA, payment confirm, none)

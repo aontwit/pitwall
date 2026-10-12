@@ -10,6 +10,8 @@ The skill holds no repo-specific values: everything that belongs to the repo (ba
 
 **pitwall dir** = `${CLAUDE_SKILL_DIR}` (this skill's folder: `playbooks/`, `principles/`, `scripts/`) · every `playbooks/…`, `principles/…`, `scripts/…` path in this skill and in the playbooks is relative to it, and `<pitwall dir>` in a command means this path
 
+**Update check** (the lead, once per session, not a subagent): `bash scripts/update-check.sh` · it prints a line → pass it on to the user in the profile's user language, with the command as is, then carry on with the request
+
 ## Rules you cannot skip
 
 In the report, state which rule changed which decision
@@ -21,6 +23,7 @@ In the report, state which rule changed which decision
 5. **Humans merge** — the agent builds, proves, opens the PR · never merge, force-push, or touch branches the profile forbids
 6. **Lessons become structure first** — script / lint / test / CI > a step in a playbook > text in rules > memory · writing the same instruction a second time = it should be a check
 7. **Record decisions when you make them** — a row in the task's `decisions.tsv` (state folder), not written back at the end
+8. **Speak the user's language** — read the profile `language` section before your first message, and write every line the user sees in its user language: progress lines between steps, the drive start message, relayed subagent results, round reports, not only questions · slash commands (`/pitwall:drive`), wakeup prompts (`/loop /pitwall:lap`), playbooks and subagent reports are English and say nothing about the language the user wants
 
 ## The 3-step ladder (loop / autopilot)
 

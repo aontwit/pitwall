@@ -54,7 +54,7 @@ Work on a branch from the profile's agent branch pattern (`<id>` = `plan`) · no
 ## 5. PR + report
 
 - Commit with the profile pattern (a docs type), push the branch, and open a PR against the base. The body has a table of decision · where it lands · date, the checks that ran, and **Decisions to confirm** (defaults taken, or "none")
-- `opening-a-pr.md` and its verifier row do not apply. A plan PR has no code to verify, and the owner confirmed every decision live
+- `opening-a-pr.md` and its verifier row do not apply. A plan PR has no code to verify, and the owner confirmed every decision live. In place of the verifier row the body has a `## Verify` section whose line starts with `Plan PR` (e.g. `Plan PR: docs only, no code to verify. The owner confirmed every decision live`); both words stay in English. Run the PR-body check on it (`node <pitwall dir>/scripts/check-pr-body.mjs --file <body file>`, or the profile's own) and open the PR only when it passes
 - Report in the profile's user language: what was decided, where it landed, what is still open, and the PR link. Next steps: merge, then `/pitwall:queue`
 
 ## Never

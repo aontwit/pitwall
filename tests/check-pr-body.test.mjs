@@ -125,7 +125,7 @@ assert.deepEqual(
   {
     ok: false,
     problems: [
-      "no verifier row in the Verify section: `| Verifier | … @<head sha> patch <patch-id> | ✅ VERIFIED or PARTIAL |`",
+      "no verifier row in the Verify section: `| Verifier | … @<head sha> patch <patch-id> | ✅ VERIFIED or PARTIAL |` (a plan PR: a line starting `Plan PR`)",
     ],
   },
   "a Verify section without the verifier row must fail",
@@ -160,5 +160,21 @@ assert.equal(
   true,
   "a deeper heading inside Verify does not end the section",
 );
+
+// Issue #26: a docs-only plan PR has no verifier row (plan.md 5)
+assert.deepEqual(
+  checkPrBody(
+    "## Summary\n| decision | lands | date |\n\n## Verify\nPlan PR: docs only, no code to verify. The owner confirmed every decision live\n",
+  ),
+  { ok: true, problems: [] },
+  "a plan PR's Verify line stands in for the verifier row",
+);
+assert.equal(checkPrBody("## Verify\n- **Plan PR** — docs only\n").ok, true, "as a bullet or in bold too");
+assert.equal(
+  checkPrBody("## Notes\nPlan PR: docs only\n## Verify\n| a | ✅ |\n").ok,
+  false,
+  "the Plan PR line counts only inside the Verify section",
+);
+assert.equal(checkPrBody("Plan PR: docs only\n").ok, false, "a plan PR still needs the Verify heading");
 
 console.log("OK: PR body checked");

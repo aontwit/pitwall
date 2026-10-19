@@ -1,5 +1,9 @@
 // Run: npm test
 import assert from "node:assert/strict";
+import { execFileSync, spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 import { resolveDocsConflict } from "../plugin/skills/pitwall/scripts/resolve-docs-conflict.mjs";
 
@@ -70,4 +74,58 @@ const row = (id, box, task = `task ${id}`) => `| ${id} | [${box}] ${task} | file
 {
   const { text, problems } = resolveDocsConflict("no conflict here\n");
   assert.deepEqual([text, problems], ["no conflict here\n", []], "a clean file is unchanged");
+}
+
+{
+  // Issue #25: base ticked 3.4, the branch added a Plan correction to 3.5 · the merge base had neither
+  const was = [row("3.4", " ", "Task four"), row("3.5", " ", "Task five")];
+  const fixed = row("3.5", " ", "Task five. Plan correction (row 3.5 PR): c.gd changed too");
+  const hunk = conflict([was[0], fixed], [row("3.4", "x", "Task four"), was[1]]);
+  const { text, problems } = resolveDocsConflict(hunk, was.join("\n"));
+  assert.deepEqual(problems, []);
+  assert.equal(text, `head\n${row("3.4", "x", "Task four")}\n${fixed}\ntail\n`, "the branch's text edit is kept");
+
+  const unsure = resolveDocsConflict(hunk);
+  assert.equal(unsure.text, hunk, "no merge base: the file is left as it was");
+  assert.match(unsure.problems.join("\n"), /task row 3\.5 changed on both sides, or no merge base/, "and the row is reported");
+
+  // The other way round: base got the correction (an earlier merge), the branch only ticked 3.4
+  const back = resolveDocsConflict(conflict([row("3.4", "x", "Task four"), was[1]], [was[0], fixed]), was.join("\n"));
+  assert.equal(back.text, `head\n${row("3.4", "x", "Task four")}\n${fixed}\ntail\n`, "base's text edit is kept too");
+
+  const both = resolveDocsConflict(conflict([row("3.5", "x", "Task five, branch")], [row("3.5", " ", "Task five, base")]), was.join("\n"));
+  assert.equal(both.problems.length, 1, "both sides changed the text: refused");
+}
+
+{
+  // The CLI reads the merge base from git's index (stage 1) during a real `git merge`
+  const dir = mkdtempSync(join(tmpdir(), "pitwall-resolve-"));
+  const git = (...args) => execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: dir, stdio: "pipe" });
+  const plan = join(dir, "plan.md");
+  const write = (...rows) => writeFileSync(plan, ["# Plan", ...rows, ""].join("\n"));
+  try {
+    git("init", "-q", "-b", "main");
+    git("config", "core.autocrlf", "false"); // Windows: keep the file LF
+    write(row("3.4", " ", "Task four"), row("3.5", " ", "Task five"));
+    git("add", ".");
+    git("commit", "-qm", "base");
+    git("checkout", "-qb", "agent");
+    write(row("3.4", " ", "Task four"), row("3.5", " ", "Task five. Plan correction: c.gd too"));
+    git("commit", "-qam", "branch");
+    git("checkout", "-q", "main");
+    write(row("3.4", "x", "Task four"), row("3.5", " ", "Task five"));
+    git("commit", "-qam", "tick");
+    git("checkout", "-q", "agent");
+    assert.notEqual(spawnSync("git", ["merge", "-q", "main"], { cwd: dir }).status, 0, "the repro conflicts");
+    const script = join(import.meta.dirname, "../plugin/skills/pitwall/scripts/resolve-docs-conflict.mjs");
+    const r = spawnSync(process.execPath, [script, plan], { encoding: "utf8" });
+    assert.equal(r.status, 0, r.stderr);
+    assert.equal(
+      readFileSync(plan, "utf8"),
+      ["# Plan", row("3.4", "x", "Task four"), row("3.5", " ", "Task five. Plan correction: c.gd too"), ""].join("\n"),
+      "CLI: base's tick and the branch's text both survive",
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 }

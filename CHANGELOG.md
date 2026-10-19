@@ -9,6 +9,7 @@ Auto merge into the dev branch: with `merge: auto` in the profile (the base is t
 - A PARTIAL verdict whose boxes are all ticked since, or a verdict from before the Always park question, gets one fresh verifier before the merge is judged again; gate 1 never accepts PARTIAL
 - The independent verifier now answers the Always park question (money, permissions / security, user data, deletes) over the whole PR diff on every run, and the lead records it; `merge-gate.mjs` holds a PR without that answer
 - `init` asks who merges again when the base is named like a dev branch, and names the permission rule for `merge-pr.mjs` (`.claude/settings.local.json`, added by you). `/pitwall:stop` and `/pitwall:brake` also stop merges during a `/pitwall:lap` you typed
+- `ticket` (ClickUp): a task gets the repo tag plus one tag per server / game the work changes, so QA can sort work by server. Kinds of work the profile groups per sprint (bugs, backend requests) become subtasks of that sprint's group parent instead of loose tasks, and work the profile marks "not tracked" (agent tooling, for one) gets no task, and its PR says so. A team said a sprint with every bug as its own task was too cluttered to review
 
 ## 0.6.0 — 2026-10-22
 

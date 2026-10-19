@@ -22,7 +22,7 @@ Tasks come from 2 sources (field `source` in the queue):
 - `plan` = a row in the repo's plan — read in the order given in the profile
 - `tracker` = a task in the profile's tracker — the brief is the description (`Why / What / Done when`); no plan to tick
 
-Profile `tracker` ≠ `none` → every task must have a tracker task (the `pitwall:ticket` skill) · `none` → the PR is the record; every tracker step below is skipped
+Profile `tracker` ≠ `none` → every task must have a tracker task (the `pitwall:ticket` skill), except work the profile marks "not tracked" (its tracker steps are skipped and the PR says "not tracked in the sprint") · `none` → the PR is the record; every tracker step below is skipped
 
 ## 0. State
 

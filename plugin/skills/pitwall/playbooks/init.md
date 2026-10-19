@@ -48,7 +48,7 @@ Never ask what a file answered; never fill a business value (prices, limits, cre
 
 - `.claude/agent-loop.md` from the draft + answers · a row nobody could answer → `none` + the reason, never left as `{{…}}`
 - no tracker and no plan → copy `<pitwall dir>/templates/plan.md` to the chosen path; the profile `plan` section points at it
-- the plan file goes into `git` → `resolve conflicts yourself`: every PR ticks a row in it, and with `tracker: none` also appends a log line, so two open PRs always conflict there (append-only, safe to union)
+- the plan file goes into `git` → `resolve conflicts yourself`: task PRs no longer tick rows or write the log (the lap's plan sync does, after merge), but a new row, a Plan correction or a parked question still lands with a task PR (append-only, safe to union)
 - no verification skill → `verification skill: none`; level B items with no browser fall to C, say so in the report
 - `permissions`: write the list into the profile; adding it to the settings file is the user's step
 - `.claude/settings.json` on the base has `"pitwall@pitwall": true` under `enabledPlugins` but no `pitwall` key under `extraKnownMarketplaces` → a teammate's clone cannot resolve the plugin: say so in the report, with the entry to add (`"pitwall": { "source": { "source": "github", "repo": "aontwit/pitwall" } }`) — adding it is the user's step, like `permissions`

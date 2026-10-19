@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `init` reads the file-based values of step 1 through `scripts/detect.mjs` (#30): package manager and frozen install, check commands, Godot version, CI `run:` steps, dev server and port, plan files, verification-skill candidates, hooks and rules files. It reads `origin/<base>` with `--ref`, and a value it cannot settle stays `null`, never a guess. Tests run it against three fixture repos (empty, Next.js, Godot). A second test reads the verifier row and the `Plan PR` line that the playbooks prescribe and runs them through `check-pr-body.mjs`, so a playbook and the script can no longer drift apart unnoticed the way they did in #26
+
 ## 0.4.3 — 2026-10-19
 
 Fixes from users: the docs-conflict resolver no longer drops a branch's edit to a task row, and a `/pitwall:plan` PR passes its own PR-body check.

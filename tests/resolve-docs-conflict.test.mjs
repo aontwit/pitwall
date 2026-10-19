@@ -100,7 +100,8 @@ const row = (id, box, task = `task ${id}`) => `| ${id} | [${box}] ${task} | file
 {
   // The CLI reads the merge base from git's index (stage 1) during a real `git merge`
   const dir = mkdtempSync(join(tmpdir(), "pitwall-resolve-"));
-  const git = (...args) => execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@t", ...args], { cwd: dir, stdio: "pipe" });
+  const id = ["-c", "user.name=t", "-c", "user.email=t@t"]; // CI has no git identity, and merge needs one
+  const git = (...args) => execFileSync("git", [...id, ...args], { cwd: dir, stdio: "pipe" });
   const plan = join(dir, "plan.md");
   const write = (...rows) => writeFileSync(plan, ["# Plan", ...rows, ""].join("\n"));
   try {
@@ -116,7 +117,8 @@ const row = (id, box, task = `task ${id}`) => `| ${id} | [${box}] ${task} | file
     write(row("3.4", "x", "Task four"), row("3.5", " ", "Task five"));
     git("commit", "-qam", "tick");
     git("checkout", "-q", "agent");
-    assert.notEqual(spawnSync("git", ["merge", "-q", "main"], { cwd: dir }).status, 0, "the repro conflicts");
+    spawnSync("git", [...id, "merge", "-q", "main"], { cwd: dir });
+    assert.match(readFileSync(plan, "utf8"), /^<<<<<<< /m, "the repro conflicts");
     const script = join(import.meta.dirname, "../plugin/skills/pitwall/scripts/resolve-docs-conflict.mjs");
     const r = spawnSync(process.execPath, [script, plan], { encoding: "utf8" });
     assert.equal(r.status, 0, r.stderr);

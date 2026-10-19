@@ -2,7 +2,16 @@
 
 ## Unreleased
 
+- Task PRs no longer tick their plan row or write the Progress log (#29). The start-of-round sync in `lap` ticks the rows of merged agent PRs and writes the log in one docs PR, through `scripts/plan-sync.mjs`, and `queue` and `lap` count a row as done once its agent PR has merged. Sibling task PRs from the same base no longer conflict in the plan file after each merge, and a resolution no longer makes their verdict stale. That conflict was behind #7, #25, the resolver in 0.4.0 and the log-row change in 0.4.1. A `repeat` row stays in the queue until its target round, so the sync skips it until then
 - New `/pitwall:verify-setup` (`playbooks/verify-setup.md`, adapted from pstack `create-verification-skill`, MIT): reads the repo, writes `.claude/skills/verify-<app>/SKILL.md` with Launch / Doctor / Drive / Evidence / Cleanup and a feature map of the top 3–5 features, runs it once end to end and fills the profile's `verification skill` row. It has a web recipe (dev server + browser) and a Godot recipe (headless scene run through a drive script, stdout + exit code, a frame from `--write-movie` or `save_png` with a renderer). `init` offers it when the repo has no verification skill, and `/pitwall:gauge` drives a level B item with that skill when there is no browser, so a Godot repo gets level B evidence instead of a step for a human (#33)
+
+## 0.4.4 — 2026-10-19
+
+A shorter way to the first agent PR: `init` hands over the commands to commit the profile and offers a one-task path, and the README says what has run on real repos.
+
+- `init` step 5: the report gives the commands to commit the profile and the plan file, ready to paste: a direct commit and push when the base is not protected, a small `docs/pitwall-profile` PR when it is. Init still runs none of them. Before, it only said "commit it to the base yourself"
+- `init` step 5: an empty plan gets two paths, `/pitwall:queue <one task in words>` then `/pitwall:lap` (one round to the first PR), or `/pitwall:plan` for a whole product or phase. Before, it always sent a new user to the multi-round `/pitwall:plan` interview and a plan PR to merge first, about 7 steps before the first agent PR
+- README: a "Your first 30 minutes" section after Quick start. The Status table moves to Proven what users have run: `/pitwall:merge-order` with the docs-conflict resolver, laps on a Next.js frontend repo, laps on two Godot repos with `tracker: github` (Duskreign, Guild Register), and laps on macOS (#7)
 
 ## 0.4.3 — 2026-10-19
 

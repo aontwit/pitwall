@@ -52,7 +52,7 @@ Never ask what a file answered; never fill a business value (prices, limits, cre
 - `.claude/agent-loop.md` from the draft + answers · a row nobody could answer → `none` + the reason, never left as `{{…}}`
 - no tracker and no plan → copy `<pitwall dir>/templates/plan.md` to the chosen path; the profile `plan` section points at it
 - the plan file goes into `git` → `resolve conflicts yourself`: task PRs no longer tick rows or write the log (the lap's plan sync does, after merge), but a new row, a Plan correction or a parked question still lands with a task PR (append-only, safe to union)
-- no verification skill → `verification skill: none`; level B items with no browser fall to C, say so in the report
+- no verification skill → `verification skill: none` for now, and the report's next steps offer `/pitwall:verify-setup`, which writes one, runs it once and fills this row · until then level B items with no browser fall to C, say so in the report
 - `permissions`: write the list into the profile; adding it to the settings file is the user's step
 - `.claude/settings.json` on the base has `"pitwall@pitwall": true` under `enabledPlugins` but no `pitwall` key under `extraKnownMarketplaces` → a teammate's clone cannot resolve the plugin: say so in the report, with the entry to add (`"pitwall": { "source": { "source": "github", "repo": "aontwit/pitwall" } }`) — adding it is the user's step, like `permissions`
 - a CI workflow triggered by `pull_request` without `edited` among its `types` → a stacked PR moved to base after its parent merges keeps only the checks from its old base, because GitHub starts no run on a base change: say so in the report, with the trigger to add (`types: [opened, synchronize, reopened, edited]`, and on the job `if: github.event.action != 'edited' || github.event.changes.base`, so edits to the title or body start nothing) — changing the workflow is the user's step
@@ -73,3 +73,4 @@ Init runs none of them: the user reads the profile before it lands, and on an op
   - fast: `/pitwall:queue <one task in words>`, then `/pitwall:lap` — one round to the first PR
   - whole product or phase: `/pitwall:plan`, merge its PR, then `/pitwall:queue` and `/pitwall:drive`
 - otherwise → `/pitwall:queue`, then `/pitwall:lap` (one round) or `/pitwall:drive`
+- `verification skill: none` and no browser for level B (a Godot game, a CLI) → `/pitwall:verify-setup` first, so the first lap gets level B evidence instead of steps for a human

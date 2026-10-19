@@ -6,7 +6,7 @@ user-invocable: true
 
 # pitwall
 
-The skill holds no repo-specific values: everything that belongs to the repo (base, check commands, browser, human-only steps, tracker, plan, recipes for building states) lives in the profile `.claude/agent-loop.md` · no profile → only `init` and `doctor` run; every other request stops with "this repo has not set up pitwall yet — run `/pitwall:init`" · never guess values the profile should hold
+The skill holds no repo-specific values: everything that belongs to the repo (base, check commands, browser, human-only steps, tracker, plan, recipes for building states) lives in the profile `.claude/agent-loop.md` · no profile → only `init`, `doctor` and `verify-setup` run; every other request stops with "this repo has not set up pitwall yet — run `/pitwall:init`" · never guess values the profile should hold
 
 **pitwall dir** = `${CLAUDE_SKILL_DIR}` (this skill's folder: `playbooks/`, `principles/`, `scripts/`) · every `playbooks/…`, `principles/…`, `scripts/…` path in this skill and in the playbooks is relative to it, and `<pitwall dir>` in a command means this path
 
@@ -65,6 +65,7 @@ Open a todo list whose first steps are the chosen playbook's steps, copied word 
 | what do I keep repeating / `/pitwall:secretary` | `playbooks/secretary.md` |
 | set this repo up / `init` | `playbooks/init.md` |
 | is the profile complete / `doctor` | `playbooks/doctor.md` |
+| make a skill that drives the app (no browser for level B, a Godot game) / `/pitwall:verify-setup` | `playbooks/verify-setup.md` — writes `.claude/skills/verify-<app>/`, runs it once |
 | test together / pair run / verify / `/pitwall:gauge` | the `pitwall:gauge` skill (pair run section) |
 | open a task / `/pitwall:ticket` | the `pitwall:ticket` skill |
 | inside `/pitwall:lap`, by task type: fix a bug / refactor that must stay identical / bring a number down / bring over from another branch | `bug-fix.md` / `move-only.md` / `ratchet.md` / `port.md` |
@@ -76,11 +77,11 @@ Open a todo list whose first steps are the chosen playbook's steps, copied word 
 
 Requests may come in the user's language; the Thai trigger phrases in the description map to the same rows.
 
-Commands: each playbook has its own shortcut skill — `/pitwall:plan`, `/pitwall:queue`, `/pitwall:drive`, `/pitwall:lap`, `/pitwall:stop`, `/pitwall:brake`, `/pitwall:merge-order`, `/pitwall:secretary`, `/pitwall:init`, `/pitwall:doctor` — which invokes this skill with the playbook name as the first argument · a first argument that names a row → that playbook · anything else (`/pitwall:pitwall <request in words>`, or a request with no command) routes by the table · `/pitwall:gauge` and `/pitwall:ticket` are separate skills of this plugin
+Commands: each playbook has its own shortcut skill — `/pitwall:plan`, `/pitwall:queue`, `/pitwall:drive`, `/pitwall:lap`, `/pitwall:stop`, `/pitwall:brake`, `/pitwall:merge-order`, `/pitwall:secretary`, `/pitwall:init`, `/pitwall:doctor`, `/pitwall:verify-setup` — which invokes this skill with the playbook name as the first argument · a first argument that names a row → that playbook · anything else (`/pitwall:pitwall <request in words>`, or a request with no command) routes by the table · `/pitwall:gauge` and `/pitwall:ticket` are separate skills of this plugin
 
 ## principles (`principles/`)
 
-Ways of thinking from pstack (MIT, Lauren Tan — source at the top of every file, license in `principles/LICENSE-pstack`, which also covers the playbooks adapted from pstack: `feature`, `investigation`, `opening-a-pr`) · read the whole file before using it · in the report / PR, state which principle changed which decision, and cite only files actually read this round
+Ways of thinking from pstack (MIT, Lauren Tan — source at the top of every file, license in `principles/LICENSE-pstack`, which also covers the playbooks adapted from pstack: `feature`, `investigation`, `opening-a-pr`, `verify-setup`) · read the whole file before using it · in the report / PR, state which principle changed which decision, and cite only files actually read this round
 
 | Use when | principle |
 |---|---|

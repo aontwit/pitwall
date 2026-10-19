@@ -47,7 +47,7 @@ Work on a branch from the profile's agent branch pattern (`<id>` = `plan`) · no
 - New repo → phase 0 comes before every product phase, and the first product phase's rows say "needs 0.2 merged":
   - `0.1` scaffold in the chosen stack · Done when: the app starts locally from a clean clone with the commands in the README
   - `0.2` checks: typecheck / lint / test / build as repo scripts (those the stack has), one passing test, and a CI workflow that runs them · Done when: CI is green on the PR, and the profile's `checks` section names these commands (same PR)
-  - `0.3` a verification skill at `.claude/skills/verify-<app>/SKILL.md` that launches the app, drives one screen and captures evidence · Done when: it ran once end to end in the PR's Verify table, and the profile's `verification skill` row (level B section) points at it (same PR)
+  - `0.3` a verification skill at `.claude/skills/verify-<app>/SKILL.md` (write it with `/pitwall:verify-setup`) that launches the app, drives one screen and captures evidence · Done when: it ran once end to end in the PR's Verify table, and the profile's `verification skill` row (level B section) points at it (same PR)
 - Order and process decisions go into the plan's answered table (question · answer · date). Items still open go to the profile's `open questions` location
 - Rows follow the profile row format. Each row cites a spec section, names its files (≤ ~8), and has a checkable "Done when". Dependencies go in the task text ("needs X merged")
 - A row that needs a human verdict is a 🚪 gate row. A phase that is not ready keeps `TBD`, so `/pitwall:queue` skips it

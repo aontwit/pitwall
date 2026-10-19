@@ -59,6 +59,7 @@ export const NAV: NavGroup[] = [
     group: 'Proof & review',
     items: [
       pb('gauge', 'Gauge', 'Pick proof by what changed: checks, a browser, or numbered steps for a human.', '/pitwall:gauge'),
+      pb('verify-setup', 'Verify setup', 'Write a skill that drives the app (browser, or a headless Godot run) so level B proof needs no human.', '/pitwall:verify-setup'),
       pb('opening-a-pr', 'Opening a PR', 'Commit, push and open the PR with its evidence; the one home of the PR rules.'),
       pb('secretary', 'Secretary', 'Read past sessions and report what keeps repeating.', '/pitwall:secretary'),
     ],

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.3 — 2026-10-19
+
+Fixes from users: the docs-conflict resolver no longer drops a branch's edit to a task row, and a `/pitwall:plan` PR passes its own PR-body check.
+
+- `scripts/resolve-docs-conflict.mjs`: a task row both sides hold with different text kept base's text and exited 0, so a `Plan correction` or a changed Files cell on the branch was lost without a word. It now reads the merge base from git's index and keeps the text of the side that changed the row, ticked if either side ticked. When both sides changed it, or there is no merge base to tell, it exits 1 and names the row, and `merge-order` 2b says how to fix it. Found in one repo: three merges in a row lost the branch's Plan correction, and one reached `main` (#25)
+- `scripts/check-pr-body.mjs` accepts a docs-only plan PR: a `## Verify` section with a line starting `Plan PR` stands in for the verifier row. `plan` step 5 says to write that line and run the check, so the playbook and the check agree. Before, a plan PR failed the check that `plan` says it needs no verifier for (#26)
+
 ## 0.4.2 — 2026-10-12
 
 The loop keeps talking in the user's language from start to end, and pitwall tells you when a new release is out.

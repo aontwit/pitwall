@@ -1,5 +1,6 @@
 // Checks a PR body against the pitwall template: a Verify heading with the independent verifier
-// row, and every open box under "Not done yet" is a ⏳ wait case (case 1-3). Run: node check-pr-body.mjs --pr <n> | --file <path> | < stdin
+// row (or, in a docs-only plan PR, a line starting `Plan PR` there: plan.md 5), and every open box
+// under "Not done yet" is a ⏳ wait case (case 1-3). Run: node check-pr-body.mjs --pr <n> | --file <path> | < stdin
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
@@ -7,6 +8,8 @@ import { pathToFileURL } from "node:url";
 // The independent verifier's passing verdict, pinned to the head SHA and patch-id it ran at (gauge skill).
 const VERIFIER_ROW =
   /^\|\s*Verifier\s*\|.*@[0-9a-f]{7,40}\b.*\bpatch [0-9a-f]{8,40}\b.*✅ (VERIFIED|PARTIAL)\b/i;
+// ponytail: the body's word is trusted; the check sees no diff, so it cannot tell a plan PR is docs only
+const PLAN_PR = /^\s*([-*+]\s+)?(\*\*)?Plan PR\b/i;
 
 /** { ok, problems } for a PR body. */
 export const checkPrBody = (body) => {
@@ -17,6 +20,7 @@ export const checkPrBody = (body) => {
   if (!hasVerify) problems.push("no heading matching `^#{1,3} Verify`");
   let verifyLevel = 0; // heading level of the open Verify section, 0 = outside it
   let hasVerifierRow = false;
+  let isPlanPr = false;
   let inNotDone = false;
   const isNotDoneStart = (line) => /^(#{1,3} |\*\*)Not done yet/.test(line);
   const hasNotDone = lines.some(isNotDoneStart);
@@ -29,6 +33,8 @@ export const checkPrBody = (body) => {
       else if (!heading || heading[1].length <= verifyLevel) verifyLevel = 0;
     } else if (verifyLevel && VERIFIER_ROW.test(line)) {
       hasVerifierRow = true;
+    } else if (verifyLevel && PLAN_PR.test(line)) {
+      isPlanPr = true;
     } else if (/^\s*[-*+] \[ \]/.test(line)) {
       if (!inNotDone) {
         if (!hasNotDone) problems.push(`open box outside a Not done yet section: ${line.trim()}`);
@@ -39,9 +45,9 @@ export const checkPrBody = (body) => {
       }
     }
   }
-  if (hasVerify && !hasVerifierRow) {
+  if (hasVerify && !hasVerifierRow && !isPlanPr) {
     problems.push(
-      "no verifier row in the Verify section: `| Verifier | … @<head sha> patch <patch-id> | ✅ VERIFIED or PARTIAL |`",
+      "no verifier row in the Verify section: `| Verifier | … @<head sha> patch <patch-id> | ✅ VERIFIED or PARTIAL |` (a plan PR: a line starting `Plan PR`)",
     );
   }
   return { ok: problems.length === 0, problems };

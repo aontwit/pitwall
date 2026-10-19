@@ -49,12 +49,13 @@ Per PR with `mergeable = CONFLICTING`, head starting with `agent/` (agent branch
 1. Conflicting files (read-only): `git fetch -q origin && git merge-tree --write-tree --name-only --no-messages origin/<base> origin/<head> | tail -n +2`
 2. Any file outside the profile's "resolve conflicts yourself" → **do not touch** 🔴 `conflict in code: <file>` for a human
 3. Separate worktree (does not disturb the main checkout / dev server): the local branch has commits not yet pushed (`git rev-list origin/<head>..<head>` not empty) → stop 🔴 · otherwise `git worktree add -B <head> <scratchpad>/wt-merge origin/<head>` (this worktree uses a real `node_modules` — run the profile's install command the first time, in case a pre-push hook builds)
-4. `git merge --no-edit origin/<base>` → `node <pitwall dir>/scripts/resolve-docs-conflict.mjs <conflicting files>` — every hunk keeps **both sides, base's first, then the branch's** (what humans pick on the web for append-only logs), a line both sides hold once, and a task row both sides hold once, ticked if either side ticked · exit 1 = it found what union cannot decide and left that file as it was → fix it by this table, or `git merge --abort` → 🔴:
+4. `git merge --no-edit origin/<base>` → `node <pitwall dir>/scripts/resolve-docs-conflict.mjs <conflicting files>` — every hunk keeps **both sides, base's first, then the branch's** (what humans pick on the web for append-only logs), a line both sides hold once, and a task row both sides hold once, ticked if either side ticked, with the text of the side that changed it since the merge base · exit 1 = it found what union cannot decide and left that file as it was → fix it by this table, or `git merge --abort` → 🔴:
 
 | The script reports | Fix |
 |---|---|
 | Two rows with the same id, e.g. an open-question number | The branch's row → next free number, and fix the `#<number>` the branch refers to in files the branch changed (`git diff --name-only origin/<base>...origin/<head>`) |
 | One status board line changed two ways | Merge into one line that states both things |
+| A task row changed on both sides (or no merge base) | Keep one row: the branch's text plus what base added (e.g. a `Plan correction`), ticked if either side ticked |
 | diff3 markers / unsure the merge is right | `git merge --abort` → 🔴 `conflict needs a human: <file:line>` |
 
 5. Check: `git grep -n -e '^<<<<<<<' -e '^>>>>>>>' -e '^=======$' -- <files>` is empty · `git diff --check` passes · referenced paths / task numbers exist (docs of `/pitwall:gauge`)

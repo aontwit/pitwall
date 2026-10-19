@@ -1,0 +1,13 @@
+name: ci
+on: pull_request
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GODOT: /usr/local/bin/godot
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/test.sh
+      - name: Multi-line steps are not read
+        run: |
+          echo skipped

@@ -12,6 +12,8 @@ Each value keeps its source for the report (file:line or command)
 
 Read the **base as the loop will see it**, not the working tree: `git fetch origin -q`, settle `base` first (row below), then read every file in the table with `git show origin/<base>:<path>` (Git Bash on Windows rewrites `origin/x:path` — prefix `MSYS_NO_PATHCONV=1`) · the local base is behind (`git rev-list --count <base>..origin/<base>` > 0) → say so in the report (the first `/pitwall:lap` pulls it, and a value read from the stale tree would be wrong: lockfile, scripts, ports)
 
+Once `base` is settled, run `node <pitwall dir>/scripts/detect.mjs . --ref origin/<base>` (prefix `MSYS_NO_PATHCONV=1` on Git Bash). It settles the file-based rows the same way every run: install + check commands for JS stacks, the Godot version, CI `run:` steps, dev server + port, plan files, verification-skill candidates, hooks and rules files. Read files yourself only for what it leaves `null` / `[]`, and for the judgment it doesn't make: other stacks (`Makefile`, `pyproject.toml` …), which CI step is the check command, and whether a candidate skill really drives the app
+
 | Value | Read from |
 |---|---|
 | install + check commands | lockfile → package manager (`package-lock.json` npm · `pnpm-lock.yaml` pnpm · `yarn.lock` yarn · `bun.lock*` bun), frozen install form · scripts that exist in `package.json` (typecheck / lint / test / build) · other stacks: `Makefile`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `project.godot` (Godot: engine version from `config/features`, no install step) · no package scripts → the `run:` steps of `.github/workflows/*.yml` are the next source: a step that calls a script in the repo → that script is the command, with the env vars the step sets written as a requirement (`GODOT` = path to the engine binary) · a check with no command → `none`, never invent one |
@@ -24,6 +26,7 @@ Read the **base as the loop will see it**, not the working tree: `git fetch orig
 | dev server | a `dev` / `start` script + its port (script flags, framework config) |
 | verification skill | a `.claude/skills/*/SKILL.md` that launches or drives the app |
 | plan | `PLAN.md`, `TODO.md`, `IMPLEMENTATION_PLAN.md`, `tasks.md`, `docs/**/plan*`, `.taskmaster/` |
+| spec (in the profile `plan` section) | `SPEC.md`, `PRODUCT.md` (impeccable's product record: use it as the spec and never write a second one), `docs/**/spec*`, `docs/**/prd*` · none → `none`, and `/pitwall:plan` creates `SPEC.md` |
 | tracker | tracker tools connected in this session (ClickUp MCP) · GitHub Issues: `gh repo view --json hasIssuesEnabled`, the labels (`gh label list --json name`) and open milestones (`gh api "repos/{owner}/{repo}/milestones?state=open"`) that already exist |
 | language | the language the user writes to you in · language of `CLAUDE.md` and of the last 20 commit subjects — options for step 3, never the answer: a repo written in English says nothing about the language the owner wants to read |
 | `gh` | `gh auth status` — fails → stop: pitwall needs an authenticated `gh` |

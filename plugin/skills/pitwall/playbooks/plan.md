@@ -14,6 +14,8 @@ Read the profile `plan` section: plan location, `spec`, `question banks` (both o
 | phase | the argument names a phase, or the next phase in reading order has rows marked `TBD` | that phase only: its open items, then its rows |
 | amend | the argument describes a decision that changed | that decision, the spec section it touches, and the rows it affects |
 
+**New repo**: the base has no code yet, i.e. `git ls-tree -r --name-only origin/<base>` lists only docs and config (`*.md`, `LICENSE*`, `.gitignore`, `.github/**`, `.claude/**`). Mode `new` then adds the stack round (step 2) and phase 0 (step 3)
+
 ## 1. Read before asking
 
 - Read the spec, the plan files (`git show origin/<base>:<path>`), the repo rules and the plan's answered questions
@@ -30,16 +32,22 @@ Read the profile `plan` section: plan location, `spec`, `question banks` (both o
 - Stop when every item on the step 1 list is answered or recorded as open, and the owner confirms the last summary. If the owner says stop, record what is answered and leave the rest open
 - Generic order for mode `new`:
   1. brief: what it is, who it is for, the riskiest question, the date that holds while scope moves, and what it will not do
-  2. MVP line: what is in v1 and what comes later
-  3. each area of the spec, from the question bank
-  4. phases: order by risk, the people gates (🚪), and what each phase ends with
-  5. how the loop runs: queue the whole phase, one lap at a time, or split rows with people
+  2. stack, new repo only, once, in plain words: the owner may not know any framework names, so options never are one · "Recommend one for me" (recommended): you propose one stack that fits the brief, with a one-line reason the owner can follow ("2D, opens from a link, no server"), and the deploy target when one constrains it, recorded as `delegated: <stack> — <reason>` · "I already have a stack in mind" → they type it in Other · goes to the spec's `## Stack` · never pick the stack without this question · phase 0's `0.1` is the cheap moment to change it: the owner sees a running screen before any product row
+  3. MVP line: what is in v1 and what comes later
+  4. each area of the spec, from the question bank
+  5. phases: order by risk, the people gates (🚪), and what each phase ends with
+  6. how the loop runs: queue the whole phase, one lap at a time, or split rows with people
 
 ## 3. Record as you go
 
 Work on a branch from the profile's agent branch pattern (`<id>` = `plan`) · nothing stays only in chat, because context compaction loses it
 
+- Profile `spec` is `none` → before the first record, copy `<pitwall dir>/templates/spec.md` to `SPEC.md` at the root on this branch and set the profile `plan` section's `spec` row to `SPEC.md` (same PR). Never write a second spec next to an existing `PRODUCT.md`
 - Product decisions go into the spec, in the section they belong to, with `(owner <date>)`. Anything still undecided gets the spec's open label
+- New repo → phase 0 comes before every product phase, and the first product phase's rows say "needs 0.2 merged":
+  - `0.1` scaffold in the chosen stack · Done when: the app starts locally from a clean clone with the commands in the README
+  - `0.2` checks: typecheck / lint / test / build as repo scripts (those the stack has), one passing test, and a CI workflow that runs them · Done when: CI is green on the PR, and the profile's `checks` section names these commands (same PR)
+  - `0.3` a verification skill at `.claude/skills/verify-<app>/SKILL.md` (write it with `/pitwall:verify-setup`) that launches the app, drives one screen and captures evidence · Done when: it ran once end to end in the PR's Verify table, and the profile's `verification skill` row (level B section) points at it (same PR)
 - Order and process decisions go into the plan's answered table (question · answer · date). Items still open go to the profile's `open questions` location
 - Rows follow the profile row format. Each row cites a spec section, names its files (≤ ~8), and has a checkable "Done when". Dependencies go in the task text ("needs X merged")
 - A row that needs a human verdict is a 🚪 gate row. A phase that is not ready keeps `TBD`, so `/pitwall:queue` skips it

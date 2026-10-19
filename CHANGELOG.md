@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- New `/pitwall:verify-setup` (`playbooks/verify-setup.md`, adapted from pstack `create-verification-skill`, MIT): reads the repo, writes `.claude/skills/verify-<app>/SKILL.md` with Launch / Doctor / Drive / Evidence / Cleanup and a feature map of the top 3–5 features, runs it once end to end and fills the profile's `verification skill` row. It has a web recipe (dev server + browser) and a Godot recipe (headless scene run through a drive script, stdout + exit code, a frame from `--write-movie` or `save_png` with a renderer). `init` offers it when the repo has no verification skill, and `/pitwall:gauge` drives a level B item with that skill when there is no browser, so a Godot repo gets level B evidence instead of a step for a human (#33)
+
 ## 0.4.3 — 2026-10-19
 
 Fixes from users: the docs-conflict resolver no longer drops a branch's edit to a task row, and a `/pitwall:plan` PR passes its own PR-body check.

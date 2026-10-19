@@ -65,6 +65,7 @@ Every command is `/pitwall:<command>`. Or say what you want in plain words, Engl
 |---------|--------------|
 | `/pitwall:init` | One-time setup: read the repo, ask what it can't read, write `.claude/agent-loop.md` |
 | `/pitwall:doctor` | Check the profile against the contract and say which section is missing |
+| `/pitwall:verify-setup` | Write `.claude/skills/verify-<app>/`: a skill that launches, drives and captures evidence from your app (browser for web, a headless scene run plus a frame for Godot), and run it once |
 | `/pitwall:plan` | Interview you in rounds of 2–3 questions, record each answer in the spec, and write plan rows (docs-only PR) |
 | `/pitwall:queue` | Pick tasks the agent can finish alone (6 criteria), then ask every open question once |
 | `/pitwall:drive` | Start the loop: one task per round until the queue is empty or you stop it |

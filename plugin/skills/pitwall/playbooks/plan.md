@@ -32,7 +32,7 @@ Read the profile `plan` section: plan location, `spec`, `question banks` (both o
 - Stop when every item on the step 1 list is answered or recorded as open, and the owner confirms the last summary. If the owner says stop, record what is answered and leave the rest open
 - Generic order for mode `new`:
   1. brief: what it is, who it is for, the riskiest question, the date that holds while scope moves, and what it will not do
-  2. stack, new repo only, once: what to build with (a framework or engine the owner names, or "you choose", recorded as `delegated: <your choice and why>`) and the deploy target when one constrains it · goes to the spec's `## Stack` · never pick the stack yourself without this question
+  2. stack, new repo only, once, in plain words: the owner may not know any framework names, so options never are one · "Recommend one for me" (recommended): you propose one stack that fits the brief, with a one-line reason the owner can follow ("2D, opens from a link, no server"), and the deploy target when one constrains it, recorded as `delegated: <stack> — <reason>` · "I already have a stack in mind" → they type it in Other · goes to the spec's `## Stack` · never pick the stack without this question · phase 0's `0.1` is the cheap moment to change it: the owner sees a running screen before any product row
   3. MVP line: what is in v1 and what comes later
   4. each area of the spec, from the question bank
   5. phases: order by risk, the people gates (🚪), and what each phase ends with

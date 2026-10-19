@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Task PRs no longer tick their plan row or write the Progress log (#29). The start-of-round sync in `lap` ticks the rows of merged agent PRs and writes the log in one docs PR, through `scripts/plan-sync.mjs`, and `queue` and `lap` count a row as done once its agent PR has merged. Sibling task PRs from the same base no longer conflict in the plan file after each merge, and a resolution no longer makes their verdict stale. That conflict was behind #7, #25, the resolver in 0.4.0 and the log-row change in 0.4.1. A `repeat` row stays in the queue until its target round, so the sync skips it until then
+
 ## 0.4.3 — 2026-10-19
 
 Fixes from users: the docs-conflict resolver no longer drops a branch's edit to a task row, and a `/pitwall:plan` PR passes its own PR-body check.

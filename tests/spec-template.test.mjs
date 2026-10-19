@@ -15,3 +15,10 @@ assert.match(plan, /templates\/spec\.md/, "plan.md creates the spec from the tem
 assert.match(readFileSync(`${dir}/templates/agent-loop.md`, "utf8"), /^\| spec \|/m, "the profile has a spec row");
 
 console.log("OK: spec template");
+
+// survey (#32): the marker plan.md writes is the one the spec template explains to its readers
+const marker = /`\(inferred from <file>\)`/;
+assert.match(plan, marker, "plan.md marks unconfirmed lines");
+assert.match(spec, marker, "templates/spec.md explains the marker");
+assert.match(plan, /^\| survey \|/m, "plan.md has the survey mode");
+console.log("OK: survey marker");

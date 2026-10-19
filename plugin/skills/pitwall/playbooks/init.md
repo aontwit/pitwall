@@ -26,6 +26,7 @@ Once `base` is settled, run `node <pitwall dir>/scripts/detect.mjs . --ref origi
 | dev server | a `dev` / `start` script + its port (script flags, framework config) |
 | verification skill | a `.claude/skills/*/SKILL.md` that launches or drives the app |
 | plan | `PLAN.md`, `TODO.md`, `IMPLEMENTATION_PLAN.md`, `tasks.md`, `docs/**/plan*`, `.taskmaster/` |
+| spec (in the profile `plan` section) | `SPEC.md`, `PRODUCT.md` (impeccable's product record: use it as the spec and never write a second one), `docs/**/spec*`, `docs/**/prd*` · none → `none`, and `/pitwall:plan` creates `SPEC.md` |
 | tracker | tracker tools connected in this session (ClickUp MCP) · GitHub Issues: `gh repo view --json hasIssuesEnabled`, the labels (`gh label list --json name`) and open milestones (`gh api "repos/{owner}/{repo}/milestones?state=open"`) that already exist |
 | language | the language the user writes to you in · language of `CLAUDE.md` and of the last 20 commit subjects — options for step 3, never the answer: a repo written in English says nothing about the language the owner wants to read |
 | `gh` | `gh auth status` — fails → stop: pitwall needs an authenticated `gh` |

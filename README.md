@@ -10,6 +10,15 @@ Plan in short interview rounds, then ask every remaining question once, up front
 
 > **Quick start:** `/plugin marketplace add aontwit/pitwall`, then `/plugin install pitwall@pitwall`, then run `/pitwall:init` in your repo.
 
+## Your first 30 minutes
+
+1. **Install:** `/plugin marketplace add aontwit/pitwall`, then `/plugin install pitwall@pitwall`.
+2. **Init:** `/pitwall:init` in your repo. It reads the repo, asks only what it can't read, and writes `.claude/agent-loop.md` (and `PLAN.md` when you have no plan or tracker).
+3. **Commit the profile:** init ends with the exact commands to paste: a direct commit, or a small PR when your base is protected. Merge it before the next step.
+4. **Queue one task:** `/pitwall:queue fix the broken sort on the search page`, in your own words. It asks anything it must not guess, once, as tick boxes.
+5. **Lap:** `/pitwall:lap` runs one round: branch, code, checks, two-model review, an independent verifier, then a PR.
+6. **Review the PR:** read its Verify table and merge it yourself. Want more? `/pitwall:plan` for a whole product or phase, then `/pitwall:drive`.
+
 ## Why pitwall?
 
 An agent left alone on a queue fails in the same few ways: it asks you something at 2am and waits, it calls a passing typecheck "done", it grades its own work, and it guesses a business rule instead of stopping.
@@ -114,16 +123,17 @@ Every command is `/pitwall:<command>`. Or say what you want in plain words, Engl
 
 ## Status
 
-pitwall is pre-1.0. It has run end to end on two repos outside the one it came from (TypeScript, GitHub, `tracker: none`, Windows). `/pitwall:init` and `/pitwall:doctor` have also run on a Godot (GDScript) game repo.
+pitwall is pre-1.0. It has run end to end on two repos outside the one it came from (TypeScript, GitHub, `tracker: none`, Windows), on two Godot (GDScript) game repos (`tracker: github`, Windows), and on macOS.
 
 | Proven | Not proven yet |
 |--------|----------------|
 | install from this repo, `/pitwall:init`, `/pitwall:doctor` | `/pitwall:brake`, and `/pitwall:stop` during a task |
 | `/pitwall:queue`, including tasks typed in words and blocking on a question it must not guess | a wakeup that picks a new task and reaches a PR on its own |
-| `/pitwall:lap` end to end: repro, fix, checks, browser evidence, two-model review, independent verifier, PR (3 PRs) | `/pitwall:merge-order` and the sync after a PR merges |
-| `/pitwall:drive` start, a self-scheduled wakeup that re-enters the loop, `/pitwall:stop` between rounds | `tracker: clickup` in plugin form, `tracker: github` inside a lap |
-| routing from Thai and English requests (eval) | the `port`, `move-only` and `ratchet` playbooks, multi-machine hand-off |
-| | a `/pitwall:lap` on a repo outside JavaScript / TypeScript, macOS and Linux |
+| `/pitwall:lap` end to end: repro, fix, checks, browser evidence, two-model review, independent verifier, PR | the sync at the start of a round after a PR merges |
+| `/pitwall:lap` on a Godot repo with `tracker: github`, and on macOS | `tracker: clickup` in plugin form |
+| `/pitwall:drive` start, a self-scheduled wakeup that re-enters the loop, `/pitwall:stop` between rounds | the `port`, `move-only` and `ratchet` playbooks, multi-machine hand-off |
+| `/pitwall:merge-order`, with the script that resolves plan-doc conflicts between sibling PRs | a `/pitwall:lap` on Linux |
+| routing from Thai and English requests (eval) | |
 
 ## Installation
 

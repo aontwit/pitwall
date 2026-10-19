@@ -57,4 +57,16 @@ Never ask what a file answered; never fill a business value (prices, limits, cre
 
 ## 5. Check + report
 
-`playbooks/doctor.md` → must end in "profile OK" · report in the profile's user language: values read (with source) · values answered · defaults taken · files written · next: commit `.claude/agent-loop.md` (and the plan file) to the base yourself — the loop never pushes to the base, and `/pitwall:lap` stops on an untracked file in the tree — then `/pitwall:plan` when the plan has no rows yet (or the next phase is `TBD`), otherwise `/pitwall:queue`
+`playbooks/doctor.md` → must end in "profile OK" · report in the profile's user language: values read (with source) · values answered · defaults taken · files written · next steps (below)
+
+**Next 1 — commit the profile to the base yourself.** The loop never pushes to the base, and `/pitwall:lap` stops on an untracked file in the tree. Give the commands ready to paste, with the real paths, base and a message in the profile's commit pattern (docs type, PR / commit language):
+- base not protected → `git add .claude/agent-loop.md <plan file> && git commit -m "<message>" && git push origin <base>`
+- base protected → `git switch -c docs/pitwall-profile && git add .claude/agent-loop.md <plan file> && git commit -m "<message>" && git push -u origin docs/pitwall-profile && gh pr create --base <base> --fill`, then merge that PR and `git switch <base> && git pull`
+
+Init runs none of them: the user reads the profile before it lands, and on an open base one paste is shorter than a PR to merge
+
+**Next 2 — the first agent PR.**
+- the plan has no rows yet (or the next phase is `TBD`) → offer both paths:
+  - fast: `/pitwall:queue <one task in words>`, then `/pitwall:lap` — one round to the first PR
+  - whole product or phase: `/pitwall:plan`, merge its PR, then `/pitwall:queue` and `/pitwall:drive`
+- otherwise → `/pitwall:queue`, then `/pitwall:lap` (one round) or `/pitwall:drive`

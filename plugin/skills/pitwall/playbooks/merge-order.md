@@ -42,7 +42,7 @@ GitHub cannot merge a Draft PR — this stops a child being pressed before its p
 
 ## 2b. Resolve docs conflicts yourself
 
-The conflict that recurs every time is the logs every PR appends to at the same place (the plan's progress log, a docs changelog, the open-questions table, the status board) — append-only logs collide; knowledge pages rarely do · GitHub does not read `merge=union`, so it has to be fixed in the branch
+The conflict that recurs every time is the logs every PR appends to at the same place (new plan rows, a docs changelog, the open-questions table, the status board; plan ticks and the Progress log no longer come from task PRs, see `lap.md` PR sync item 2) — append-only logs collide; knowledge pages rarely do · GitHub does not read `merge=union`, so it has to be fixed in the branch
 
 Per PR with `mergeable = CONFLICTING`, head starting with `agent/` (agent branches only — never touch anyone else's, including the user's own) and base = destination:
 

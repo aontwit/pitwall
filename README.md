@@ -6,9 +6,11 @@
 
 The agent loop that queues your work, proves every PR, and leaves the merge to you.
 
-Plan in short interview rounds, then ask every remaining question once, up front. Then the agent builds one task per round, proves it, gets a verdict from a verifier that did not write the code, and opens the PR. 16 playbooks, 20 principles. Runs in Claude Code today; Codex, Cursor and Gemini CLI are planned.
+Plan in short interview rounds, then ask every remaining question once, up front. Then the agent builds one task per round, proves it, gets a verdict from a verifier that did not write the code, and opens the PR. 18 playbooks, 20 principles. Runs in Claude Code today; Codex, Cursor and Gemini CLI are planned.
 
 > **Quick start:** `/plugin marketplace add aontwit/pitwall`, then `/plugin install pitwall@pitwall`, then run `/pitwall:init` in your repo.
+
+**Who it's for:** developers with a GitHub repo who want a queue of small tasks built and proven while they're away, and who still read and merge every PR. It is not an app builder for people who don't review code.
 
 ## Your first 30 minutes
 
@@ -17,7 +19,7 @@ Plan in short interview rounds, then ask every remaining question once, up front
 3. **Commit the profile:** init ends with the exact commands to paste: a direct commit, or a small PR when your base is protected. Merge it before the next step.
 4. **Queue one task:** `/pitwall:queue fix the broken sort on the search page`, in your own words. It asks anything it must not guess, once, as tick boxes.
 5. **Lap:** `/pitwall:lap` runs one round: branch, code, checks, two-model review, an independent verifier, then a PR.
-6. **Review the PR:** read its Verify table and merge it yourself. Want more? `/pitwall:plan` for a whole product or phase, then `/pitwall:drive`.
+6. **Review the PR:** read its Verify table and merge it yourself. Want more? `/pitwall:plan` for a whole product or a phase, then `/pitwall:drive`. On a new repo it asks the stack in plain words and writes phase 0 (scaffold, checks, a verification skill). On a repo with code but no docs it drafts the spec from the code and asks you to confirm it.
 
 ## Why pitwall?
 
@@ -75,7 +77,7 @@ Every command is `/pitwall:<command>`. Or say what you want in plain words, Engl
 | `/pitwall:init` | One-time setup: read the repo, ask what it can't read, write `.claude/agent-loop.md` |
 | `/pitwall:doctor` | Check the profile against the contract and say which section is missing |
 | `/pitwall:verify-setup` | Write `.claude/skills/verify-<app>/`: a skill that launches, drives and captures evidence from your app (browser for web, a headless scene run plus a frame for Godot), and run it once |
-| `/pitwall:plan` | Interview you in rounds of 2–3 questions, record each answer in the spec, and write plan rows (docs-only PR) |
+| `/pitwall:plan` | Interview you in rounds of 2–3 questions, record each answer in the spec, and write plan rows (docs-only PR). Modes: `new` (empty repo: stack, `SPEC.md`, phase 0), `survey` (code but no docs: drafts the spec from the code, you confirm), `phase`, `amend` |
 | `/pitwall:queue` | Pick tasks the agent can finish alone (6 criteria), then ask every open question once |
 | `/pitwall:drive` | Start the loop: one task per round until the queue is empty or you stop it |
 | `/pitwall:lap` | Run exactly one round |
@@ -130,11 +132,16 @@ pitwall is pre-1.0. It has run end to end on two repos outside the one it came f
 |--------|----------------|
 | install from this repo, `/pitwall:init`, `/pitwall:doctor` | `/pitwall:brake`, and `/pitwall:stop` during a task |
 | `/pitwall:queue`, including tasks typed in words and blocking on a question it must not guess | a wakeup that picks a new task and reaches a PR on its own |
-| `/pitwall:lap` end to end: repro, fix, checks, browser evidence, two-model review, independent verifier, PR | the sync at the start of a round after a PR merges |
+| `/pitwall:lap` end to end: repro, fix, checks, browser evidence, two-model review, independent verifier, PR | the sync at the start of a round after a PR merges, including the plan-sync PR that ticks merged rows (0.5.0) |
 | `/pitwall:lap` on a Next.js frontend repo, on a Godot repo with `tracker: github`, and on macOS | `tracker: clickup` in plugin form |
 | `/pitwall:drive` start, a self-scheduled wakeup that re-enters the loop, `/pitwall:stop` between rounds | the `port`, `move-only` and `ratchet` playbooks, multi-machine hand-off |
 | `/pitwall:merge-order`, with the script that resolves plan-doc conflicts between sibling PRs | a `/pitwall:lap` on Linux |
-| routing from Thai and English requests (eval) | |
+| routing from Thai and English requests (eval) | `/pitwall:plan` survey mode and new-repo phase 0, `/pitwall:verify-setup` on an outside repo (0.5.0) |
+| `init`'s file-based reads (`detect.mjs`) on empty, Next.js and Godot fixture repos (tests) | tokens and time per lap, not measured yet |
+
+## Feedback
+
+pitwall is in public beta. If you try it, open an issue with the [beta feedback template](https://github.com/aontwit/pitwall/issues/new?template=beta-feedback.md): what you ran, on what kind of repo, and where it stalled, guessed or claimed something it hadn't proven. A PR it opened that you would not merge is the most useful report.
 
 ## Installation
 

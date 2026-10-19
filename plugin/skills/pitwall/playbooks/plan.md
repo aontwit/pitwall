@@ -10,7 +10,8 @@ Read the profile `plan` section: plan location, `spec`, `question banks` (both o
 
 | Mode | When | Covers |
 |---|---|---|
-| new | no spec file, or it is empty | the whole product: brief, then each area, then phases, then the first phase's rows |
+| new | no spec file (or it is empty), and the base has no code yet (a new repo, below) | the whole product: brief, then each area, then phases, then the first phase's rows |
+| survey | no spec file (or it is empty), but the base already has code | what the code already says: a drafted spec the owner confirms (section 1b), then `phase` for the rows if the owner wants them |
 | phase | the argument names a phase, or the next phase in reading order has rows marked `TBD` | that phase only: its open items, then its rows |
 | amend | the argument describes a decision that changed | that decision, the spec section it touches, and the rows it affects |
 
@@ -22,6 +23,15 @@ Read the profile `plan` section: plan location, `spec`, `question banks` (both o
 - Make the list for this mode: items the spec labels open or deferred, rows marked `TBD`, people gates, plan open questions, and anything the question bank files ask
 - Drop every question a file already answers. A likely reading becomes a claim the owner can correct, not a menu
 - No question bank in the profile → use the generic order in step 2
+
+## 1b. Survey: read the code, draft the spec (mode `survey` only)
+
+The code already answers most of what `new` would ask, so read it first and ask only to confirm. Repo evidence is a claim, not an answer, until the owner confirms it
+- Read in this order: `node <pitwall dir>/scripts/detect.mjs . --ref origin/<base>` (stack, checks, dev server) · the README and any docs · the entry points the user touches (web: `app/` / `pages/` routes, API handlers · Godot: `project.godot` main scene and autoloads, `*.tscn` scenes) · the data shapes (schemas, models, types, saved-game / resource classes) · the tests (they state intended behaviour) · the last ~30 commit subjects
+- Copy `<pitwall dir>/templates/spec.md` to `SPEC.md` on the plan branch (step 3) and fill each section with what the code shows. Every line ends with `(inferred from <file>)`. `## Terms` lists the domain words the code uses (type, table, scene and route names) with what each seems to mean. A section the code doesn't show stays empty, never a guess
+- Ask in the step 2 rounds, but the questions are about the draft: a round shows 3–6 inferred lines of one section, and asks "is this right?" with the shakiest line turned around as the second option. A confirmed line swaps its `(inferred from …)` for `(owner <date>)`. A corrected line takes the owner's words
+- At most 6 questions in all, and none that a file you read answers. Lines still unconfirmed when the owner stops keep their `inferred` mark, and `queue` treats them as open
+- Then offer rows: "plan the next work now" → mode `phase` for it, or "spec only" → step 4
 
 ## 2. Ask in rounds
 

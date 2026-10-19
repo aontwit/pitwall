@@ -2,7 +2,17 @@
 
 ## Unreleased
 
+- Task PRs no longer tick their plan row or write the Progress log (#29). The start-of-round sync in `lap` ticks the rows of merged agent PRs and writes the log in one docs PR, through `scripts/plan-sync.mjs`, and `queue` and `lap` count a row as done once its agent PR has merged. Sibling task PRs from the same base no longer conflict in the plan file after each merge, and a resolution no longer makes their verdict stale. That conflict was behind #7, #25, the resolver in 0.4.0 and the log-row change in 0.4.1. A `repeat` row stays in the queue until its target round, so the sync skips it until then
+- `init` reads the file-based values of step 1 through `scripts/detect.mjs` (#30): package manager and frozen install, check commands, Godot version, CI `run:` steps, dev server and port, plan files, verification-skill candidates, hooks and rules files. It reads `origin/<base>` with `--ref`, and a value it cannot settle stays `null`, never a guess. Tests run it against three fixture repos (empty, Next.js, Godot). A second test reads the verifier row and the `Plan PR` line that the playbooks prescribe and runs them through `check-pr-body.mjs`, so a playbook and the script can no longer drift apart unnoticed the way they did in #26
 - A new repo gets a spec and a phase 0 (#31). When the base has no code yet, `/pitwall:plan` asks once what to build with and where it deploys, and writes the answer to the spec's `## Stack`, or records `delegated` with the reason. When the profile has no spec, it creates `SPEC.md` from `templates/spec.md` (Stack, Users, Purpose, Capabilities and constraints, Terms, Open decisions) and points the profile at it. Before any product phase it writes phase 0: a scaffold, check commands with CI, and a verification skill. Each of these rows updates its own profile row, so the first product PR has level A evidence that actually ran. `init` reads an existing `PRODUCT.md` (impeccable) as the spec and never writes a second one
+
+## 0.4.4 — 2026-10-19
+
+A shorter way to the first agent PR: `init` hands over the commands to commit the profile and offers a one-task path, and the README says what has run on real repos.
+
+- `init` step 5: the report gives the commands to commit the profile and the plan file, ready to paste: a direct commit and push when the base is not protected, a small `docs/pitwall-profile` PR when it is. Init still runs none of them. Before, it only said "commit it to the base yourself"
+- `init` step 5: an empty plan gets two paths, `/pitwall:queue <one task in words>` then `/pitwall:lap` (one round to the first PR), or `/pitwall:plan` for a whole product or phase. Before, it always sent a new user to the multi-round `/pitwall:plan` interview and a plan PR to merge first, about 7 steps before the first agent PR
+- README: a "Your first 30 minutes" section after Quick start. The Status table moves to Proven what users have run: `/pitwall:merge-order` with the docs-conflict resolver, laps on a Next.js frontend repo, laps on two Godot repos with `tracker: github` (Duskreign, Guild Register), and laps on macOS (#7)
 
 ## 0.4.3 — 2026-10-19
 

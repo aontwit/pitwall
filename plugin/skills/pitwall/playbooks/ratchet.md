@@ -27,5 +27,5 @@ The reviewer must answer this question directly in the review: **"Does the drop 
 
 ## 5. Finish
 
-- Before / after numbers go in the PR every round · tick the plan row only in the round that reaches the target
+- Before / after numbers go in the PR every round · the row stays in the queue until the round that reaches the target, and the lap's plan sync ticks it once that round's PR merges
 - Target reached → lower the CI threshold to the new value in the same PR (if it still uses a fixed number)

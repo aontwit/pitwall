@@ -21,7 +21,7 @@ The queue lives in the loop's state (path in the profile), field `queue` — **d
 The profile has a "multi-machine" section → **receive** state per that section first (the other machine's queue / done / parked must not be lost) · at the end of a `/pitwall:queue` that changed the queue → **send** state
 
 
-**Plan** (if the profile has a "plan" section): `git fetch origin -q` then `git show origin/<base>:<plan files in the reading order from the profile>` — task = an unticked row, plus the pending rows (`newRow`) already in the queue; skip phases / rows the profile marks "not queued"
+**Plan** (if the profile has a "plan" section): `git fetch origin -q` then `git show origin/<base>:<plan files in the reading order from the profile>` — task = an unticked row whose agent PR has not merged (`node <pitwall dir>/scripts/plan-sync.mjs --dry <plan files>` lists the merged ones: ticks land later, in the lap's plan sync), plus the pending rows (`newRow`) already in the queue; skip phases / rows the profile marks "not queued"
 **Tracker** (skip when `none`): the open tasks per the `pitwall:ticket` skill section "Find open tasks" (tag from the profile, status `to do`, assignee me or empty) — plan subtasks that `/pitwall:ticket` has already created count as plan rows, not counted twice
 Both: `gh pr list --state open --json number,title,headRefName`
 

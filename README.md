@@ -123,14 +123,14 @@ Every command is `/pitwall:<command>`. Or say what you want in plain words, Engl
 
 ## Status
 
-pitwall is pre-1.0. It has run end to end on two repos outside the one it came from (TypeScript, GitHub, `tracker: none`, Windows), on two Godot (GDScript) game repos (`tracker: github`, Windows), and on macOS.
+pitwall is pre-1.0. It has run end to end on two repos outside the one it came from (TypeScript, GitHub, `tracker: none`, Windows), on a Next.js frontend repo, on two Godot (GDScript) game repos (`tracker: github`, Windows), and on macOS.
 
 | Proven | Not proven yet |
 |--------|----------------|
 | install from this repo, `/pitwall:init`, `/pitwall:doctor` | `/pitwall:brake`, and `/pitwall:stop` during a task |
 | `/pitwall:queue`, including tasks typed in words and blocking on a question it must not guess | a wakeup that picks a new task and reaches a PR on its own |
 | `/pitwall:lap` end to end: repro, fix, checks, browser evidence, two-model review, independent verifier, PR | the sync at the start of a round after a PR merges |
-| `/pitwall:lap` on a Godot repo with `tracker: github`, and on macOS | `tracker: clickup` in plugin form |
+| `/pitwall:lap` on a Next.js frontend repo, on a Godot repo with `tracker: github`, and on macOS | `tracker: clickup` in plugin form |
 | `/pitwall:drive` start, a self-scheduled wakeup that re-enters the loop, `/pitwall:stop` between rounds | the `port`, `move-only` and `ratchet` playbooks, multi-machine hand-off |
 | `/pitwall:merge-order`, with the script that resolves plan-doc conflicts between sibling PRs | a `/pitwall:lap` on Linux |
 | routing from Thai and English requests (eval) | |

@@ -6,7 +6,7 @@ A shorter way to the first agent PR: `init` hands over the commands to commit th
 
 - `init` step 5: the report gives the commands to commit the profile and the plan file, ready to paste: a direct commit and push when the base is not protected, a small `docs/pitwall-profile` PR when it is. Init still runs none of them. Before, it only said "commit it to the base yourself"
 - `init` step 5: an empty plan gets two paths, `/pitwall:queue <one task in words>` then `/pitwall:lap` (one round to the first PR), or `/pitwall:plan` for a whole product or phase. Before, it always sent a new user to the multi-round `/pitwall:plan` interview and a plan PR to merge first, about 7 steps before the first agent PR
-- README: a "Your first 30 minutes" section after Quick start. The Status table moves to Proven what users have run: `/pitwall:merge-order` with the docs-conflict resolver, laps on two Godot repos with `tracker: github` (Duskreign, Guild Register), and laps on macOS (#7)
+- README: a "Your first 30 minutes" section after Quick start. The Status table moves to Proven what users have run: `/pitwall:merge-order` with the docs-conflict resolver, laps on a Next.js frontend repo, laps on two Godot repos with `tracker: github` (Duskreign, Guild Register), and laps on macOS (#7)
 
 ## 0.4.3 — 2026-10-19
 

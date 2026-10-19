@@ -2,7 +2,7 @@
 
 <!-- pitwall:spec-schema 1 -->
 
-What the product is. `/pitwall:plan` writes each decision into its section with `(owner <date>)`, and marks a line still undecided `open`. Plan rows cite the section they build. Leave a section empty rather than fill it with a guess.
+What the product is. `/pitwall:plan` writes each decision into its section with `(owner <date>)`, and marks a line still undecided `open`. A line read from the code but not yet confirmed ends with `(inferred from <file>)` and counts as open. Plan rows cite the section they build. Leave a section empty rather than fill it with a guess.
 
 ## Stack
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- A new repo gets a spec and a phase 0 (#31). When the base has no code yet, `/pitwall:plan` asks once what to build with and where it deploys, and writes the answer to the spec's `## Stack`, or records `delegated` with the reason. When the profile has no spec, it creates `SPEC.md` from `templates/spec.md` (Stack, Users, Purpose, Capabilities and constraints, Terms, Open decisions) and points the profile at it. Before any product phase it writes phase 0: a scaffold, check commands with CI, and a verification skill. Each of these rows updates its own profile row, so the first product PR has level A evidence that actually ran. `init` reads an existing `PRODUCT.md` (impeccable) as the spec and never writes a second one
+
 ## 0.4.3 — 2026-10-19
 
 Fixes from users: the docs-conflict resolver no longer drops a branch's edit to a task row, and a `/pitwall:plan` PR passes its own PR-body check.

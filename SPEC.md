@@ -29,6 +29,14 @@ What the product is. `/pitwall:plan` writes each decision into its section with 
 - Two tasks run together only when their rows share no file, except files on the profile's `resolve conflicts yourself` list (`PLAN.md`, `CHANGELOG.md` …); a shared file → the second task waits for the first one's PR (owner 2026-10-21)
 - Level B: a profile that pins the dev server port (a backend that allows one origin) → the lead lets one task at a time hold the dev server; otherwise each worktree runs its own server on a spare port. Pair runs and human-only steps always go one at a time (owner 2026-10-21)
 
+### Auto merge (pstack `shipping`)
+
+- `init` asks `merge: human | auto`; `human` stays the default. `auto` lets the agent merge only into the dev branch the profile names (e.g. `dev`); the base's other destinations (`main`, release) are always merged by a human, and a repo with no dev branch is never offered `auto` (owner 2026-10-21)
+- Merges happen in one place: the PR sync at the start of a `/pitwall:lap` round, one PR at a time from the bottom of each stack, never by the worker that wrote the PR (owner 2026-10-21)
+- A PR merges only when every gate passes, as in pstack `shipping`: (1) a VERIFIED verdict (not PARTIAL) from a fresh verifier at the current patch-id; (2) no `- [ ]` left in "Not done yet", so no ⏳ and no pending level C; (3) green CI on the current head, run on the current base; (4) right before the merge, fetch the dev branch: when it changed a file the patch touches or depends on, merge it into the PR branch and wait for CI again, and a third such round holds the PR and reports it; (5) read the PR back as `MERGED` after the merge, never `--auto`; (6) no merge while `/pitwall:stop` or `/pitwall:brake` is set. A failed gate leaves the PR for a human (owner 2026-10-21)
+- Always for a human, even with every gate passed: a PR that touches the "Always park" list (money, permissions / security, user data, deletes), and a PR that loosens a gate (CI workflows, check commands, ignored checks, a lint baseline that grows) (owner 2026-10-21)
+- Merge method: a merge commit, as `/pitwall:merge-order` already tells humans, so a stack's history stays intact (owner 2026-10-21)
+
 ## Terms
 
 <!-- The domain words the code and the plan use, one line each, so agents don't guess -->

@@ -27,4 +27,17 @@ assert.deepEqual(checkPrBody(body(planLine)).problems, [], "plan PR: the prescri
 // and a body with neither still fails, so the two passes above mean something
 assert.equal(checkPrBody(body("| a | ✅ |")).ok, false);
 
+// lap.md section 9 (lead mode) and pick-batch.mjs stay in step: every flag the lead passes is in the script's usage
+// line, and the state key the script reads worker entries from is the one lap.md copies `workers[]` into
+const pickBatch = readFileSync("plugin/skills/pitwall/scripts/pick-batch.mjs", "utf8");
+const usage = /usage: pick-batch\.mjs ([^"]+)/.exec(pickBatch)?.[1];
+const call = /`node <pitwall dir>\/scripts\/pick-batch\.mjs ([^`]+)`/.exec(playbook("lap"))?.[1];
+assert.ok(usage, "pick-batch.mjs has a usage line");
+assert.ok(call, "lap.md quotes the pick-batch.mjs command");
+const flags = (text) => [...text.matchAll(/--[a-z-]+/g)].map((m) => m[0]);
+for (const flag of flags(call)) assert.ok(flags(usage).includes(flag), `lap.md passes ${flag}, pick-batch.mjs has no such flag`);
+const key = /Array\.isArray\(state\.(\w+)\)/.exec(pickBatch)?.[1];
+assert.ok(key, "pick-batch.mjs reads the worker entries from one state key");
+assert.ok(playbook("lap").includes(`\`${key}[]\` = one entry per task a worker holds`), `lap.md names the state key pick-batch reads (\`${key}[]\`)`);
+
 console.log("OK: playbook bodies");

@@ -10,7 +10,7 @@
 //   --prs = a file with `gh pr list --state open --json headRefName` output (default: that command)
 //   prints one batch id per line on stdout, one `# <id> <reason>` line per skipped item on stderr
 //   exit 0 (also for an empty batch) · 1 = could not read the state, a plan, the profile or the PR list · 2 = bad arguments
-//   · ids in state `running[]` are skipped, hold their files and count toward `parallel`
+//   · ids in state `workers[]` (lead mode, `playbooks/lap.md` section 9) are skipped, hold their files and count toward `parallel`
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
@@ -95,8 +95,8 @@ export const pickBatch = (state, rows, { parallel = 1, shared = [], openBranches
   const merged = (id) => done.get(id)?.merged === true || plan.get(id)?.ticked === true;
   const isShared = (file) => shared.some((g) => norm(g) === norm(file) || matches(norm(g), norm(file)));
 
-  // tasks a worker still runs (state `running[]`) hold their files and a slot of the cap
-  const running = (state.running ?? []).map((r) => r.id);
+  // tasks a worker still runs (state `workers[]`; `running` is the loop on / off flag) hold their files and a slot of the cap
+  const running = (Array.isArray(state.workers) ? state.workers : []).map((r) => r.id);
   const skipped = [];
   const pickable = [];
   for (const item of ordered) {

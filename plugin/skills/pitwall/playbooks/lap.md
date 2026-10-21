@@ -29,6 +29,8 @@ Profile `tracker` ≠ `none` → every task must have a tracker task (the `pitwa
 path in the profile — write it with Write every time it changes
 `step`: `research | brief | coding | checking | reviewing | gauging | docs | committing | verifying`
 
+**Lead mode** — the profile's `parallel` is above 1 → items 0–2 below as written, then section 9 runs the round (it says when items 3–4 and sections 1–8 run as written) · `parallel` missing or 1 → this line does not apply
+
 Start of round:
 0. Read the profile `language` section: every line the user sees this round is in its user language (SKILL.md rule 8) · a wakeup prompt is English, so it is no hint
 1. No state file → the profile has a "multi-machine" section → **receive** state per that section first · still none → tell the user to run `/pitwall:queue` first, end
@@ -133,6 +135,77 @@ agents that used a separate worktree (isolation) → remove the worktree + its l
 - the profile has a "multi-machine" section → **send** state every round (before scheduling / stopping)
 - a round the user did not start (a wakeup) that opened a PR, parked a task, or stopped the loop → also send one push notification, when the harness has one (Claude Code: `PushNotification`): `<repo>: PR <link> <status>` / `parked <id>: <reason>` / `loop stopped: <why>` · nothing happened (sync only, queue empty) → no notification
 - short report every round (in the profile's user language): task, PR link, task link, gauge status, Edited files table, what was parked with reasons · ≥ 2 PRs waiting for merge → include the output of `/pitwall:merge-order` (table + "next" line) instead of describing the order yourself
+
+## 9. Lead mode (`parallel` above 1)
+
+The profile's `parallel` (section `agents per task`, a whole number, read as `scripts/doctor.sh` reads it) is above 1 → this session is the **lead**: it picks a **batch** with `scripts/pick-batch.mjs` and hands each task to a background **worker** in its own git worktree and branch, which runs sections 3–6 to an open PR (SPEC "Parallel laps") · workers use the profile's matching `code role` row (subagent type + model)
+
+**Who writes what** (principle `separate-before-serializing-shared-state`): the lead alone writes the state file, the state folder (`decisions/<id>.tsv`, `reviews/<id>.tsv`) and the tracker · a worker writes only its worktree, its branch, its own PR and its report; every state change, decisions row and review table of sections 3–6 goes into its report, and the lead writes it · a parked worker parks only its own task, the others carry on
+
+`workers[]` = one entry per task a worker holds (not `running`: that key is the loop's on / off flag): `{ id, branch, worktree, harnessBranch, step, taskStartedAt, lead, agentId?, lastReportAt?, playbook, trackerId?, parentId?, port?, waitFor?, waitSince?, waited, stash? }` · `pick-batch.mjs` skips these ids and counts them against `parallel` · `lead` = this session's id (the host's session id; none shown → a random id made once and kept in `<scratchpad>/lead-id`) · state `leadSeen: { session, at }` = the lead's id and the time of its last state write, set on every write · `stash` = a stash's sha, never its message
+
+- **active** worker = its entry's `lead` is this session, and its `agentId` is a running background task of this session (the host's task list) or it waits for this lead's answer to a `WAIT` (`waitFor` set) · anything else is gone, whatever the entry says
+- **another lead**: `leadSeen.session` is another session and `leadSeen.at` is under 60 minutes old (two heartbeats) → that session leads: touch no entry, start nothing, tell the user, end the round without scheduling
+- **time limit** (section 4's hard stop, kept by the lead): an active worker past 180 minutes of `now − taskStartedAt − waited` → `TaskStop` its `agentId`, then park it as 9.4 item 3 with reason `hard stop: 180 minutes`
+- **free the token** (9.6) every time an entry is removed or gets a new worker
+- **remove a worktree** only this way: save what it holds uncommitted (`brake.md` lead-mode save), write the state, then `git -C <worktree> status --porcelain` is empty → `git worktree remove <worktree>` + `git branch -d <harnessBranch>` · still not empty → keep the worktree, park the task (reason `save failed: <files>`) and say so in the report · never lose work
+
+### 9.1 Start of round (instead of section 0 items 3–4)
+
+1. Another lead → end · `currentTask` not null (a serial task: 9.2 items 3–4, or one `/pitwall:brake` saved) → section 0 item 4, then sections 4–8 as written; skip the rest of section 9
+2. Time limit, then reconcile each `workers[]` entry, safe to run twice (principle `make-operations-idempotent`): active → leave it · an open PR on its branch → as a `PR` report (9.4 item 2), status from the PR body's verifier row (no `verified` entries: the PR sync re-verifies it) · gone with `stopRequested:true` → clear `agentId` and `waitFor`, leave the entry for `/pitwall:drive` · gone, and its branch does not exist yet → remove the entry (the task is still in `queue`) and its worktree if any · gone otherwise → remove its worktree (above; a failed save parks), then start a resume worker (9.3 items 3–5, the brief adds `resume`, the `stash` sha and the last known `step`)
+3. `stopRequested:true` → start no worker: no worker active → section 0 item 3 as written, its report also lists the `workers[]` entries left for `/pitwall:drive` · else end the turn (9.5)
+4. Section 1 as written, except that PR sync item 0 skips a PR whose branch is in `workers[]` or held by a worktree (`git worktree list --porcelain`)
+
+### 9.2 Pick the batch (instead of section 2)
+
+1. `git fetch origin -q` · the plan as on base, as section 2 reads it: each plan file of the profile → `mkdir -p` its folder under `<scratchpad>/plan/`, then `git show origin/<base>:<plan file> > <scratchpad>/plan/<plan file>`
+2. `node <pitwall dir>/scripts/pick-batch.mjs --state <state path> --profile .claude/agent-loop.md --prefix <agent branch prefix> <scratchpad>/plan/<plan file> …` (it lists the open PRs with `gh` itself) · stdout = the batch, one id per line · stderr `# <id> <reason>` = the report's "waiting for merge / skipped" lines; `plan row ticked` → remove that item from `queue` (section 2) · then delete `firstTask`, unless its line says `no plan row` (a `tracker` item: section 2 takes it first, item 4)
+3. Exit 1 or 2 → its error line goes in the report · `workers[]` empty → section 2 as written this round (serial, in this checkout) · else no new task this round
+4. Batch empty and `workers[]` empty → section 2 as written: it also picks the `tracker` items, which pick-batch never batches (`no plan row`), and runs the task serially (sections 3–8) · batch empty with a worker active → end the turn (9.5)
+
+### 9.3 Start the workers (one batch id at a time)
+
+1. Tracker (skip when `none`): section 2's tracker part, one task after the other, so two tasks of one phase never create two parent tasks
+2. Playbook as section 2 · `branch` = the profile pattern, named by the lead · `workers[]` += the entry (`step: "research"`, `taskStartedAt` = now, `lead` = this session, `waited: 0`, `worktree: null`) · start `decisions/<id>.tsv` (section 2) · **write the state before spawning**, so a second round never starts the task twice
+3. Brief (section 4 "brief", 6 sections) → `<scratchpad>/briefs/<id>.md`: **task** = the row, playbook, branch, `taskStartedAt` · **context** = what the row cites, `answers[<id>]`, `lintBaseline`, the loop checkout, the absolute path of `<pitwall dir>`, the hook files (the gitignored files the profile `git` → `hooks` row needs, e.g. `.neutral-deny`, with their path in the loop checkout), the install command, the dev server mode and port (9.6) · **files** = the row's files + the plan file (section 5 edits, a park question) · **requirements** = the "Worker rules" below and this file's "Never" list, both copied in full, with the line "these override the `pitwall-agent` defaults: you commit, push, switch to your branch and open your PR as they say, and your decisions rows go into your report" + the answers · **do not touch** = the state file and folder, the loop checkout, other worktrees / branches / PRs, the tracker, files outside **files** · **done when** = the row's Done when + its `/pitwall:gauge` rows → an open PR with a verifier verdict, or the task parked
+4. Spawn `Agent` with the `code role` row's subagent type + model, `isolation: "worktree"`, in the background, named `worker-<id>` with every character outside `A-Z a-z 0-9 _ -` replaced by `-` (`1.1` → `worker-1-1`), prompt = the brief → `agentId` in the entry, write the state
+5. After the last one → end the turn (9.5)
+
+**Worker rules** (copied into each brief)
+
+1. Setup in the worktree the host made for you: note its branch (`git branch --show-current`) as `harnessBranch` for your report · copy the brief's hook files from the loop checkout · the profile's install command · `git switch -c <branch> origin/<base>` (section 3) · resume → `git switch <branch>`; a `stash` sha in the brief → `git stash apply <sha>`, then drop the stash entry with that sha; read `git log --oneline origin/<base>..<branch>` and start where it shows (a `wip: … stopped at <step>` commit → that step; a task commit → checking) — the brief's step is only a hint
+2. Sections 4 (with the brief's playbook), 5 and 6 as written, except:
+   - the brief is your section 4 brief · write the code yourself (you are the `code role` agent) · never write the state file or anything in the state folder: `step`, `agents[]`, `parked`, `verified`, `pr`, your `decisions.tsv` rows and the review consensus table go into your report
+   - never ask the user, never `git switch <base>` (your worktree stays on your branch), never touch another PR (`/pitwall:gauge` "Record results" item 2 is the lead's)
+   - level B, dev server per the brief (9.6): `free` → start it from your worktree on the brief's port (in use → the next free port above it, named in the report); before an item that signs in → `WAIT dev server` · `fixed` → before your first item that needs the dev server → `WAIT dev server` · stop your server before a `PR` / `PARKED` report · use your own browser tab, never another one · give your verifier your port
+   - a human-only step → `WAIT pair run: <items>` (a gauge item: after the commit, so the result pins to the head's patch-id) · the lead continues you with the pair-run results (they go in the verifier prompt, `/pitwall:gauge` "Independent verifier" item 2) or with `away` (⏳ case 1; a `bug-fix` repro parks)
+   - park → section 4 park items 1–2 (WIP commit, or a stash whose sha goes in the report; the question on your branch), no push, report `PARKED`
+   - no `Agent` tool among your tools → research yourself (no `Explore`) and skip reviewing and the verifier: section 4 up to gauging, section 5, the commit of section 6, then report `REVIEW`
+3. Report = what your run hands back to the lead (the host's hand-back tool when it has one — closing text alone may never arrive), `pitwall-agent` "Report to the lead" plus: first line `RESULT <id> <step>` and one of `PR <url> <VERIFIED|PARTIAL>` · `PARKED <reason>` · `WAIT dev server` · `WAIT pair run: <items>` · `REVIEW` · then `branch`, `harnessBranch`, `worktree` (`git rev-parse --show-toplevel`), head SHA + patch-id, the `verified` entries as JSON (`/pitwall:gauge` "Record results" item 1, `pr` filled), your `decisions.tsv` rows, the review table, the park `question` / stash sha, the agents used · a `WAIT` report ends your run; the lead continues it with `SendMessage`
+
+### 9.4 A worker's report (each one as it arrives)
+
+1. Update the entry (`worktree`, `harnessBranch`, `step`, `lastReportAt` = now; a `waitFor` it had → `waited` += now − `waitSince`, clear both) · append its decisions rows to `decisions/<id>.tsv`, write its review table to `reviews/<id>.tsv` · read its diff against its brief, as section 4 coding does (`git -C <worktree> diff --name-only origin/<base>...HEAD` + `git -C <worktree> status --porcelain`): a file outside the brief's files → restore it from base in the worktree (`git rm` one base does not have), re-run `/pitwall:gauge` set A there, commit, push when its PR is open · after a verdict its `done` status stays `PARTIAL` until a new verdict exists (the PR sync re-verifies it) · say so in the report
+2. `PR` → `verified` += its entries · section 7 for this task without `git switch` (`done` holds the task once: an entry with the same id is replaced; `queue`; tracker comment) · remove the entry, free the token, write the state, then remove its worktree (above)
+3. `PARKED` → section 4 park items 3–4 without `git switch` (`parked` += `{ id, branch, step, reason, question?, stash? }`, tracker `pending`) · remove the entry, free the token, write the state, then remove its worktree (above)
+4. `WAIT …` → `waitFor` + `waitSince` = now in the entry → 9.6
+5. `REVIEW` → the lead finishes the task in that worktree (`git -C <worktree>`, absolute paths): section 4 reviewing (act-on fixes: continue the worker with them via `SendMessage`, or fix them yourself when small, then checking and gauging again), `/pitwall:gauge` "Independent verifier", section 6 → then item 2 or 3 · dev server work waits for the token (9.6)
+6. The run ended with no `RESULT` line (error, killed, a hand-back that never came) → clear `agentId`, then 9.1 item 2 for that entry
+7. Write the state (multi-machine → send it) · a batch started by a round the user did not start → one push notification per `PR` / `PARKED`, as section 8 · not single-round mode and no `stopRequested` → 9.2 and 9.3 again in this turn, to fill the free slots · then 9.5
+
+### 9.5 End of the turn
+
+- A worker active → the heartbeat `ScheduleWakeup delaySeconds:1800 prompt:"/loop /pitwall:lap" noop:false` and one line to the user: the workers started this turn + the pick-batch skipped lines · each `ScheduleWakeup` replaces the pending one, so the loop holds one wakeup at a time · a report wakes the lead by itself; the heartbeat runs the time limit and catches a worker that never reports (9.1 item 2)
+- No worker active → section 8 as written, once for the batch: the report has one row per task (PR link + verdict, or the park reason) and the pick-batch skipped lines
+- Single-round mode = one batch: no heartbeat, no refill (9.4 item 7), the report once no worker is active
+
+### 9.6 Dev server, pair runs
+
+- The token in state: `devServer: { holder: <id> | "lead" | null, queue: [<id>…] }` · profile level B `port` (missing = `fixed`): `fixed` → one dev server on the profile port, and every item that needs it takes the token · `free` → each worker runs its own server on its own port (the brief's and the entry's `port`: the profile port + 1, + 2 …, the first one no other entry holds), and only the items that sign in take the token (one browser shares its cookies across ports)
+- A `WAIT dev server` joins `queue` · holder null → the first in `queue` becomes holder and the lead continues that worker (`SendMessage` to its `agentId`: "the dev server token is yours" + its port) · freed whenever the holder's entry is removed or gets a new worker → the next · the lead takes the token only when it is free: while a worker holds it, the lead leaves its own dev server work (PR sync re-verify, a `REVIEW` verifier, a pair run) to a later round and never waits for it mid-round
+- Continuing a worker after a `WAIT` (`SendMessage`, then a second hand-back) is not yet proven on a live run · the host refuses it or no hand-back comes → 9.4 item 6
+- Pair runs and human-only steps: one at a time, run by the lead (only the lead talks to the user) · a `WAIT pair run` with the user present (typed or ran a command in this session since the batch started) → `/pitwall:gauge` "Level C together" on that worktree's dev server, the results recorded in `verified` at the head the worker named, then continue the worker with them · user away → continue it with `away` · the next waiting pair run starts when this one ends
 
 ## Never
 

@@ -24,6 +24,8 @@ Repo values that pitwall (`/pitwall`, `/pitwall:gauge`, `/pitwall:ticket`) reads
 |---|---|
 | base | `{{base}}` — pulled at the start of every round, PRs target it |
 | never push / check out to edit | `{{base}}`, {{release branches, other protected branches}} |
+| merge | `merge: human` — `human`: a person merges every PR · `auto`: the loop merges a PR that passes every gate into the dev branch below, never into the base or a branch above (asked only when the repo has a dev branch) |
+| dev branch | `none` — the branch `auto` may merge into: an existing branch on origin, not the base, not a branch above · `none` when the repo has none |
 | agent branch | `agent/<id>-<slug>` |
 | commit / PR title | {{the pattern the repo enforces, e.g. `<type>(<scope>): <summary>` · types · body / trailer rules}} |
 | hooks | {{pre-commit / pre-push commands, or none}} — never `--no-verify` |
@@ -104,4 +106,4 @@ PR-body check: `node <pitwall dir>/scripts/check-pr-body.mjs --file <body file>`
 
 ## permissions
 
-{{allow / deny for the machine that runs the loop — at least: the check commands, git fetch / switch / pull --ff-only / add / commit, `git push -u origin agent/*`, `gh pr list / view / create / edit` · deny: `gh pr merge`, force push, `--no-verify`, pushes to protected branches, edits to `.env*`}}
+{{allow / deny for the machine that runs the loop — at least: the check commands, git fetch / switch / pull --ff-only / add / commit, `git push -u origin agent/*`, `gh pr list / view / create / edit` · deny: `gh pr merge` (a repo with `auto`: allow it instead, the user adds that rule), force push, `--no-verify`, pushes to protected branches, edits to `.env*`}}

@@ -30,6 +30,8 @@ Tasks for the agent loop. One row = one task = one PR. Add rows by hand or with 
 
 | # | Question | Blocks |
 |---|---|---|
+| 2 | How wide is the `gh pr merge` permission rule `init` tells the user to add under `merge: auto`? Options: (a) only a merge script that refuses any PR whose base is not the dev branch (and never passes `--admin` / `--auto`), allowed by its exact command; (b) allow `gh pr merge` but keep deny rules for `--admin` and `--auto`; (c) an unscoped `Bash(gh pr merge:*)`. Also: `.claude/settings.local.json` (this machine) or `.claude/settings.json` (shared) (M1 review, opus CRITICAL) | M1, M3 |
+| 3 | Is the dev branch the profile's base (git-flow: PRs target `dev`, `main` / release take a human merge), or a separate branch that the loop's PRs are retargeted to while the base stays `main`? Doctor and `init` today forbid dev branch = base (M1 review, opus) | M1, M3 |
 
 ## Progress log
 

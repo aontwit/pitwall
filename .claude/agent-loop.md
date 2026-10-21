@@ -84,7 +84,7 @@ none — the tests build their own fixture repos (`tests/fixtures/`)
 | open questions | the `Open questions` table in `PLAN.md` |
 | not queued | none |
 | playbook per row type | bug → bug-fix · refactor that must stay identical → move-only · everything else → feature |
-| spec | none — `/pitwall:plan` creates `SPEC.md` |
+| spec | `SPEC.md` |
 | question banks | none |
 
 ## tracker

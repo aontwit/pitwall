@@ -145,7 +145,7 @@ const q = (...ids) => ({ queue: ids.map((id) => ({ id })) });
 {
   // Tasks still running in a worker hold their files and a slot of the cap
   const plan = rows({ A: ["a"], B: ["a"], C: ["c"], D: ["d"] });
-  const r = pickBatch({ queue: [{ id: "A" }, { id: "B" }, { id: "C" }, { id: "D" }], running: [{ id: "A" }] }, plan, { parallel: 2 });
+  const r = pickBatch({ queue: [{ id: "A" }, { id: "B" }, { id: "C" }, { id: "D" }], running: true, workers: [{ id: "A" }] }, plan, { parallel: 2 });
   assert.deepEqual(r.batch, ["C"]);
   assert.deepEqual(r.skipped, [
     { id: "A", reason: "running" },

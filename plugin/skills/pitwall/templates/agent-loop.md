@@ -46,7 +46,7 @@ PR-body check: `node <pitwall dir>/scripts/check-pr-body.mjs --file <body file>`
 
 | | |
 |---|---|
-| dev server | `{{command}}` on port `{{port}}` · port already in use by someone else → never kill it, item B becomes ⏳ case 3 |
+| dev server | `{{command}}` on port `{{port}}` · `port: fixed` (one task at a time holds the dev server, for a backend that allows one origin · `free` = each worktree runs its own server on a spare port) · port already in use by someone else → never kill it, item B becomes ⏳ case 3 |
 | browser | {{which browser the agent drives, e.g. Claude in Chrome / built-in browser / Playwright}} |
 | pages | {{the pages that matter, with paths}} |
 | viewports | {{widths, e.g. 393 and 1366 px}} · console errors = 0 |
@@ -83,6 +83,8 @@ PR-body check: `node <pitwall dir>/scripts/check-pr-body.mjs --file <body file>`
 `tracker: none` — no tasks, the PR is the record · for ClickUp write `tracker: clickup` and fill: workspace / space / sprint folder, tag, QA, meaning of `review`, task names · for GitHub Issues write `tracker: github` and fill: agent label, `in progress` / `review` / `pending` labels, QA login, `milestone: current | none`, issue names (phase parent, `<prefix> <id> ` for a row)
 
 ## agents per task
+
+`parallel: 1` — at most this many tasks at once, each in its own worktree when above 1 (1 = one at a time)
 
 | Role | subagent | model |
 |---|---|---|

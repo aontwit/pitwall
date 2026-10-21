@@ -109,12 +109,12 @@ Required sections · a playbook that needs a section that is missing → stop an
 | repo | name, state path per OS, the checkout the loop uses |
 | git | base, branches never to touch, branch / commit / PR name patterns, hooks, files the agent may resolve conflicts in itself |
 | checks | level A commands (install, typecheck, lint + baseline, test, build, any extra repo checks), PR-body check (optional) |
-| level B | dev server + port rules, browser, pages, viewport, time per method, human-only steps (what only a human may click: wallet popup, 2FA, payment confirm …), (optional) verification skill, upkeep cadence |
+| level B | dev server + port rules (`port: fixed \| free` — optional, missing = `fixed` · `fixed`: the backend allows one origin, one task at a time holds the dev server · `free`: each worktree runs its own server on a spare port), browser, pages, viewport, time per method, human-only steps (what only a human may click: wallet popup, 2FA, payment confirm …), (optional) verification skill, upkeep cadence |
 | states to build | recipes for producing the states to test, or a pointer to the file that holds them |
 | repo-specific evidence | file pattern → extra evidence + level |
 | plan (optional) | plan folder, reading order, row format, where open questions go, rows not to queue, playbook per row type, (optional) spec file and question bank files for `/pitwall:plan` |
 | tracker (optional — missing = `none`) | `tracker: clickup \| github \| none` · for `clickup`: location, tag, QA, meaning of each status, naming · for `github` (GitHub Issues): agent label, the `in progress` / `review` / `pending` labels, QA login, `milestone: current \| none`, naming (both in the `pitwall:ticket` skill) · `none` = no tasks, the PR is the record |
-| agents per task | subagent type + model per role (`code role`, `verifier`), review panel, domain checklist files |
+| agents per task | subagent type + model per role (`code role`, `verifier`), review panel, domain checklist files, `parallel: <n>` (optional, missing = 1: at most n tasks at once, each in its own worktree when n > 1) |
 | repo rules | rules files in use, principles turned off (with the reason) |
 | multi-machine (optional) | state hand-off branch |
 | permissions | allow / deny for the machine that runs the loop |

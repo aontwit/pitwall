@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Checks a repo's pitwall profile against the "Profile contract" table in ../SKILL.md.
 #   doctor.sh [profile]   (default: .claude/agent-loop.md in the current repo)
-# Exit 0 = every required section present · 1 = sections missing / bad tracker value · 3 = no profile
+# Exit 0 = every required section present · 1 = sections missing / bad tracker, parallel or port value · 3 = no profile
 set -uo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 skill="$here/../SKILL.md"
@@ -43,6 +43,24 @@ done <<< "$rows"
 if has tracker && ! grep -qE 'tracker: *`?(clickup|github|none)([^a-z0-9_]|$)' "$profile"; then
   echo "BAD      tracker: the section must say \`tracker: clickup\`, \`tracker: github\` or \`tracker: none\`"; problems=$((problems+1))
 fi
+
+# optional `key: value` settings (missing key = fine), read only inside the section the contract puts them in, so prose
+# elsewhere ("run in parallel: lint", "DB port: 5432") is never a value · `key:` on a word boundary, so `Report:` never
+# matches `port:` and `on port \`4321\`` (no colon) is not a value · a {{…}} placeholder is left to the UNFILLED check
+section() { # <section name> → its lines, heading matched like has()
+  tr -d '\r' < "$profile" | awk -v s="$1" '/^## /{h=tolower(substr($0,4)); on=(h==s || index(h,s" ")==1); next} on'
+}
+check_value() { # <section> <key> <ok-regex for the value> <message>
+  local tok
+  while IFS= read -r tok; do
+    [ -n "$tok" ] || continue
+    tok="${tok#*:}"; tok="${tok# }"; tok="${tok#\`}"; tok="${tok# }"; tok="${tok#\`}"
+    [[ "$tok" == '{{'* ]] && continue
+    printf '%s' "$tok" | grep -qE "$3" || { echo "BAD      $2: $4 (got \`$2: $tok\`)"; problems=$((problems+1)); }
+  done < <(section "$1" | grep -oE "(^|[^A-Za-z0-9_])$2: *\`? *[^[:space:]\`|,;)]*" | sed -E "s/^[^A-Za-z0-9_]?//")
+}
+check_value 'agents per task' parallel '^[1-9][0-9]*$' 'a whole number of 1 or more, e.g. `parallel: 2`'
+check_value 'level b' port '^(fixed|free)$' 'must be `port: fixed` or `port: free` (the port number goes after `on port`)'
 
 left="$(grep -c '{{' "$profile" || true)"
 if [ "$left" -gt 0 ]; then

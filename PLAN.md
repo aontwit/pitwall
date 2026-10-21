@@ -25,12 +25,12 @@ Tasks for the agent loop. One row = one task = one PR. Add rows by hand or with 
 | How does the loop run these rows? | `/pitwall:queue` P1–P4, then `/pitwall:drive`; P5 is a gate for the owner | 2026-10-21 |
 | How is auto merge split into PRs? | M1–M5 as above; M2 can start now, M1 needs P1, M3 needs M1, M2 and P3 | 2026-10-21 |
 | How does the loop run the auto-merge rows? | M1–M4 join the end of the running queue; M5 is a gate for the owner | 2026-10-21 |
+| How does `merge-gate.mjs` recognise a PR that touches the "Always park" list (money, permissions / security, user data, deletes)? | (a) Fail closed via the verifier: the gate holds a PR as `always-human` unless state `verified` has, at the PR's current patch-id, an entry `item: "always-park"`, `method: "verifier"`, `evidence: "none"` (the independent verifier found no Always park topic); any other evidence holds and is quoted, no entry holds. M3 adds the question to the verifier prompt (owner) | 2026-10-22 |
 
 ## Open questions
 
 | # | Question | Blocks |
 |---|---|---|
-| 1 | How does `merge-gate.mjs` recognise a PR that touches the "Always park" list (money, permissions / security, user data, deletes), so auto merge leaves it to a human? Options: (a) fail closed: hold unless the independent verifier recorded "no Always park topic" at the current patch-id in state; (b) path / content signals (auth, permission, secret, payment, price, fee, migration, `DROP` / `DELETE FROM` / `GRANT`) plus a profile row of always-human globs that `init` asks for; (c) both. Today only an `Always human:` body line holds, and nothing writes it (M2 review, both models CRITICAL) | M2, M3 |
 
 ## Progress log
 

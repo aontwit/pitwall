@@ -26,7 +26,7 @@ Repo values that pitwall (`/pitwall`, `/pitwall:gauge`, `/pitwall:ticket`) reads
 | never push / check out to edit | `main` |
 | agent branch | `agent/<id>-<slug>` |
 | commit / PR title | `<type>(<scope>): <summary>` · type: feat / fix / refactor / test / chore / docs · scope: lowercase, digits, `-` · English only · no `Co-Authored-By` trailer (`scripts/check-commit-msg.sh`) |
-| hooks | none installed · run `bash scripts/check-commit-msg.sh <message file>` before each commit — never `--no-verify` |
+| hooks | `.githooks/` (`git config core.hooksPath .githooks`): commit-msg → `scripts/check-commit-msg.sh` · pre-push → `check-neutral.sh` + `check-english.sh`, which needs `.neutral-deny` in the checkout (a new worktree: copy it from `C:\personal\pitwall`) — never `--no-verify` |
 | resolve conflicts yourself | `PLAN.md`, `CHANGELOG.md` (the `## Unreleased` section only — keep both entries) · everything else → a human |
 | ignored checks | none |
 

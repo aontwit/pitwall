@@ -73,6 +73,7 @@ none — the tests build their own fixture repos (`tests/fixtures/`)
 | `plugin/skills/**/*.md` | the changed step read against the playbook that calls it (names, section numbers) · the agent runs the changed step itself on a sample repo it builds in the scratchpad (a `tests/fixtures/` repo or `git init` + a filled profile), with the plugin files from a checkout of the PR head; a step with no script is walked on that repo by a fresh subagent · a real ClickUp workspace or another person's repo stays out: level C, steps in the PR | A + B |
 | `site/**` | `npm run build --prefix site` · the changed page at both viewports, console errors = 0 | A + B |
 | `CHANGELOG.md` | a `## Unreleased` entry for every user-facing change | A |
+| `plugin/**`, `site/**` (behaviour a user sees) | `README.md` updated in the same PR: the section the change touches (Commands, Playbooks, The profile, Status …) — the owner asked for the README to stay current with every change · nothing in the README fits → one line under the PR's Decisions to confirm saying why | A |
 
 ## plan
 

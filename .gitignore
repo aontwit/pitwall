@@ -11,3 +11,7 @@ site/.astro/
 # Blender source for the hero models (28 MB, textures included)
 site/design/*.blend
 site/design/*.blend1
+
+# local tooling: preview servers and design tool state
+.claude/launch.json
+.impeccable/

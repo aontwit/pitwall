@@ -4,7 +4,7 @@ playbook: stop
 
 ## What it does
 
-`/pitwall:stop` ends the loop gently. A task in progress is left alone: its round finishes, opens the PR, and then the loop stops by itself. Between rounds, it stops at once.
+`/pitwall:stop` ends the loop gently. A task in progress is left alone: its round finishes, opens the PR, and then the loop stops by itself. Between rounds, it stops at once. In [lead mode](../lap/#lead-mode-parallel-laps), no new worker starts, the running ones finish their PRs (or park), and the loop stops once none is left.
 
 ## Use it when
 

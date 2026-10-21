@@ -6,7 +6,7 @@ playbook: brake
 
 `/pitwall:brake` stops the loop **now**. It cancels the next round first, then saves the unfinished task as a WIP commit on its branch (a stash if a hook refuses the commit), and switches back to the base. Nothing is discarded and no PR is opened. Nothing is pushed either, unless the profile hands work between machines; then the WIP branch is pushed so the other machine can resume it.
 
-In [lead mode](../lap/#lead-mode-parallel-laps), it stops every worker and saves each one's worktree the same way, at its last known step; the next `/pitwall:drive` resumes each one in a new worker.
+In [lead mode](../lap/#lead-mode-parallel-laps), it stops every worker and saves each worktree as a WIP commit (or stash) on its own branch, without switching branches, at its last known step; the next `/pitwall:drive` resumes each one in a new worker.
 
 ## Use it when
 

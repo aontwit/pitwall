@@ -56,7 +56,7 @@ PR-body check: `node <pitwall dir>/scripts/check-pr-body.mjs --file <body file>`
 | pages | `/` (landing), the docs page of each changed playbook / principle |
 | viewports | 393 and 1366 px · console errors = 0 |
 | time | ~10 minutes per method per item, then change method |
-| human-only steps | a live run of a changed `/pitwall:*` skill on a sample repo (Next.js / Godot) or a real ClickUp workspace — level C, steps in the PR |
+| human-only steps | none — a live run of the plugin on a sample repo is the agent's own level B item (repo-specific evidence) |
 | verification skill | none |
 | upkeep | none |
 
@@ -70,7 +70,7 @@ none — the tests build their own fixture repos (`tests/fixtures/`)
 |---|---|---|
 | `plugin/**` | both `plugin validate --strict` commands pass · `tests/playbook-bodies.test.mjs` passes | A |
 | `plugin/skills/**/scripts/*` | the test in `tests/` that covers the script passes, a new behaviour gets a new test case | A |
-| `plugin/skills/**/*.md` | the changed step read against the playbook that calls it (names, section numbers) · a live run on a sample repo | A + C |
+| `plugin/skills/**/*.md` | the changed step read against the playbook that calls it (names, section numbers) · the agent runs the changed step itself on a sample repo it builds in the scratchpad (a `tests/fixtures/` repo or `git init` + a filled profile), with the plugin files from a checkout of the PR head; a step with no script is walked on that repo by a fresh subagent · a real ClickUp workspace or another person's repo stays out: level C, steps in the PR | A + B |
 | `site/**` | `npm run build --prefix site` · the changed page at both viewports, console errors = 0 | A + B |
 | `CHANGELOG.md` | a `## Unreleased` entry for every user-facing change | A |
 

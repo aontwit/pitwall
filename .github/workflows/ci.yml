@@ -4,10 +4,13 @@ on:
   push:
     branches: [main]
   pull_request:
+    # edited: a stacked PR moved to main after its parent merges gets a fresh run
+    types: [opened, synchronize, reopened, edited]
 
 jobs:
   doctor-macos:
     # macOS /bin/bash is 3.2: no mapfile, no ${x,,}
+    if: github.event.action != 'edited' || github.event.changes.base
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,6 +22,7 @@ jobs:
           DOCTOR_BASH: /bin/bash
 
   check:
+    if: github.event.action != 'edited' || github.event.changes.base
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

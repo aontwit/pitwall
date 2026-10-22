@@ -113,7 +113,7 @@ Every command is `/pitwall:<command>`. Or say what you want in plain words, Engl
 | Section | Holds |
 |---------|-------|
 | repo | name, state path, the checkout the loop uses |
-| git | base, protected branches, branch / commit / PR patterns, hooks |
+| git | base, protected branches, branch / commit / PR patterns, hooks · `merge: human` (default) or `auto` with a `dev branch`: under `auto` the base is the dev branch (git-flow), the loop merges a PR into it only when every gate passes, through one merge script, and `main` / release stay with you |
 | checks | level A commands: install, typecheck, lint, test, build |
 | level B | dev server, `port: fixed \| free` (tasks take turns on one dev server, or each worktree runs its own), browser, pages, viewports, human-only steps |
 | states to build | recipes for the states your tests need |
@@ -141,6 +141,7 @@ pitwall is pre-1.0. It has run end to end on two repos outside the one it came f
 | routing from Thai and English requests (eval) | `/pitwall:plan` survey mode and new-repo phase 0, `/pitwall:verify-setup` on an outside repo (0.5.0) |
 | `init`'s file-based reads (`detect.mjs`) on empty, Next.js and Godot fixture repos (tests) | tokens and time per lap, not measured yet |
 | | parallel laps (`parallel` above 1): a lead session running a batch of workers to one PR each, with `/pitwall:stop` and `/pitwall:brake` while workers run (Unreleased) |
+| | `merge: auto` (auto merge into the dev branch): doctor checks it, the merge itself is not built or proven yet |
 
 ## Feedback
 

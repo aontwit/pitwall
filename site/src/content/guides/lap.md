@@ -95,11 +95,71 @@ Saved   commit "wip: P2-05 parked — …" on agent/p2-05-saved-card (not pushed
 Asked   the question is written into the plan's open questions on that branch
 ```
 
+## Lead mode (parallel laps)
+
+**Not proven yet.** Lead mode has not opened two PRs side by side on a live run. Try it on a repo where a stuck round costs you little.
+
+When the profile's `parallel` is above 1, a round no longer does one task in this checkout. This session becomes the **lead**: it hands each task to a background **worker**, and each worker runs the round above, from Branch to PR, in its own git worktree and branch. With `parallel` missing or 1, a lap works as described above.
+
+### What the lead does
+
+<ol class="steps">
+<li><strong>Pick a batch.</strong> Up to <code>parallel</code> tasks from the queue, whose plan rows share no file. Files the loop already resolves conflicts in, such as the plan file or <code>CHANGELOG.md</code>, don't count. A task that shares a file waits until the first one’s worker is done (PR open or parked). Tasks that come from the tracker rather than a plan row are not batched: they run one at a time in this checkout when no worker is running.</li>
+<li><strong>Start one worker per task.</strong> Each gets a brief and its own worktree and branch, and runs the task to an open PR: code, checks, browser, review panel and verifier, under the same rules as a serial round. A worker that cannot start its own reviewers hands the task back, and the lead runs the review panel, verifier and PR for it. Workers use the profile's code role agent and model.</li>
+<li><strong>Keep the books.</strong> Only the lead writes the loop state and the tracker. A worker hands everything back in its report and the lead records it, so two workers never write the same file. A worker that parks parks only its own task; the others carry on.</li>
+<li><strong>Share the dev server.</strong> With <code>port: fixed</code>, one dev server runs on the profile's port and the workers take turns holding it. With <code>port: free</code>, each worktree runs its own server on the next spare port; steps that sign in still take turns, since one browser shares its cookies across ports. Pair runs and human-only steps go one at a time, run by the lead, since only the lead talks to you.</li>
+<li><strong>Refill and report.</strong> Under <code>/pitwall:drive</code>, when a worker finishes, the lead fills its slot from the queue in the same turn. A <code>/pitwall:lap</code> you type runs one batch and reports once its last worker is done. A worker still running after 180 minutes is stopped and parked. When no worker is left, one report covers the batch.</li>
+</ol>
+
+Only one session leads at a time: a second session that finds a lead active in the last hour starts nothing and tells you so.
+
+### What you'll see
+
+One PR per task, each with its own Verify table and verdict, the same as a serial round. While workers run, the lead says which ones it started and which tasks it left out, and why:
+
+```text
+Started  P2-04 · P2-07, each in its own worktree
+Waiting  P2-06 shares src/search/sort.ts with P2-04
+```
+
+When the last worker of a typed `/pitwall:lap` finishes, the round report has one row per task (the wording may differ):
+
+```text
+Lap · batch of 2
+P2-04   https://github.com/acme/shop/pull/58   [PARTIAL]
+P2-07   https://github.com/acme/shop/pull/59   VERIFIED
+Parked  none
+Waiting P2-06 shares src/search/sort.ts with P2-04
+```
+
+### Stop and brake with workers running
+
+- `/pitwall:stop` starts no new worker. The running ones finish their PRs, or park, and the loop stops once none is left.
+- `/pitwall:brake` stops every worker now and saves each worktree as a WIP commit on its branch (a stash if a hook refuses). The next `/pitwall:drive` resumes each one in a new worker, at the step it left. Drive refuses while `parallel` is back to 1, and names the tasks that are waiting.
+
+### Turn it on
+
+In the profile, `.claude/agent-loop.md`, set the cap under `agents per task`, and say under `level B` whether each worktree may run its own dev server:
+
+```markdown
+## agents per task
+
+`parallel: 2`
+
+## level B (browser)
+
+| | |
+|---|---|
+| dev server | `npm run dev` on port `3000` · `port: free` |
+```
+
+Leave out `port`, or write `port: fixed`, when your backend accepts only one origin. Then run `/pitwall:doctor`: it fails a `parallel` that is not a whole number of 1 or more, and a `port` other than `fixed` or `free`. Commit the profile to the base before the next `/pitwall:drive`.
+
 ## Stop or change it
 
 - `/pitwall:stop` finishes the task in progress, then stops.
 - `/pitwall:brake` stops now and saves the work as a WIP commit.
 - `/pitwall:drive` runs lap after lap until the queue is empty.
-- The profile, `.claude/agent-loop.md`, sets the branch pattern, check commands, review panel, agents per task and dev server.
+- The profile, `.claude/agent-loop.md`, sets the branch pattern, check commands, review panel, agents per task, how many tasks run at once and dev server.
 
 A lap never merges, never force-pushes, never touches a branch the profile protects, and never asks you a question in the middle of a round.

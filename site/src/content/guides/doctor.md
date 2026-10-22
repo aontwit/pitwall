@@ -21,7 +21,7 @@ playbook: doctor
 ## What it checks
 
 <ol class="steps">
-<li><strong>The sections.</strong> Every required section is there (repo, git, checks, level B, states to build, repo-specific evidence, agents per task, repo rules, permissions, language), the tracker line is valid, and no <code>{{…}}</code> placeholder is left.</li>
+<li><strong>The sections.</strong> Every required section is there (repo, git, checks, level B, states to build, repo-specific evidence, agents per task, repo rules, permissions, language), the tracker line is valid, <code>parallel</code> and <code>port</code> hold a valid value when they are set, and no <code>{{…}}</code> placeholder is left.</li>
 <li><strong>What a script cannot see.</strong> The install command still matches the lockfile on the base, every check command exists, the base branch exists on the remote, <code>gh</code> is signed in, and the tracker's tools are connected.</li>
 </ol>
 

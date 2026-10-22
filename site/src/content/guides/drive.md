@@ -28,6 +28,7 @@ Drive refuses to start, and says why, when:
 - the working tree has uncommitted changes (commit or stash them)
 - `gh` is not signed in, or the dependencies are not installed
 - the queue has no task it could pick: all blocked, or waiting for a merge (`/pitwall:queue` first, or answer the blocked questions)
+- in [lead mode](../lap/#lead-mode-parallel-laps), another session still leads, or workers a brake left behind are waiting while `parallel` is back to 1 (set it above 1 again to resume them)
 
 It starts, but warns you, when the browser in the profile does not connect (browser checks wait, and bug-fix tasks park) or the tracker's tools are not connected (tasks are not logged).
 
@@ -41,6 +42,8 @@ Loop started · 4 tasks in the queue
   While it runs, don't work in this checkout.
   Stop with /pitwall:stop (after this task) or /pitwall:brake (now).
 ```
+
+With `parallel` above 1 in the profile, the message has one more line: up to that many tasks run at once, each in its own worktree and branch, and this session leads them ([lead mode](../lap/#lead-mode-parallel-laps)).
 
 Then one report per round, as on the [lap page](../lap/). A round you did not start yourself that opens a PR, parks a task or stops the loop also sends one push notification, when your setup has them. When the queue is empty, the loop checks back every 30 minutes for PRs that merged.
 

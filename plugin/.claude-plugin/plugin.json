@@ -1,6 +1,6 @@
 {
   "name": "pitwall",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "The agent loop that queues your work, proves every PR, and leaves the merge to you.",
   "author": {
     "name": "aontwit"

@@ -4,13 +4,13 @@
 [![License: MIT](https://img.shields.io/github/license/aontwit/pitwall)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/aontwit/pitwall?style=social)](https://github.com/aontwit/pitwall/stargazers)
 
-The agent loop that queues your work, proves every PR, and leaves the merge to you.
+The agent loop that queues your work, proves every PR, and leaves the merge to you. Opt in, and it merges into your dev branch itself, only when every gate passes.
 
 Plan in short interview rounds, then ask every remaining question once, up front. Then the agent builds one task per round, proves it, gets a verdict from a verifier that did not write the code, and opens the PR. 18 playbooks, 20 principles. Runs in Claude Code today; Codex, Cursor and Gemini CLI are planned.
 
 > **Quick start:** `/plugin marketplace add aontwit/pitwall`, then `/plugin install pitwall@pitwall`, then run `/pitwall:init` in your repo.
 
-**Who it's for:** developers with a GitHub repo who want a queue of small tasks built and proven while they're away, and who still read and merge every PR. It is not an app builder for people who don't review code.
+**Who it's for:** developers with a GitHub repo who want a queue of small tasks built and proven while they're away, and who still read every PR and, by default, merge it. A team with a git-flow dev branch can let the loop merge into that branch itself ([Auto merge](#auto-merge)); `main` and release branches stay with a person. It is not an app builder for people who don't review code.
 
 ## Your first 30 minutes
 
@@ -19,7 +19,7 @@ Plan in short interview rounds, then ask every remaining question once, up front
 3. **Commit the profile:** init ends with the exact commands to paste: a direct commit, or a small PR when your base is protected. Merge it before the next step.
 4. **Queue one task:** `/pitwall:queue fix the broken sort on the search page`, in your own words. It asks anything it must not guess, once, as tick boxes.
 5. **Lap:** `/pitwall:lap` runs one round: branch, code, checks, two-model review, an independent verifier, then a PR.
-6. **Review the PR:** read its Verify table and merge it yourself. Want more? `/pitwall:plan` for a whole product or a phase, then `/pitwall:drive`. On a new repo it asks the stack in plain words and writes phase 0 (scaffold, checks, a verification skill). On a repo with code but no docs it drafts the spec from the code and asks you to confirm it.
+6. **Review the PR:** read its Verify table and merge it yourself (the default, `merge: human`; under `merge: auto` a later lap merges it into your dev branch once every gate passes). Want more? `/pitwall:plan` for a whole product or a phase, then `/pitwall:drive`. On a new repo it asks the stack in plain words and writes phase 0 (scaffold, checks, a verification skill). On a repo with code but no docs it drafts the spec from the code and asks you to confirm it.
 
 ## Why pitwall?
 
@@ -29,7 +29,7 @@ pitwall adds:
 - **Questions up front, never mid-round.** `/pitwall:queue` asks everything only a human can decide, once, as tick boxes. The run then follows a 3-step ladder: try it, take a recorded default, or park the task.
 - **Evidence, not claims.** `/pitwall:gauge` picks proof by what changed: level A runs your checks, level B drives the page in a browser, level C hands a human numbered steps. Nothing is ticked that was not run.
 - **A verdict from someone who did not write the code.** Every PR gets a fresh read-only verifier pinned to its patch-id. A new commit makes the verdict stale.
-- **Humans merge.** The agent builds, proves and opens the PR. It never merges (except under `merge: auto`, into the dev branch, when every gate passes), force-pushes or touches protected branches.
+- **Humans merge.** The agent builds, proves and opens the PR. It never merges (except under [`merge: auto`](#auto-merge), into the dev branch, when every gate passes), force-pushes or pushes to protected branches.
 - **One profile per repo.** Everything repo-specific (base branch, check commands, dev server, tracker, plan) lives in `.claude/agent-loop.md`. The plugin holds no repo values.
 
 ## How it works
@@ -125,6 +125,48 @@ Every command is `/pitwall:<command>`. Or say what you want in plain words, Engl
 | multi-machine (optional) | hand off loop state between machines |
 | permissions | allow / deny for the machine that runs the loop |
 | language | language for you, for PRs / commits, for tracker comments |
+
+## Auto merge
+
+Off by default: with `merge: human` (or no `merge` row) you merge every PR. With `merge: auto`, the loop merges its own finished PRs into your dev branch. It is for a team on git-flow: PRs target a dev branch such as `dev`, and a person merges dev into `main` or a release branch. The loop never merges into `main`, `master`, a release or a production branch. Not proven on a live run yet (see Status).
+
+**Turn it on.** `/pitwall:init` asks who merges only when the base is named like a dev branch: `dev`, `development`, or a short form in between such as `devel`. To set it by hand, the profile's `git` section needs `merge: auto` and a `dev branch` row that names the base itself; `/pitwall:doctor` fails anything else (a dev branch that is not the base, looks like `main` / `master` / a release or production line, or is not on origin):
+
+```markdown
+| base | `dev` |
+| merge | `merge: auto` |
+| dev branch | `dev` |
+```
+
+**When it merges.** Only in the sync at the start of a `/pitwall:lap` round, never in the middle of a task and never by a lead-mode worker. Only the task PRs the loop opened itself: a plan-sync PR, your own PRs and anyone else's stay with you. One action per round (one merge, or one merge of the dev branch into a PR branch), oldest PR first, from the bottom of each stack; a stacked child is moved onto the dev branch after its parent merges and judged in a later round, once its CI has run there.
+
+**The gates.** A PR merges only when all of them pass:
+
+1. A VERIFIED verdict from a fresh, read-only verifier at the PR's current patch-id. PARTIAL never passes; a PARTIAL PR whose boxes were all ticked since gets one new verifier run first.
+2. A "Not done yet" section with nothing left unticked, so no ⏳ and no step waiting for a human.
+3. Green CI on the current head and the current base: every check outside the profile's `ignored checks` is green, at least one succeeded, and each one started after the last commit and the last retarget.
+4. A fresh dev branch. When the dev branch has commits the PR branch does not hold yet, the loop merges it into the PR branch, pushes, and judges the PR again in a later round, after the new CI. The third time it holds the PR; a conflict outside the files it may resolve itself holds it too.
+5. The merge is a merge commit of the judged head (`--match-head-commit`), and the PR must read back as merged into the dev branch.
+6. No merge while `/pitwall:stop` or `/pitwall:brake` is set. A PR already merged stays merged.
+
+**Always for a person**, even with every gate passed:
+
+- a PR where the verifier found money, prices or fees, permissions or security, user data, or deletes in the diff (the verifier answers this on every PR; a verdict without that answer gets one new verifier run first)
+- a PR that changes CI or the checks: anything under `.github/`, `.githooks/` or `.husky/`, lefthook or pre-commit config, any `package.json`, a `Makefile`, `CODEOWNERS`, ESLint, RuboCop or TypeScript config (`eslint*`, `.eslintrc*`, `.rubocop*`, `tsconfig*`), a path with `baseline` in it, the profile, and the files the profile's check commands run
+
+A held PR gets one line in the round report, `#<n> HOLD <gate>: <reason>` (or the merge script's `REFUSED` / `FAILED` reason as it printed it). A hold that needs you also sends one push notification, in a round you did not start; a hold that ends by itself, such as a check still running, does not. Any other held PR waits for you or for its next commit.
+
+**The permission rule you add.** Every merge goes through one script, `merge-pr.mjs`. It refuses a PR that is a draft, not open, not based on the dev branch or still held by a worker, refuses while stop or brake is set, judges the gates again right before the merge, and runs `gh pr merge <n> --merge --match-head-commit <head>`, never `--admin`, `--auto`, squash or rebase. `gh pr merge` itself stays denied in every repo. Under `merge: auto`, init's report names one rule for this machine's `.claude/settings.local.json` (not the shared `.claude/settings.json`), with the real path of the plugin's `scripts/` folder:
+
+```json
+{
+  "permissions": {
+    "allow": ["Bash(node <absolute pitwall dir>/scripts/merge-pr.mjs:*)"]
+  }
+}
+```
+
+Update the path after a plugin update moves it, and remove any deny rule that matches it. Init never writes a settings file.
 
 ## Status
 

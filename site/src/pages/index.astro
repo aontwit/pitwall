@@ -62,8 +62,12 @@ const stages: { label: string; icon: keyof typeof ICONS; title: string; lede: st
     label: 'Merge',
     icon: 'merge',
     title: 'Humans merge',
-    lede: 'Open PRs are ordered by stack and readiness. The agent never merges, force-pushes or touches a protected branch.',
-    options: [doc('/pitwall:merge-order', 'docs/playbooks/merge-order/'), doc('opening-a-pr', 'docs/playbooks/opening-a-pr/')],
+    lede: 'Open PRs are ordered by stack and readiness. No force-push, no push to a protected branch, and a merge only into your dev branch, if you opt in.',
+    options: [
+      doc('/pitwall:merge-order', 'docs/playbooks/merge-order/'),
+      doc('opening-a-pr', 'docs/playbooks/opening-a-pr/'),
+      doc('merge: auto', 'docs/playbooks/lap/#auto-merge'),
+    ],
   },
 ];
 

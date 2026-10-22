@@ -43,6 +43,8 @@ Loop started · 4 tasks in the queue
   Stop with /pitwall:stop (after this task) or /pitwall:brake (now).
 ```
 
+Under [`merge: auto`](../lap/#auto-merge) the start message still says "No merges", but the sync at the start of a round may merge one finished PR into the dev branch.
+
 With `parallel` above 1 in the profile, the message has one more line: up to that many tasks run at once, each in its own worktree and branch, and this session leads them ([lead mode](../lap/#lead-mode-parallel-laps)).
 
 Then one report per round, as on the [lap page](../lap/). A round you did not start yourself that opens a PR, parks a task or stops the loop also sends one push notification, when your setup has them. When the queue is empty, the loop checks back every 30 minutes for PRs that merged.

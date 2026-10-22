@@ -9,6 +9,7 @@ Auto merge into the dev branch: with `merge: auto` in the profile (the base is t
 - A PARTIAL verdict whose boxes are all ticked since, or a verdict from before the Always park question, gets one fresh verifier before the merge is judged again; gate 1 never accepts PARTIAL
 - The independent verifier now answers the Always park question (money, permissions / security, user data, deletes) over the whole PR diff on every run, and the lead records it; `merge-gate.mjs` holds a PR without that answer
 - `init` asks who merges again when the base is named like a dev branch, and names the permission rule for `merge-pr.mjs` (`.claude/settings.local.json`, added by you). `/pitwall:stop` and `/pitwall:brake` also stop merges during a `/pitwall:lap` you typed
+- Docs: the README has an Auto merge section (who it is for, how to turn it on, the six gates, what always stays with a person, and the permission rule for `merge-pr.mjs` in `.claude/settings.local.json`), and its lines that said the agent never merges now name the exception. On the docs site, the lap guide has an Auto merge section, and the init, doctor, stop, brake, merge-order, drive and overview guides and the landing page say what changes under `merge: auto`
 
 ## 0.6.0 — 2026-10-22
 

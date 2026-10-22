@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `scripts/detect.mjs` finds a repo's own hooks folder: the folder `git config core.hooksPath` names (for example `.githooks`) and a `.githooks/` folder are reported under `hooks`, next to `.husky` and `lefthook.yml`, so `init` no longer reads `hooks: none` on a repo like this one. A folder counts only when files sit under it in what is read (`--ref` reads `origin/<base>`), a husky v9 `.husky/_` adds nothing to `.husky`, and the config is read only from the repo root, never from a parent repo. An absolute `core.hooksPath` is not followed, so `init` reads it with `git config` itself
+
 ## 0.6.0 — 2026-10-22
 
 Parallel laps (#42): with `parallel` above 1 in the profile, one session leads a batch of tasks, each built by a background worker in its own worktree and branch, one PR per task. Not proven on a live run yet. Also the groundwork for auto merge into a dev branch, which `init` does not offer yet.

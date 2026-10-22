@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.7.0 — 2026-10-22
 
-Auto merge into the dev branch: with `merge: auto` in the profile (the base is the dev branch, git-flow), the lap merges its own PRs into it when every gate passes. `main` and release stay with you. Not proven on a live run yet.
+Auto merge into the dev branch: with `merge: auto` in the profile (the base is the dev branch, git-flow), the lap merges its own PRs into it when every gate passes. `main` and release stay with you. Not proven on a live run yet. Also: the ClickUp `ticket` changes from #41, `detect.mjs` finds a repo's own hooks folder, and parallel laps ran its first live batch.
 
 - `lap` section 10 runs in the PR sync under `merge: auto`, one action per round, bottom of each stack first: gate 6 (no merge once `/pitwall:stop` or `/pitwall:brake` is set), `merge-gate.mjs` (gates 1–3 and the always-human kinds), gate 4 (the dev branch moved since the PR's merge-base → merge it in and wait for CI, held the third time), then the merge and a read-back (gate 5). A held PR goes in the round report and a push notification. `merge: human` reads exactly as before
 - New `scripts/merge-pr.mjs`, the only merge command the loop runs: it refuses unless the profile says `merge: auto` with the dev branch = the base, the PR is open, not a draft, targets the dev branch and is not a worker's, stop / brake is not set and `merge-gate.mjs` prints `MERGE`; then it runs `gh pr merge <n> --merge --match-head-commit <head>` (never `--admin`, `--auto` or `--delete-branch`) and reads the PR back, base included
@@ -12,6 +12,7 @@ Auto merge into the dev branch: with `merge: auto` in the profile (the base is t
 - `scripts/detect.mjs` finds a repo's own hooks folder: the folder `git config core.hooksPath` names (for example `.githooks`) and a `.githooks/` folder are reported under `hooks`, next to `.husky` and `lefthook.yml`, so `init` no longer reads `hooks: none` on a repo like this one. A folder counts only when files sit under it in what is read (`--ref` reads `origin/<base>`), a husky v9 `.husky/_` adds nothing to `.husky`, and the config is read only from the repo root, never from a parent repo. An absolute `core.hooksPath` is not followed, so `init` reads it with `git config` itself
 - Docs: the README has an Auto merge section (who it is for, how to turn it on, the six gates, what always stays with a person, and the permission rule for `merge-pr.mjs` in `.claude/settings.local.json`), and its lines that said the agent never merges now name the exception. On the docs site, the lap guide has an Auto merge section, and the init, doctor, stop, brake, merge-order, drive and overview guides and the landing page say what changes under `merge: auto`
 - `ticket` (ClickUp): a task gets the repo tag plus one tag per server / game the work changes, so QA can sort work by server. Kinds of work the profile groups per sprint (bugs, backend requests) become subtasks of that sprint's group parent instead of loose tasks, and work the profile marks "not tracked" (agent tooling, for one) gets no task, and its PR says so. A team said a sprint with every bug as its own task was too cluttered to review
+- Parallel laps ran live on this repo with `parallel: 2`: one lead-mode batch started two workers side by side in their own worktrees, and both opened a PR (#63, #65). A worker that needed the dev server stopped with `WAIT dev server`, got the token from the lead, and went on in the same worker. Not yet run on a repo with a pinned backend port
 
 ## 0.6.0 — 2026-10-22
 

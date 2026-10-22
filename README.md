@@ -29,7 +29,7 @@ pitwall adds:
 - **Questions up front, never mid-round.** `/pitwall:queue` asks everything only a human can decide, once, as tick boxes. The run then follows a 3-step ladder: try it, take a recorded default, or park the task.
 - **Evidence, not claims.** `/pitwall:gauge` picks proof by what changed: level A runs your checks, level B drives the page in a browser, level C hands a human numbered steps. Nothing is ticked that was not run.
 - **A verdict from someone who did not write the code.** Every PR gets a fresh read-only verifier pinned to its patch-id. A new commit makes the verdict stale.
-- **Humans merge.** The agent builds, proves and opens the PR. It never merges, force-pushes or touches protected branches.
+- **Humans merge.** The agent builds, proves and opens the PR. It never merges (except under `merge: auto`, into the dev branch, when every gate passes), force-pushes or touches protected branches.
 - **One profile per repo.** Everything repo-specific (base branch, check commands, dev server, tracker, plan) lives in `.claude/agent-loop.md`. The plugin holds no repo values.
 
 ## How it works
@@ -54,7 +54,7 @@ flowchart TD
     gauge -.->|stuck after 2 methods| park["park + question<br/>for next briefing"]
     review -.->|CRITICAL on a park list| park
     park -.-> queue
-    pr --> merge["/pitwall:merge-order<br/>human merges"]
+    pr --> merge["/pitwall:merge-order<br/>human merges<br/>(merge: auto → the lap, into the dev branch)"]
 ```
 
 With `parallel` above 1 in the profile, a round runs a batch instead: this session leads up to that many tasks at once, each in its own worktree and branch, one PR per task (not proven yet, see Status).
@@ -113,7 +113,7 @@ Every command is `/pitwall:<command>`. Or say what you want in plain words, Engl
 | Section | Holds |
 |---------|-------|
 | repo | name, state path, the checkout the loop uses |
-| git | base, protected branches, branch / commit / PR patterns, hooks · `merge: human` (default) or `auto` with a `dev branch`: under `auto` the base is the dev branch (git-flow), the loop merges a PR into it only when every gate passes, through one merge script, and `main` / release stay with you · `init` does not offer `auto` yet: the loop does not merge PRs yet |
+| git | base, protected branches, branch / commit / PR patterns, hooks · `merge: human` (default) or `auto` with a `dev branch`: under `auto` the base is the dev branch (git-flow), the loop merges a PR into it only when every gate passes, through one merge script, and `main` / release stay with you |
 | checks | level A commands: install, typecheck, lint, test, build |
 | level B | dev server, `port: fixed \| free` (tasks take turns on one dev server, or each worktree runs its own), browser, pages, viewports, human-only steps |
 | states to build | recipes for the states your tests need |
@@ -141,7 +141,7 @@ pitwall is pre-1.0. It has run end to end on two repos outside the one it came f
 | routing from Thai and English requests (eval) | `/pitwall:plan` survey mode and new-repo phase 0, `/pitwall:verify-setup` on an outside repo (0.5.0) |
 | `init`'s file-based reads (`detect.mjs`) on empty, Next.js and Godot fixture repos (tests) | tokens and time per lap, not measured yet |
 | | parallel laps (`parallel` above 1): a lead session running a batch of workers to one PR each, with `/pitwall:stop` and `/pitwall:brake` while workers run (0.6.0) |
-| | `merge: auto` (auto merge into the dev branch): doctor checks it, the merge itself is not built or proven yet |
+| | `merge: auto` (auto merge into the dev branch): built (doctor's checks, the lap's PR sync, `merge-gate.mjs` and `merge-pr.mjs`), not proven until a live run on a repo with a dev branch |
 
 ## Feedback
 

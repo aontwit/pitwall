@@ -7,7 +7,9 @@ description: Park when you get there ("จอดเมื่อถึง") — s
 
 1. Read state (path in `.claude/agent-loop.md`; no file + the profile has a "multi-machine" section → receive first) — none / `running:false` → say "the agent is not running" (in the profile's user language), end
    lead mode (`lap.md` section 9): a non-empty `workers[]` counts as running, even with `running:false` (a single round started by `/pitwall:lap`)
+   under `merge: auto`: `autoMergeAt` set and under 60 minutes old (a round in `lap.md` section 10, e.g. a single round started by `/pitwall:lap`) counts as running too, even with `running:false` — go on to item 2, so that round merges nothing more
 2. Set `stopRequested: true` and write it back (multi-machine → **send** state every time you write)
+   under `merge: auto`: from this write on, no PR merges (`lap.md` section 10 gate 6, and `merge-pr.mjs` refuses while `stopRequested` is set) until `/pitwall:drive` starts the loop again · a PR already merged stays merged
    lead mode (`lap.md` section 9) with a worker active (running, or waiting on the lead) → skip item 3 and **don't touch the workers**: tell the user "will stop after `<id>` (last known step `<step>`), … finish" · no new worker starts, each running one goes on to its PR (or parks), and the lead stops the loop as item 3 once none is active (`lap.md` 9.1 item 3 and 9.5)
 3. `currentTask` is null (between rounds / queue empty / waiting for merge) → `running:false`, `ScheduleWakeup stop:true`, summary report of `done` (PR link + gauge status) and `parked` (branch + reason + question)
 4. Has `currentTask` → **don't touch the task**, tell the user: "will stop after `<id>` finishes (currently at step `<step>`)" — the current `/pitwall:lap` round works until the PR is opened, then stops itself

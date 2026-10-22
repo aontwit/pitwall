@@ -97,7 +97,7 @@ Asked   the question is written into the plan's open questions on that branch
 
 ## Lead mode (parallel laps)
 
-**Not proven yet.** Lead mode has not opened two PRs side by side on a live run. Try it on a repo where a stuck round costs you little.
+**Not proven yet.** One live batch on the pitwall repo opened two PRs side by side (0.7.0), but lead mode has not run with a pinned backend port, nor been stopped or braked while workers run. Try it on a repo where a stuck round costs you little.
 
 When the profile's `parallel` is above 1, a round no longer does one task in this checkout. This session becomes the **lead**: it hands each task to a background **worker**, and each worker runs the round above, from Branch to PR, in its own git worktree and branch. With `parallel` missing or 1, a lap works as described above.
 

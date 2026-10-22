@@ -40,4 +40,31 @@ const key = /Array\.isArray\(state\.(\w+)\)/.exec(pickBatch)?.[1];
 assert.ok(key, "pick-batch.mjs reads the worker entries from one state key");
 assert.ok(playbook("lap").includes(`\`${key}[]\` = one entry per task a worker holds`), `lap.md names the state key pick-batch reads (\`${key}[]\`)`);
 
+// lap.md section 10 (auto merge) and the two merge scripts stay in step: every flag the lap passes is in the script's
+// usage line, merges go through merge-pr.mjs only (a line that names `gh pr merge` also names the script), and
+// merge-pr.mjs calls merge-gate.mjs with flags merge-gate has
+const scriptText = (name) => readFileSync(`plugin/skills/pitwall/scripts/${name}`, "utf8");
+const usageOf = (name) => new RegExp(`usage: ${name.replace(".", "\\.")} ([^"]+)`).exec(scriptText(name))?.[1];
+for (const name of ["merge-pr.mjs", "merge-gate.mjs"]) {
+  const calls = [...playbook("lap").matchAll(new RegExp(`\`node <pitwall dir>/scripts/${name.replace(".", "\\.")} ([^\`]+)\``, "g"))].map((m) => m[1]);
+  assert.ok(usageOf(name), `${name} has a usage line`);
+  assert.ok(calls.length, `lap.md quotes the ${name} command`);
+  for (const flag of calls.flatMap(flags)) assert.ok(flags(usageOf(name)).includes(flag), `lap.md passes ${flag}, ${name} has no such flag`);
+}
+for (const line of playbook("lap").split("\n").filter((l) => l.includes("gh pr merge")))
+  assert.ok(line.includes("merge-pr.mjs"), `lap.md names \`gh pr merge\` outside the merge-pr.mjs rule: ${line.slice(0, 120)}`);
+const gateArgv = /run\(process\.execPath, \[gate, ([^\]]+)\]/.exec(scriptText("merge-pr.mjs"))?.[1];
+assert.ok(gateArgv, "merge-pr.mjs runs merge-gate.mjs");
+for (const flag of flags(gateArgv)) assert.ok(flags(usageOf("merge-gate.mjs")).includes(flag), `merge-pr.mjs passes ${flag}, merge-gate.mjs has no such flag`);
+
+// the Always park answer: the gauge verifier section asks it and records the entry merge-gate.mjs reads
+const gauge = readFileSync("plugin/skills/gauge/SKILL.md", "utf8");
+const verifierSection = gauge.slice(gauge.indexOf("## Independent verifier"), gauge.indexOf("## When verify misses"));
+assert.ok(verifierSection.includes("`Always park: none`"), "gauge's verifier section names the `Always park: none` line");
+for (const field of ['item: "always-park"', 'method: "verifier"', 'evidence: "none"'])
+  assert.ok(verifierSection.includes(field), `gauge records the Always park entry with ${field}`);
+assert.match(scriptText("merge-gate.mjs"), /e\.item === "always-park"/, "merge-gate.mjs reads `item: \"always-park\"`");
+assert.match(scriptText("merge-gate.mjs"), /park\.evidence !== "none"/, "merge-gate.mjs passes only `evidence: \"none\"`");
+assert.ok(readFileSync("plugin/agents/pitwall-agent.md", "utf8").includes("`Always park: none`"), "the verifier's report names the Always park line");
+
 console.log("OK: playbook bodies");

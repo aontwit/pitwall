@@ -7,7 +7,7 @@ description: Merge order — resolve docs / wiki conflicts in the agent's PRs yo
 
 The merge order lives here and only here — PR bodies / round reports / messages to the user **never explain the merge order themselves**, they write only "merge order: `/pitwall:merge-order`"
 
-Arguments: none = all my open PRs · `<PR number>` = only the stack containing that PR · Claude **does not merge itself** (forbidden in the profile) — a human presses
+Arguments: none = all my open PRs · `<PR number>` = only the stack containing that PR · Claude **does not merge itself** (forbidden in the profile) — a human presses · the one exception is not this skill: under `merge: auto` the lap's PR sync merges into the dev branch (`lap.md` section 10)
 
 ## 1. Pull data
 
@@ -114,5 +114,6 @@ Next: merge #101 → then press "Delete branch" in that PR (GitHub moves #102 to
 ## Never
 
 - Never `gh pr merge` / close a PR / delete a branch yourself — only retarget (`gh pr edit --base`) and merge base **into** an `agent/*` branch per step 2b
+- The auto-merge exception: under the profile's `merge: auto`, the lap's PR sync (`lap.md` section 10) merges the loop's own PRs into the dev branch, one at a time, only through `<pitwall dir>/scripts/merge-pr.mjs` — this skill still never merges, and nothing ever runs `gh pr merge` directly
 - Never resolve conflicts in code / config / lockfile — report them to a human
 - Never edit the body / tick checkboxes in this skill (that is the job of `/pitwall:lap` + `/pitwall:gauge`)

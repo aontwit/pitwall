@@ -6,6 +6,8 @@ playbook: stop
 
 `/pitwall:stop` ends the loop gently. A task in progress is left alone: its round finishes, opens the PR, and then the loop stops by itself. Between rounds, it stops at once. In [lead mode](../lap/#lead-mode-parallel-laps), no new worker starts, the running ones finish their PRs (or park), and the loop stops once none is left.
 
+Under [`merge: auto`](../lap/#auto-merge), it also stops merges while the loop runs: from then on no PR merges into the dev branch, and that includes a single round you started with `/pitwall:lap`, until `/pitwall:drive` starts the loop again. A PR that already merged stays merged.
+
 ## Use it when
 
 - you want the loop to end but the current task to land as a PR

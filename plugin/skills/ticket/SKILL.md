@@ -34,7 +34,7 @@ Operations the playbooks call by name:
 | me | `clickup_resolve_assignees ["me"]` — use the numeric id, don't hardcode it |
 | statuses the agent uses | `to do` · `in progress` · `review` · `pending` (blocked) — the stages after review (`rejected`, `wait to deploy`, `on prod` …) QA / PM move themselves |
 | `review` means | merged into base, testable on dev (not just a PR opened) |
-| tag | per the profile — the tag must already exist; never create a new one |
+| tags | the repo tag **plus** one tag per server / game the work changes (the ones QA must test), both from the profile — a group / phase parent gets the repo tag only · work for every server gets every server tag · not sure which servers → read the diff / brief, never guess (no PR yet → repo tag only, add the server tags when the PR opens) · tags must already exist; never create a new one |
 
 ## 2. Find the current sprint
 
@@ -46,16 +46,19 @@ No list covers today → **never guess**: manual → ask the user · from the lo
 | Work | Structure |
 |---|---|
 | a plan row | a **subtask** under 1 parent task per phase |
-| other work / improvements you found yourself | a standalone task in the sprint |
+| other work whose kind has a sprint group in the profile (bug, backend request …) | a **subtask** under that kind's group parent of **this** sprint, named per the profile (e.g. with an area prefix) |
+| other work with no group in the profile | a standalone task in the sprint |
+| work the profile marks "not tracked" | **no task** — say so in the report / PR ("not tracked in the sprint") |
 
-Avoid duplicates: `clickup_filter_tasks list_ids=[sprint] include_closed=true` → a name that starts the same way (parent: phase name, child: `<prefix> <id> `) → use that one
-The parent task is not in this sprint (the phase spans sprints) → look in the previous sprint by the same name; found → use it, not found → only then create it
+Avoid duplicates: `clickup_filter_tasks list_ids=[sprint] include_closed=true` → a name that starts the same way (parent: phase or group name, child: `<prefix> <id> `) → use that one
+The phase parent is not in this sprint (the phase spans sprints) → look in the previous sprint by the same name; found → use it, not found → only then create it · a group parent belongs to one sprint: not in this sprint → create it (section 4)
 
 ## 4. Create
 
-Every one: `clickup_create_task` list_id=current sprint, **assignees=[<id of me>], never empty**, tags per the profile → `clickup_get_task` to confirm me is on it (not there → the assignee rule in section 5)
+Every one: `clickup_create_task` list_id=current sprint, **assignees=[<id of me>], never empty**, tags per section 1 → `clickup_get_task` to confirm me is on it and the tags are there (not there → the assignee rule in section 5)
 - **phase parent task**: status `in progress` · description in the profile's tracker language · Why (the plan's goal + the phase) / What (link to the phase file, 1 subtask = 1 row = 1 PR) / Done when (all subtasks merged + QA per the phase's combined DoD)
-- **subtask**: `parent=<parent id>`, status `in progress` (loop) — parent already in `review` → parent back to `in progress` + comment (in the profile's tracker language) "Added <subtask> — back to in progress until everything is merged"
+- **group parent task**: status `in progress` · Why (the team groups this kind of work per sprint) / What (subtask = 1 item, the name format from the profile) / Done when (every subtask at `review` or later)
+- **subtask**: `parent=<parent id>`, status `in progress` (loop) · manual work under a group parent: `to do` — parent already in `review` → parent back to `in progress` + comment (in the profile's tracker language) "Added <subtask> — back to in progress until everything is merged"
 - **standalone task**: status manual `to do` · loop `in progress`
 
 Description of a subtask / standalone task (body in the profile's tracker language):
@@ -79,7 +82,7 @@ Comment templates below are in English; write them in the profile's tracker lang
 
 | Event | subtask / standalone task | parent task |
 |---|---|---|
-| PR opened | **keep `in progress`** + 1-line comment `PR #<n> opened (waiting for merge) — <what it does> · no testing needed yet` → store `prCommentId` in state | don't touch |
+| PR opened | **keep `in progress`** + server tags the diff changes that the task lacks (`clickup_add_tag_to_task`, section 1) + 1-line comment `PR #<n> opened (waiting for merge) — <what it does> · no testing needed yet` → store `prCommentId` in state | don't touch |
 | PR merged (sync at the start of a `/pitwall:lap` round) | → `review` + ✅ on the PR comment: the API has no reactions, so use `clickup_update_comment` to prepend `✅ merged <YYYY-MM-DD> — ` to the existing text | see the next row |
 | the parent has **≥ 1** subtask and **every one** is in `review` or later | — | → `review` + comment to QA: `merged to <base>: PR #a, #b · <effect on users / regression scope> · please test on dev: <level C steps from the PR> [@<QA>](#user_mention#<id>)` |
 | PR closed without merge | keep `in progress` + comment the reason + report to the user | don't touch |

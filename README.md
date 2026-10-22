@@ -119,7 +119,7 @@ Every command is `/pitwall:<command>`. Or say what you want in plain words, Engl
 | states to build | recipes for the states your tests need |
 | repo-specific evidence | file pattern → extra proof + level |
 | plan (optional) | where the plan lives and how its rows look |
-| tracker (optional) | `clickup`, `github` (GitHub Issues) or `none` (the PR is the record) |
+| tracker (optional) | `clickup`, `github` (GitHub Issues) or `none` (the PR is the record) · on `clickup`, optionally server / game tags, per-sprint groups for kinds of work (bugs …), and work that is not tracked |
 | agents per task | subagent + model per role, review panel, checklists, `parallel: <n>` (missing = 1; above 1 = up to n tasks at once, each in its own worktree, and this session leads them) |
 | repo rules | your rules files, principles turned off |
 | multi-machine (optional) | hand off loop state between machines |

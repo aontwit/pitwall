@@ -8,7 +8,9 @@ description: Brake ("เบรก") — stop the agent loop immediately, even mi
 1. `ScheduleWakeup stop:true` before anything else (prevents the next round from firing on top)
 2. Read state (path in `.claude/agent-loop.md`; no file + the profile has a "multi-machine" section → receive first) — none / `running:false` → say "not running" (in the profile's user language), end
    lead mode (`lap.md` section 9): a non-empty `workers[]` counts as running, even with `running:false` (a single round started by `/pitwall:lap`)
+   under `merge: auto`: `autoMergeAt` set and under 60 minutes old (a round in `lap.md` section 10, e.g. a single round started by `/pitwall:lap`) counts as running too, even with `running:false` — go on to item 3, so that round merges nothing more
 3. Set `running:false`, `stopRequested:true` and write it back (**keep** currentTask / branch / step so `/pitwall:drive` can resume)
+   under `merge: auto`: from this write on, no PR merges (`lap.md` section 10 gate 6, and `merge-pr.mjs` refuses while `stopRequested` is set) until `/pitwall:drive` starts the loop again · a PR already merged stays merged
 4. Has `currentTask`:
    - cancel subagents that are still running
    - `git status --porcelain` has changes → `git add -A && git commit -m "wip: <id> stopped at <step>"` on the current branch — hook fails → `git stash push -u -m "agent-loop <id> @<step>"` and record `stash` in state · **don't open a PR, never discard** · don't push — unless the profile has a "multi-machine" section: push the WIP branch and record `stashMachine` per that section

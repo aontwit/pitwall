@@ -8,6 +8,8 @@ playbook: brake
 
 In [lead mode](../lap/#lead-mode-parallel-laps), it stops every worker and saves each worktree as a WIP commit (or stash) on its own branch, without switching branches, at its last known step; the next `/pitwall:drive` resumes each one in a new worker.
 
+Under [`merge: auto`](../lap/#auto-merge), it also stops merges while the loop runs: from then on no PR merges into the dev branch, and that includes a single round you started with `/pitwall:lap`, until `/pitwall:drive` starts the loop again. A PR that already merged stays merged.
+
 ## Use it when
 
 - you need the checkout back immediately

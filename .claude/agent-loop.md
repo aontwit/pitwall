@@ -94,6 +94,8 @@ none — the tests build their own fixture repos (`tests/fixtures/`)
 
 ## agents per task
 
+`parallel: 2` — at most this many tasks at once, each in its own worktree when above 1 (1 = one at a time)
+
 | Role | subagent | model |
 |---|---|---|
 | research | `Explore` | default |

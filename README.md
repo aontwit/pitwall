@@ -140,7 +140,7 @@ pitwall is pre-1.0. It has run end to end on two repos outside the one it came f
 | `/pitwall:merge-order`, with the script that resolves plan-doc conflicts between sibling PRs | a `/pitwall:lap` on Linux |
 | routing from Thai and English requests (eval) | `/pitwall:plan` survey mode and new-repo phase 0, `/pitwall:verify-setup` on an outside repo (0.5.0) |
 | `init`'s file-based reads (`detect.mjs`) on empty, Next.js and Godot fixture repos (tests) | tokens and time per lap, not measured yet |
-| | parallel laps (`parallel` above 1): a lead session running a batch of workers to one PR each, with `/pitwall:stop` and `/pitwall:brake` while workers run (Unreleased) |
+| | parallel laps (`parallel` above 1): a lead session running a batch of workers to one PR each, with `/pitwall:stop` and `/pitwall:brake` while workers run (0.6.0) |
 | | `merge: auto` (auto merge into the dev branch): doctor checks it, the merge itself is not built or proven yet |
 
 ## Feedback

@@ -4,14 +4,14 @@ playbook: readme
 
 ## What pitwall is
 
-pitwall is a plugin for Claude Code that runs your backlog as a loop. You plan once and answer every open question once, up front. Then the agent builds one task per round, proves it, gets a verdict from a verifier that did not write the code, and opens the PR. **You merge.**
+pitwall is a plugin for Claude Code that runs your backlog as a loop. You plan once and answer every open question once, up front. Then the agent builds one task per round, proves it, gets a verdict from a verifier that did not write the code, and opens the PR. **You merge**, unless you let the loop merge into your dev branch (below).
 
 An agent left alone on a queue tends to fail the same few ways: it asks you something at 2am and waits, it calls a passing typecheck "done", it grades its own work, and it guesses a business rule. pitwall is built against each of these:
 
 - **Questions up front.** `/pitwall:queue` asks everything only you can decide, once, as tick boxes. During the run the agent tries it, takes a recorded default, or parks the task. It never stops to ask.
 - **Evidence, not claims.** `/pitwall:gauge` runs your checks, drives the page in a browser, and hands you numbered steps only for what a machine cannot do.
 - **A verdict from someone else.** Every PR gets a fresh, read-only verifier, pinned to the exact code it checked. A new commit makes the verdict stale.
-- **Humans merge.** The agent never merges, force-pushes or touches a protected branch.
+- **Humans merge.** The agent never force-pushes or pushes to a protected branch, and never merges unless you opt in with `merge: auto`: then it merges its own PRs into your git-flow dev branch, only when every gate passes, and `main` and release branches stay with you ([auto merge](playbooks/lap/#auto-merge)).
 
 ## The loop
 
@@ -20,7 +20,7 @@ An agent left alone on a queue tends to fail the same few ways: it asks you some
 <li><strong><a href="playbooks/plan/">plan</a>.</strong> Short interview rounds; every answer lands in the spec, and the plan gets rows.</li>
 <li><strong><a href="playbooks/queue/">queue</a>.</strong> Pick the tasks the agent can finish alone, and ask every open question once.</li>
 <li><strong><a href="playbooks/drive/">drive</a> and <a href="playbooks/lap/">lap</a>.</strong> One task per round: branch, code, prove, review, verdict, PR. Then the next.</li>
-<li><strong><a href="playbooks/merge-order/">merge-order</a>.</strong> Which PR to merge first. You press the button.</li>
+<li><strong><a href="playbooks/merge-order/">merge-order</a>.</strong> Which PR to merge first. You press the button (under <code>merge: auto</code>, the lap merges into the dev branch itself).</li>
 </ol>
 
 Stop between tasks with `/pitwall:stop`, or now with `/pitwall:brake`.

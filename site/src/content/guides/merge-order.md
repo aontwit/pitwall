@@ -4,7 +4,7 @@ playbook: merge-order
 
 ## What it does
 
-`/pitwall:merge-order` tells you which of your open PRs to merge first, and why the others must wait. It sorts stacked PRs parent before child, gives each PR a level, and fixes what it safely can: it retargets a child whose parent merged, keeps children in draft, and resolves conflicts in the plan's log and rows. **It never merges**; you press the button.
+`/pitwall:merge-order` tells you which of your open PRs to merge first, and why the others must wait. It sorts stacked PRs parent before child, gives each PR a level, and fixes what it safely can: it retargets a child whose parent merged, keeps children in draft, and resolves conflicts in the plan's log and rows. **It never merges**; you press the button. The one exception is not this command: under [`merge: auto`](../lap/#auto-merge), the sync at the start of a lap merges the loop's own PRs into the dev branch, in the same order (bottom of each stack first, a merge commit), when every gate passes.
 
 ## Use it when
 

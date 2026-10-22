@@ -3,6 +3,7 @@
 ## Unreleased
 
 Auto merge into the dev branch: with `merge: auto` in the profile (the base is the dev branch, git-flow), the lap merges its own PRs into it when every gate passes. `main` and release stay with you. Not proven on a live run yet.
+
 - `lap` section 10 runs in the PR sync under `merge: auto`, one action per round, bottom of each stack first: gate 6 (no merge once `/pitwall:stop` or `/pitwall:brake` is set), `merge-gate.mjs` (gates 1–3 and the always-human kinds), gate 4 (the dev branch moved since the PR's merge-base → merge it in and wait for CI, held the third time), then the merge and a read-back (gate 5). A held PR goes in the round report and a push notification. `merge: human` reads exactly as before
 - New `scripts/merge-pr.mjs`, the only merge command the loop runs: it refuses unless the profile says `merge: auto` with the dev branch = the base, the PR is open, not a draft, targets the dev branch and is not a worker's, stop / brake is not set and `merge-gate.mjs` prints `MERGE`; then it runs `gh pr merge <n> --merge --match-head-commit <head>` (never `--admin`, `--auto` or `--delete-branch`) and reads the PR back, base included
 - A PARTIAL verdict whose boxes are all ticked since, or a verdict from before the Always park question, gets one fresh verifier before the merge is judged again; gate 1 never accepts PARTIAL

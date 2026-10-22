@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 — 2026-10-22
 
-Parallel laps (#42): with `parallel` above 1 in the profile, one session leads a batch of tasks, each built by a background worker in its own worktree and branch, one PR per task. Not proven on a live run yet.
+Parallel laps (#42): with `parallel` above 1 in the profile, one session leads a batch of tasks, each built by a background worker in its own worktree and branch, one PR per task. Not proven on a live run yet. Also the groundwork for auto merge into a dev branch, which `init` does not offer yet.
 
 - Profile values (#46): `parallel: <n>` in `agents per task` caps how many tasks run at once; missing = 1, one task at a time as before. `port: fixed | free` in `level B` says how tasks share the dev server: `fixed` (the default, for a backend that allows one origin) lets one task at a time hold it, `free` lets each worktree run its own on a spare port. The template has both, and `doctor.sh` fails a `parallel` that is not a whole number of 1 or more and a `port` other than `fixed` or `free`. It reads each value only inside the section that holds it, so prose such as "DB port: 5432" elsewhere in the profile is never taken for one. Tests cover each case
 - `scripts/pick-batch.mjs` picks the batch (#48): pickable tasks in queue order (not blocked, every `waitFor` merged, plan row not ticked, no open PR), adding one only when its plan row shares no file with a task already in the batch, up to `parallel`. Files on the profile's `resolve conflicts yourself` list (`PLAN.md`, `CHANGELOG.md` …) never count as shared, since the loop already resolves conflicts in them. A task left out gets a reason line (`shares <file> with <id>`, `batch full`, `waitFor <id> not merged`) for the round report
@@ -10,6 +10,7 @@ Parallel laps (#42): with `parallel` above 1 in the profile, one session leads a
 - `drive`, `stop` and `brake` handle workers (#53). `drive` resumes the workers a brake left behind, and refuses to start while another session still leads or while workers are left over and `parallel` is back to 1. `stop` starts no new worker and lets the running ones finish their PRs, then stops the loop. `brake` stops every worker and saves each worktree as a WIP commit (or a stash kept by its sha), and keeps the entries so the next `drive` resumes each one in a new worker
 - Fix (#53): worker entries live in the state's `workers[]`. `pick-batch.mjs` from #48 read them from `running`, which is the loop's on / off flag, so it threw on any real state file. The tests now use a state that holds both keys, and a playbook test checks that the key the script reads is the one `lap.md` names
 - Not proven yet: no live run with `parallel: 2` has opened two PRs side by side, and continuing a worker after it waits on the lead (dev server, pair run) has not run live. The README lists parallel laps under "Not proven yet" until it has
+- Groundwork for auto merge into a dev branch (#54, #56), not turned on yet. The profile's `git` section gains `merge: human | auto` (missing = `human`) and a `dev branch` row, and `doctor.sh` fails `merge: auto` unless the dev branch is the base itself, is not `main`, `master`, a release line or a production branch, is not a pattern and exists on origin. `scripts/merge-gate.mjs` judges one PR against the gates in the spec (a VERIFIED verdict at the current patch-id, no open box in "Not done yet", green CI on the current base) and holds PRs that touch money, permissions, user data or deletes, or that change CI or the checks; a PARTIAL verdict with every box ticked prints `HOLD 1: re-verify`. The lap does not merge yet, so `init` does not ask about it and writes `merge: human`
 
 ## 0.5.0 — 2026-10-19
 

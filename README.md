@@ -57,6 +57,8 @@ flowchart TD
     pr --> merge["/pitwall:merge-order<br/>human merges<br/>(merge: auto → the lap, into the dev branch)"]
 ```
 
+With `parallel` above 1 in the profile, a round runs a batch instead: this session leads up to that many tasks at once, each in its own worktree and branch, one PR per task (not proven yet, see Status).
+
 `/pitwall:stop` ends the loop after the current task. `/pitwall:brake` stops now and saves the work as a WIP commit.
 
 ## What's included
@@ -113,12 +115,12 @@ Every command is `/pitwall:<command>`. Or say what you want in plain words, Engl
 | repo | name, state path, the checkout the loop uses |
 | git | base, protected branches, branch / commit / PR patterns, hooks · `merge: human` (default) or `auto` with a `dev branch`: under `auto` the base is the dev branch (git-flow), the loop merges a PR into it only when every gate passes, through one merge script, and `main` / release stay with you |
 | checks | level A commands: install, typecheck, lint, test, build |
-| level B | dev server, browser, pages, viewports, human-only steps |
+| level B | dev server, `port: fixed \| free` (tasks take turns on one dev server, or each worktree runs its own), browser, pages, viewports, human-only steps |
 | states to build | recipes for the states your tests need |
 | repo-specific evidence | file pattern → extra proof + level |
 | plan (optional) | where the plan lives and how its rows look |
 | tracker (optional) | `clickup`, `github` (GitHub Issues) or `none` (the PR is the record) |
-| agents per task | subagent + model per role, review panel, checklists |
+| agents per task | subagent + model per role, review panel, checklists, `parallel: <n>` (missing = 1; above 1 = up to n tasks at once, each in its own worktree, and this session leads them) |
 | repo rules | your rules files, principles turned off |
 | multi-machine (optional) | hand off loop state between machines |
 | permissions | allow / deny for the machine that runs the loop |
@@ -138,6 +140,7 @@ pitwall is pre-1.0. It has run end to end on two repos outside the one it came f
 | `/pitwall:merge-order`, with the script that resolves plan-doc conflicts between sibling PRs | a `/pitwall:lap` on Linux |
 | routing from Thai and English requests (eval) | `/pitwall:plan` survey mode and new-repo phase 0, `/pitwall:verify-setup` on an outside repo (0.5.0) |
 | `init`'s file-based reads (`detect.mjs`) on empty, Next.js and Godot fixture repos (tests) | tokens and time per lap, not measured yet |
+| | parallel laps (`parallel` above 1): a lead session running a batch of workers to one PR each, with `/pitwall:stop` and `/pitwall:brake` while workers run (0.6.0) |
 | | `merge: auto` (auto merge into the dev branch): built (doctor's checks, the lap's PR sync, `merge-gate.mjs` and `merge-pr.mjs`), not proven until a live run on a repo with a dev branch |
 
 ## Feedback

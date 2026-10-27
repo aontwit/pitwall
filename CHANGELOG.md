@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Parallel laps on a game: a team running three tasks on a game said every long automated playtest waited in one queue. `port: free` now also covers a repo with no dev server: each worker drives its own copy of the game from its worktree through the verification skill, and takes no token. `port: fixed` still runs one copy at a time. The Godot recipe of `verify-setup` gives each drive its own `user://` folder (on Windows by setting `APPDATA`, checked on Godot 4.7.2 with two worktrees running at once; Linux `XDG_DATA_HOME` and macOS `HOME` not checked yet), and writes `port: free` only after a drive from a second worktree passed while the first ran. Not run in a live parallel batch yet, and no Unity recipe
+
 ## 0.7.0 — 2026-10-22
 
 Auto merge into the dev branch: with `merge: auto` in the profile (the base is the dev branch, git-flow), the lap merges its own PRs into it when every gate passes. `main` and release stay with you. Not proven on a live run yet. Also: the ClickUp `ticket` changes from #41, `detect.mjs` finds a repo's own hooks folder, and parallel laps ran its first live batch.

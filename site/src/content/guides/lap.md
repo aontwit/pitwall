@@ -107,7 +107,7 @@ When the profile's `parallel` is above 1, a round no longer does one task in thi
 <li><strong>Pick a batch.</strong> Up to <code>parallel</code> tasks from the queue, whose plan rows share no file. Files the loop already resolves conflicts in, such as the plan file or <code>CHANGELOG.md</code>, don't count. A task that shares a file waits until the first one’s worker is done (PR open or parked). Tasks that come from the tracker rather than a plan row are not batched: they run one at a time in this checkout when no worker is running.</li>
 <li><strong>Start one worker per task.</strong> Each gets a brief and its own worktree and branch, and runs the task to an open PR: code, checks, browser, review panel and verifier, under the same rules as a serial round. A worker that cannot start its own reviewers hands the task back, and the lead runs the review panel, verifier and PR for it. Workers use the profile's code role agent and model.</li>
 <li><strong>Keep the books.</strong> Only the lead writes the loop state and the tracker. A worker hands everything back in its report and the lead records it, so two workers never write the same file. A worker that parks parks only its own task; the others carry on.</li>
-<li><strong>Share the dev server.</strong> With <code>port: fixed</code>, one dev server runs on the profile's port and the workers take turns holding it. With <code>port: free</code>, each worktree runs its own server on the next spare port; steps that sign in still take turns, since one browser shares its cookies across ports. Pair runs and human-only steps go one at a time, run by the lead, since only the lead talks to you.</li>
+<li><strong>Share the dev server.</strong> With <code>port: fixed</code>, one dev server runs on the profile's port and the workers take turns holding it. With <code>port: free</code>, each worktree runs its own server on the next spare port; steps that sign in still take turns, since one browser shares its cookies across ports. A game with no dev server reads <code>port</code> the same way for its verification skill: with <code>free</code>, each worker runs its own copy of the game from its worktree, so a long automated playtest no longer blocks the others. Pair runs and human-only steps go one at a time, run by the lead, since only the lead talks to you.</li>
 <li><strong>Refill and report.</strong> Under <code>/pitwall:drive</code>, when a worker finishes, the lead fills its slot from the queue in the same turn. A <code>/pitwall:lap</code> you type runs one batch and reports once its last worker is done. A worker still running after 180 minutes is stopped and parked. When no worker is left, one report covers the batch.</li>
 </ol>
 
@@ -153,7 +153,9 @@ In the profile, `.claude/agent-loop.md`, set the cap under `agents per task`, an
 | dev server | `npm run dev` on port `3000` · `port: free` |
 ```
 
-Leave out `port`, or write `port: fixed`, when your backend accepts only one origin. Then run `/pitwall:doctor`: it fails a `parallel` that is not a whole number of 1 or more, and a `port` other than `fixed` or `free`. Commit the profile to the base before the next `/pitwall:drive`.
+Leave out `port`, or write `port: fixed`, when your backend accepts only one origin.
+
+A Godot game has no dev server. Write `none` in its place and keep `port: free`, so each worker drives its own game through the verification skill. Run `/pitwall:verify-setup` first: on Godot it gives each run its own `user://` folder (on Windows by setting `APPDATA` per run), because two worktrees of one project would otherwise share the save files. It writes `port: free` only after a second worktree drove the game at the same time as the first. Then run `/pitwall:doctor`: it fails a `parallel` that is not a whole number of 1 or more, and a `port` other than `fixed` or `free`. Commit the profile to the base before the next `/pitwall:drive`.
 
 ## Auto merge
 

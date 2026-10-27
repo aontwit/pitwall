@@ -48,7 +48,7 @@ PR-body check: `node <pitwall dir>/scripts/check-pr-body.mjs --file <body file>`
 
 | | |
 |---|---|
-| dev server | `{{command}}` on port `{{port}}` · `port: fixed` (one task at a time holds the dev server, for a backend that allows one origin · `free` = each worktree runs its own server on a spare port) · port already in use by someone else → never kill it, item B becomes ⏳ case 3 |
+| dev server | `{{command}}` on port `{{port}}` · `port: fixed` (one task at a time holds the dev server, for a backend that allows one origin · `free` = each worktree runs its own server on a spare port) · port already in use by someone else → never kill it, item B becomes ⏳ case 3 · no dev server (a game driven by the verification skill) → `none` in place of the command and port, and keep the port mode: `free` = each worktree runs its own app instance |
 | browser | {{which browser the agent drives, e.g. Claude in Chrome / built-in browser / Playwright}} |
 | pages | {{the pages that matter, with paths}} |
 | viewports | {{widths, e.g. 393 and 1366 px}} · console errors = 0 |

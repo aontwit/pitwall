@@ -115,7 +115,7 @@ Every command is `/pitwall:<command>`. Or say what you want in plain words, Engl
 | repo | name, state path, the checkout the loop uses |
 | git | base, protected branches, branch / commit / PR patterns, hooks · `merge: human` (default) or `auto` with a `dev branch`: under `auto` the base is the dev branch (git-flow), the loop merges a PR into it only when every gate passes, through one merge script, and `main` / release stay with you |
 | checks | level A commands: install, typecheck, lint, test, build |
-| level B | dev server, `port: fixed \| free` (tasks take turns on one dev server, or each worktree runs its own), browser, pages, viewports, human-only steps |
+| level B | dev server, `port: fixed \| free` (tasks take turns on one dev server, or each worktree runs its own; a game with no dev server: each worktree runs its own copy of the game through the verification skill), browser, pages, viewports, human-only steps |
 | states to build | recipes for the states your tests need |
 | repo-specific evidence | file pattern → extra proof + level |
 | plan (optional) | where the plan lives and how its rows look |

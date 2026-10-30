@@ -27,7 +27,17 @@
 
   --ease-reveal: cubic-bezier(0.215, 0.61, 0.355, 1);
   --ease-move: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  /* fast off the mark, long settle: entrances that slide or rise into place */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* Thai pages: Kanit first, so Thai, Latin and digits share one family; the display face keeps Kanit for Thai glyphs */
+:root:lang(th) {
+  --font-body: 'Kanit', 'Barlow', system-ui, sans-serif;
+  --font-display: 'Bebas Neue', 'Kanit', sans-serif;
+}
+/* English text on a Thai page (the agent's playbooks) keeps the English face */
+:root:lang(th) [lang='en'] { --font-body: 'Barlow', 'Kanit', system-ui, sans-serif; }
 
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -64,6 +74,9 @@ a { color: inherit; }
   text-transform: uppercase;
   font-weight: 400;
 }
+
+/* Thai is never letter-spaced or upper-cased; Latin labels on a Thai page keep their case */
+:root:lang(th) .label:lang(th) { letter-spacing: 0.02em; }
 
 .wordmark {
   font: 400 26px/1 var(--font-display);

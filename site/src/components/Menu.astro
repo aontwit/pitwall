@@ -1,8 +1,9 @@
 ---
 // Top-right MENU, as in the reference: one quiet control that opens a full-screen panel.
-import { defaultLang, href, t } from '../i18n/ui';
+import { defaultLang, href, t, type Lang } from '../i18n/ui';
 
-const tr = t(defaultLang);
+const { lang = defaultLang } = Astro.props as { lang?: Lang };
+const tr = t(lang);
 const main = [
   { label: tr('menu.home'), to: href('/') },
   { label: tr('nav.overview'), to: href('docs/') },

@@ -1,27 +1,11 @@
 ---
 import type { GetStaticPaths } from 'astro';
-import { getCollection } from 'astro:content';
 import Docs from '../../layouts/Docs.astro';
-import { FLAT, docPath } from '../../docs/nav';
+import { docsPaths } from '../../docs/paths';
 
-export const getStaticPaths = (async () => {
-  const all = [...(await getCollection('overview')), ...(await getCollection('playbooks')), ...(await getCollection('principles'))];
-  const guides = await getCollection('guides');
+export const getStaticPaths = (() => docsPaths('en')) satisfies GetStaticPaths;
 
-  // every page the plugin ships must have a place in the navigation, or the build stops
-  const missing = all.filter((e) => e.collection !== 'overview' && !FLAT.some((i) => i.kind === e.collection && i.id === e.id));
-  if (missing.length) throw new Error(`docs: add to src/docs/nav.ts: ${missing.map((e) => `${e.collection}/${e.id}`).join(', ')}`);
-
-  return FLAT.flatMap((item) => {
-    const entry = all.find((e) => e.collection === item.kind && (item.kind === 'overview' || e.id === item.id));
-    if (!entry) throw new Error(`docs: src/docs/nav.ts lists ${item.kind}/${item.id}, which the repo does not have`);
-    const guide = guides.find((g) => g.data.playbook === item.id);
-    const slug = docPath(item).replace(/^docs\/?/, '').replace(/\/$/, '');
-    return [{ params: { slug: slug || undefined }, props: { entry, item, guide } }];
-  });
-}) satisfies GetStaticPaths;
-
-const { entry, item, guide } = Astro.props;
+const { entry, item, guide, lang } = Astro.props;
 ---
 
-<Docs entry={entry} item={item} guide={guide} />
+<Docs entry={entry} item={item} guide={guide} lang={lang} />

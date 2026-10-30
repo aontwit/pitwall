@@ -7,8 +7,10 @@ type Props = { title: string; summary: string; body: string };
 
 export const getStaticPaths = (async () => {
   const all = [...(await getCollection('overview')), ...(await getCollection('playbooks')), ...(await getCollection('principles'))];
+  const guides = await getCollection('guides');
   return FLAT.flatMap((item) => {
-    const entry = all.find((e) => e.collection === item.kind && (item.kind === 'overview' || e.id === item.id));
+    // a guide-only page (parallel laps, auto merge) is its guide
+    const entry = item.kind === 'guides' ? guides.find((g) => g.data.playbook === item.id) : all.find((e) => e.collection === item.kind && (item.kind === 'overview' || e.id === item.id));
     if (!entry) return [];
     const path = mdPath(item).replace(/^docs\//, '').replace(/\.md$/, '');
     const props: Props = { title: item.label, summary: item.summary ?? '', body: entry.body ?? '' };

@@ -4,7 +4,9 @@ playbook: merge-order
 
 ## What it does
 
-`/pitwall:merge-order` tells you which of your open PRs to merge first, and why the others must wait. It sorts stacked PRs parent before child, gives each PR a level, and fixes what it safely can: it retargets a child whose parent merged, keeps children in draft, and resolves conflicts in the plan's log and rows. **It never merges**; you press the button. The one exception is not this command: under [`merge: auto`](../lap/#auto-merge), the sync at the start of a lap merges the loop's own PRs into the dev branch, in the same order (bottom of each stack first, a merge commit), when every gate passes.
+`/pitwall:merge-order` tells you which open PRs to merge first and why the others have to wait. It sorts stacked PRs parent before child and gives each PR a level. Then it fixes what it safely can: it retargets a child whose parent merged, keeps children in draft, and resolves conflicts in the plan's log and rows. It never merges. You press the button.
+
+Under [`merge: auto`](../auto-merge/), the sync at the start of a lap merges the loop's own PRs into the dev branch when every gate passes, in the same order (bottom of each stack first, as a merge commit). That is part of the lap, separate from this command.
 
 ## Use it when
 
@@ -53,7 +55,7 @@ Next: merge #59 → then press "Delete branch" in that PR (GitHub moves #60 to m
 
 ## When you merge
 
-- Use **Create a merge commit**, never squash or rebase a PR in a stack: the child would see its parent's commits twice and conflict.
+- Use **Create a merge commit**. Never squash or rebase a PR in a stack: the child would see its parent's commits twice and conflict.
 - Merge one at a time, in order, and only PRs whose base is the profile's base.
-- Press **Delete branch** right after, so GitHub moves the child onto the base. Forgot? Run `/pitwall:merge-order` again and it retargets.
-- The other agent PRs usually conflict in the plan's log after a merge. Run it again, or let the next lap fix them.
+- Press **Delete branch** right after, so GitHub moves the child onto the base. If you forget, run `/pitwall:merge-order` again and it retargets.
+- After a merge, the other agent PRs usually conflict in the plan's log. Run the command again, or let the next lap fix them.

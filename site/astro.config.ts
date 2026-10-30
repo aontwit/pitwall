@@ -12,6 +12,7 @@ const blob = 'https://github.com/aontwit/pitwall/blob/main/';
 // - any other relative link in a repo file (`LICENSE`, `plugin/...`) points at the file on GitHub;
 //   the site's own guides (under site/) link to site pages and are left alone
 // - inline `/pitwall:lap` and friends get a class, so they read as commands
+// - a heading ending in `{#id}` gets that id (translated pages keep the English anchors)
 function docsMarkdown() {
   return (tree: Root, file: { path?: string }): void => {
     const rel = file.path ? relative(repoRoot, dirname(file.path)).split(sep).join('/') : '';
@@ -21,6 +22,16 @@ function docsMarkdown() {
         const sibling = node.url.replace(/^\.\/([\w-]+)\.md$/, '../$1/');
         if (sibling !== node.url) node.url = sibling;
         else if (repoFile && !/^([a-z]+:|#|\/)/i.test(node.url)) node.url = blob + posix.normalize(posix.join(rel, node.url));
+      }
+      // `## Heading {#id}` keeps a fixed id, so a translated heading still answers the English page's anchors
+      if (node.type === 'heading') {
+        const last = node.children.at(-1);
+        const id = last?.type === 'text' ? /\s*\{#([\w-]+)\}\s*$/.exec(last.value) : null;
+        if (last?.type === 'text' && id) {
+          last.value = last.value.slice(0, id.index);
+          const data = (node.data ??= {}) as { hProperties?: Record<string, unknown> };
+          data.hProperties = { ...data.hProperties, id: id[1] };
+        }
       }
       if (node.type === 'inlineCode' && node.value.startsWith('/pitwall:')) {
         const data = (node.data ??= {}) as { hProperties?: Record<string, unknown> };
@@ -39,7 +50,7 @@ export default defineConfig({
   devToolbar: { enabled: false },
   i18n: {
     defaultLocale: 'en',
-    locales: ['en'],
+    locales: ['en', 'th'],
     routing: { prefixDefaultLocale: false },
   },
   markdown: {

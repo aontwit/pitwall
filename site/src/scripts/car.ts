@@ -1,6 +1,7 @@
 // Hero scene: an F1 car in light. The paint is near-black and lit only by a matcap of bright strips
 // that slowly turns, so streaks run along the car's real surfaces (the technique the reference uses).
 // On the engine stage the body goes see-through and the power unit comes apart, one part per step of a lap.
+// At lights out the paint sweeps in nose to tail while the camera flies in; a change of stage orbits the car.
 // Drive mode: a chase camera behind the car, as in a racing game. The car stays at the centre of the world
 // and the floor, dust and wind stream past it; an 8-speed seamless gearbox and carbon brakes give it its feel.
 //
@@ -22,8 +23,17 @@ export type SceneOptions = {
   labels: Map<string, HTMLElement>; // engine part name → its label, positioned by the scene
 };
 export type Scene = {
+  /** 0..1: how much of the car model has arrived. */
+  progress(): number;
+  /** Resolves once the car is on the stage; rejects when it cannot load. */
+  ready: Promise<void>;
+  /** Lights out: paint the car in and fly the camera to the first stage (waits for the car if it is still loading). */
+  reveal(): void;
   focus(stage: number): void;
+  /** Drive mode on or off. On, the car waits on the grid (the engine revs, the car stays put) until `launch`. */
   drive(on: boolean): void;
+  /** Lights out in drive mode: release the car. */
+  launch(): void;
   input(c: Partial<Controls>): void;
   telemetry(): Telemetry;
   dispose(): void;
@@ -50,7 +60,7 @@ const v = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 const POSES: Pose[] = [
   { pos: v(7.6, 3.2, 8.0), look: v(0, 0.4, 0) }, // three-quarter front
   { pos: v(0.4, 2.0, 11.5), look: v(0, 0.5, 0) }, // side profile
-  { pos: v(0.2, 5.4, 6.4), look: v(-1.2, 0.85, 0) }, // engine, from above
+  { pos: v(0.4, 6.0, 7.2), look: v(-1.2, 0.85, 0) }, // engine, from above (far enough back that the parts clear the stage UI)
   { pos: v(-9.0, 3.4, 5.4), look: v(-0.3, 0.45, 0) }, // three-quarter rear
   { pos: v(10.5, 1.2, 1.8), look: v(0, 0.5, 0) }, // head-on, low
 ];
@@ -174,9 +184,7 @@ const setUniform = (m: THREE.ShaderMaterial, name: string, value: number): void 
 // ---------- scene ----------
 
 /** Thin light rings on a tyre's outer edges, each with one brighter arc, so the spin can be seen. */
-function rimLights(wheel: THREE.Object3D): THREE.Mesh[] {
-  const ring = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.32, blending: THREE.AdditiveBlending, depthWrite: false });
-  const arc = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false });
+function rimLights(wheel: THREE.Object3D, ring: THREE.Material, arc: THREE.Material): THREE.Mesh[] {
   return [0.21, -0.21].flatMap((z) => {
     const full = new THREE.Mesh(new THREE.TorusGeometry(0.382, 0.004, 6, 72), ring);
     const bright = new THREE.Mesh(new THREE.TorusGeometry(0.382, 0.006, 6, 24, Math.PI * 0.55), arc);
@@ -378,6 +386,12 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
   const wind = new Wind(44);
   const brakeGlow = new THREE.MeshBasicMaterial({ color: 0xff5a1f, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
   const mirrorGlow = brakeGlow.clone();
+  // the tyres' rim lights, and their faint copy in the reflection: dark until the car is painted in (see the tick)
+  const glow = (): THREE.MeshBasicMaterial =>
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+  const rimRing = glow();
+  const rimArc = glow();
+  const dimRim = glow();
   carRoot.add(wind.object);
 
   const engineScene = new THREE.Scene(); // drawn after the bloom so the metal stays crisp
@@ -389,47 +403,65 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
 
   const draco = new DRACOLoader().setDecoderPath(`${opts.base}draco/`);
   const loader = new GLTFLoader().setDRACOLoader(draco);
-  let revealStart = -1;
-
-  loader.load(`${opts.base}models/car.glb`, (gltf) => {
-    const car = gltf.scene;
-    const isWheel = (o: THREE.Object3D): boolean => o.name.startsWith('wheel') || (o.parent?.name.startsWith('wheel') ?? false);
-    car.traverse((o) => {
-      if (o instanceof THREE.Mesh) o.material = isWheel(o) ? tyrePaint : bodyPaint;
-    });
-    const body = car.getObjectByName('body');
-    if (body) wind.setProfile(bodyProfile(body));
-    for (const name of ['wheel_fl', 'wheel_fr', 'wheel_rl', 'wheel_rr']) {
-      const w = car.getObjectByName(name);
-      if (!w) continue;
-      rimLights(w);
-      // carbon brake discs, glowing through the wheel face: dark until heat makes them glow
-      for (const z of [0.205, -0.205]) {
-        const disc = new THREE.Mesh(new THREE.RingGeometry(0.07, 0.17, 40), brakeGlow);
-        disc.position.z = z;
-        disc.userData['disc'] = true;
-        w.add(disc);
-      }
-    }
-    const mirror = car.clone(true);
-    const dimRim = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.05, blending: THREE.AdditiveBlending, depthWrite: false });
-    mirror.traverse((o) => {
-      if (o instanceof THREE.Mesh) o.material = o.userData['disc'] ? mirrorGlow : o.userData['rim'] ? dimRim : mirrorPaint;
-    });
-    mirror.scale.y = -1;
-    for (const name of ['wheel_fl', 'wheel_fr', 'wheel_rl', 'wheel_rr']) {
-      const w = car.getObjectByName(name);
-      const m = mirror.getObjectByName(name);
-      if (w && m) {
-        w.rotation.order = m.rotation.order = 'YZX'; // steer about Y, then spin about the axle
-        wheels.push(w);
-        mirrorWheels.push(m);
-      }
-    }
-    carRoot.add(car, mirror);
-    revealStart = performance.now();
+  let revealStart = -1; // when the paint started to sweep in: lights out and the car loaded, whichever came last
+  let revealAsked = false;
+  let loaded = false;
+  let progress = 0;
+  let resolveReady!: () => void;
+  let rejectReady!: (reason: unknown) => void;
+  const ready = new Promise<void>((resolve, reject) => {
+    resolveReady = resolve;
+    rejectReady = reject;
   });
 
+  loader.load(
+    `${opts.base}models/car.glb`,
+    (gltf) => {
+      const car = gltf.scene;
+      const isWheel = (o: THREE.Object3D): boolean => o.name.startsWith('wheel') || (o.parent?.name.startsWith('wheel') ?? false);
+      car.traverse((o) => {
+        if (o instanceof THREE.Mesh) o.material = isWheel(o) ? tyrePaint : bodyPaint;
+      });
+      const body = car.getObjectByName('body');
+      if (body) wind.setProfile(bodyProfile(body));
+      for (const name of ['wheel_fl', 'wheel_fr', 'wheel_rl', 'wheel_rr']) {
+        const w = car.getObjectByName(name);
+        if (!w) continue;
+        rimLights(w, rimRing, rimArc);
+        // carbon brake discs, glowing through the wheel face: dark until heat makes them glow
+        for (const z of [0.205, -0.205]) {
+          const disc = new THREE.Mesh(new THREE.RingGeometry(0.07, 0.17, 40), brakeGlow);
+          disc.position.z = z;
+          disc.userData['disc'] = true;
+          w.add(disc);
+        }
+      }
+      const mirror = car.clone(true);
+      mirror.traverse((o) => {
+        if (o instanceof THREE.Mesh) o.material = o.userData['disc'] ? mirrorGlow : o.userData['rim'] ? dimRim : mirrorPaint;
+      });
+      mirror.scale.y = -1;
+      for (const name of ['wheel_fl', 'wheel_fr', 'wheel_rl', 'wheel_rr']) {
+        const w = car.getObjectByName(name);
+        const m = mirror.getObjectByName(name);
+        if (w && m) {
+          w.rotation.order = m.rotation.order = 'YZX'; // steer about Y, then spin about the axle
+          wheels.push(w);
+          mirrorWheels.push(m);
+        }
+      }
+      carRoot.add(car, mirror);
+      loaded = true;
+      progress = 1;
+      resolveReady();
+    },
+    (e) => {
+      if (e.total > 0) progress = Math.min(0.95, e.loaded / e.total); // the last step is the parse
+    },
+    rejectReady,
+  );
+
+  // only the Lap stage needs the engine: if it fails, that stage shows the car in glass, empty
   loader.load(`${opts.base}models/engine.glb`, (gltf) => {
     const metal = metalMatcap('rgb(190, 194, 202)');
     const red = metalMatcap('rgb(225, 40, 30)');
@@ -495,7 +527,9 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
   // ---------- state ----------
   let active = 0;
   let driving = false;
+  let staged = false; // in drive mode, on the grid before lights out
   let explode = 0;
+  let rimFade = 0; // the rim lights: off until the paint sweeps in, a glint when the body turns to glass
   let floorBase = 0; // the floor's opacity, shared out between the specks and their streaks
   const SHUTTER = 1 / 60; // s: one frame of travel, so a streak never runs into the next speck's
   let flow = 0; // integrated speed: drives the paint bands, the floor and the dust
@@ -506,11 +540,26 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
   const box = { gear: 1, rpm: 4000, shift: 0, kick: 0, shifts: 0, heat: 0, decel: 0 };
   let camHeading = 0;
   const pose = (n: number): Pose => POSES[n % POSES.length] ?? { pos: v(8, 3, 8), look: v(0, 0.4, 0) };
-  const camPos = pose(0).pos.clone().multiplyScalar(1.5);
+  const up = THREE.Object3D.DEFAULT_UP;
+  // parked far out and round to the side until lights out, then the arrival flies in to the first stage
+  const camPos = pose(0).pos.clone().applyAxisAngle(up, -0.7).multiplyScalar(1.8);
   const camLook = pose(0).look.clone();
   const target = new THREE.Vector3();
   const tmp = new THREE.Vector3();
-  const up = THREE.Object3D.DEFAULT_UP;
+  // A camera move flies round the car on a timed, eased path, in spherical terms about the point it looks at,
+  // so a change of stage orbits the car instead of cutting straight across (or through) it.
+  const move = { from: new THREE.Spherical(), look: new THREE.Vector3(), start: -1, ms: 1 };
+  const orbit = new THREE.Spherical();
+  const to = new THREE.Spherical();
+  const look = new THREE.Vector3();
+  const rel = new THREE.Vector3();
+  let moving = 0; // 0..1..0 over a move: widens the lens a touch and speeds the light along the body
+  const beginMove = (seconds: number): void => {
+    move.from.setFromVector3(rel.copy(camPos).sub(camLook));
+    move.look.copy(camLook);
+    move.start = performance.now();
+    move.ms = seconds * 1000;
+  };
   const start = performance.now();
   let last = start;
   let frame = 0;
@@ -529,9 +578,19 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
     const dt = Math.min((now - last) / 1000, 0.05);
     last = now;
     const k = 1 - Math.exp(-dt * 1.8);
+    if (revealStart < 0 && revealAsked && loaded) {
+      revealStart = now;
+      beginMove(2.8);
+    }
 
     // ---- drive: speed and steering; the car turns on the spot and the world streams past ----
-    if (driving) {
+    if (driving && staged) {
+      // on the grid: the throttle revs the engine against the clutch, the car waits for lights out
+      car.speed = 0;
+      box.gear = 1;
+      box.rpm += (IDLE + controls.throttle * (UPSHIFT - 800 - IDLE) - box.rpm) * Math.min(1, dt * 6);
+      car.steer += (controls.steer * 0.38 - car.steer) * Math.min(1, dt * 7);
+    } else if (driving) {
       // drag alone slows an F1 car about 1 g at top speed when the driver lifts (Autosport: over 0.9 g at 200 mph)
       const drag = 0.25 + 0.0011 * car.speed * car.speed;
       // engine braking off throttle, so a lift at any speed is felt: 100 km/h to rest in about 9 s
@@ -581,8 +640,9 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
     // the nose dips under braking and lifts a touch under power
     car.pitch += (-box.decel * 0.0011 + controls.throttle * sn * 0.004 - car.pitch) * Math.min(1, dt * 6);
     car.spin -= (car.speed / RADIUS) * dt * 0.25; // slowed down, or the eye reads a blur as standing still
-    // a slow drift keeps the parked hero alive; while driving the bands move only with the car, so a car on the brakes or at rest shows still tyres
-    flow += dt * ((driving ? 0 : 0.35) + car.speed * 0.22);
+    // a slow drift keeps the parked hero alive; while driving the bands move only with the car, so a car on the brakes or at rest shows still tyres;
+    // a camera move sends a rush of light down the body
+    flow += dt * ((driving ? 0 : 0.35) + car.speed * 0.22 + moving * 2.6);
     carRoot.rotation.set(car.roll, car.heading, driving ? car.pitch : 0, 'YXZ');
     brakeGlow.opacity = box.heat * 0.95;
     brakeGlow.color.setRGB(1, 0.18 + box.heat * 0.3, 0.05);
@@ -606,20 +666,34 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
       tmp.set(5, 0.6, 0).applyAxisAngle(up, camHeading);
       camPos.lerp(target, 1 - Math.exp(-dt * 8));
       camLook.lerp(tmp, 1 - Math.exp(-dt * 8));
-    } else {
+      moving = 0;
+    } else if (revealStart >= 0) {
       camHeading = car.heading;
       const p = pose(active);
-      const sway = Math.sin(t * 0.15) * 0.06;
-      target.copy(p.pos).sub(p.look).multiplyScalar(fit).add(p.look).applyAxisAngle(up, sway);
+      to.setFromVector3(rel.copy(p.pos).sub(p.look).multiplyScalar(fit));
+      const u = move.start < 0 ? 1 : Math.min(1, (now - move.start) / move.ms);
+      if (u >= 1) move.start = -1;
+      const eased = u < 0.5 ? 4 * u ** 3 : 1 - (2 - 2 * u) ** 3 / 2; // ease in and out
+      const turn = Math.atan2(Math.sin(to.theta - move.from.theta), Math.cos(to.theta - move.from.theta)); // the short way round
+      orbit.set(
+        THREE.MathUtils.lerp(move.from.radius, to.radius, eased),
+        THREE.MathUtils.lerp(move.from.phi, to.phi, eased),
+        move.from.theta + turn * eased,
+      );
+      look.lerpVectors(move.look, p.look, eased);
+      // a slow sway and the pointer ride on top of the path, lightly smoothed
+      target.setFromSpherical(orbit).add(look).applyAxisAngle(up, Math.sin(t * 0.15) * 0.06);
       target.x += pointer.x * 0.8;
       target.y -= pointer.y * 0.5;
-      camPos.lerp(target, k);
-      camLook.lerp(p.look, k);
+      const follow = 1 - Math.exp(-dt * 6);
+      camPos.lerp(target, follow);
+      camLook.lerp(look, follow);
+      moving = Math.sin(Math.PI * u);
     }
     camera.position.copy(camPos);
     camera.lookAt(camLook);
     // the lens widens with speed, as in a racing game: the world rushes in at the edges and the car pulls away a little
-    const fov = driving ? 48 + sn ** 1.3 * 22 : 30;
+    const fov = driving ? 48 + sn ** 1.3 * 22 : 30 + moving * 4;
     if (Math.abs(camera.fov - fov) > 0.01) {
       camera.fov += (fov - camera.fov) * Math.min(1, dt * 3);
       camera.updateProjectionMatrix();
@@ -627,7 +701,12 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
 
     // ---- paint, x-ray and the engine ----
     const xray = active === ENGINE_STAGE && !driving;
-    const reveal = revealStart < 0 ? 3.2 : 3.2 - Math.min(1, (now - revealStart) / 2600) * 7;
+    const painted = revealStart < 0 ? 0 : Math.min(1, (now - revealStart) / 2600);
+    const reveal = 3.6 - painted * 7.4; // the paint's front, nose to tail
+    rimFade += (painted * (xray ? 0.12 : 1) - rimFade) * Math.min(1, dt * 4);
+    rimRing.opacity = 0.32 * rimFade;
+    rimArc.opacity = 0.8 * rimFade;
+    dimRim.opacity = 0.05 * rimFade;
     for (const m of paints) {
       setUniform(m, 'uTime', t);
       setUniform(m, 'uReveal', reveal);
@@ -692,12 +771,26 @@ export function mountCar(canvas: HTMLCanvasElement, opts: SceneOptions): Scene {
   frame = requestAnimationFrame(tick);
 
   return {
+    ready,
+    progress: () => progress,
+    reveal() {
+      revealAsked = true;
+    },
     focus(stage) {
+      if (stage === active) return;
       active = stage;
+      if (revealStart >= 0) beginMove(1.8);
     },
     drive(on) {
       driving = on;
-      if (!on) Object.assign(controls, { throttle: 0, brake: 0, steer: 0 });
+      staged = on;
+      if (!on) {
+        Object.assign(controls, { throttle: 0, brake: 0, steer: 0 });
+        beginMove(1.6); // from the chase camera back out to the stage's pose
+      }
+    },
+    launch() {
+      staged = false;
     },
     input(c) {
       Object.assign(controls, c);

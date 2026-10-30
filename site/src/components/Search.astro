@@ -1,19 +1,22 @@
 ---
 // ⌘K search over the docs. The index is built by Pagefind after `astro build` (see package.json),
 // so it exists on the built site only; in `astro dev` the dialog says so.
-import { href } from '../i18n/ui';
+import { defaultLang, href, t, type Lang } from '../i18n/ui';
+
+const { lang = defaultLang } = Astro.props as { lang?: Lang };
+const tr = t(lang);
 ---
 
 <button type="button" class="search-trigger" data-search-open>
   <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></svg>
-  <span>Search</span>
+  <span>{tr('search.open')}</span>
   <kbd>⌘K</kbd>
 </button>
 
 <dialog class="search" data-search data-index={href('pagefind/pagefind.js')} data-base={href('')} aria-label="Search the docs">
   <div class="search-box">
     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></svg>
-    <input type="search" placeholder="Search playbooks, principles, commands…" autocomplete="off" spellcheck="false" data-search-input />
+    <input type="search" placeholder={tr('search.placeholder')} autocomplete="off" spellcheck="false" data-search-input />
     <kbd>Esc</kbd>
   </div>
   <ol class="search-results" data-search-results></ol>

@@ -1,0 +1,11 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Docs from '../../../layouts/Docs.astro';
+import { docsPaths } from '../../../docs/paths';
+
+export const getStaticPaths = (() => docsPaths('th')) satisfies GetStaticPaths;
+
+const { entry, item, guide, lang } = Astro.props;
+---
+
+<Docs entry={entry} item={item} guide={guide} lang={lang} />

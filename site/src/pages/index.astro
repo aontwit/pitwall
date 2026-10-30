@@ -46,6 +46,7 @@ const stages: { label: string; icon: keyof typeof ICONS; title: string; lede: st
       doc('/pitwall:lap', 'docs/playbooks/lap/'),
       doc('/pitwall:stop', 'docs/playbooks/stop/'),
       doc('/pitwall:brake', 'docs/playbooks/brake/'),
+      doc('parallel: 2', 'docs/playbooks/parallel-laps/'),
     ],
   },
   {
@@ -66,7 +67,7 @@ const stages: { label: string; icon: keyof typeof ICONS; title: string; lede: st
     options: [
       doc('/pitwall:merge-order', 'docs/playbooks/merge-order/'),
       doc('opening-a-pr', 'docs/playbooks/opening-a-pr/'),
-      doc('merge: auto', 'docs/playbooks/lap/#auto-merge'),
+      doc('merge: auto', 'docs/playbooks/auto-merge/'),
     ],
   },
 ];
@@ -76,7 +77,7 @@ const engineParts = [
   { key: 'intake', name: 'Intake', step: 'Pick the next task', side: 'right' },
   { key: 'pistons', name: 'Pistons', step: 'Code, a subagent per role', side: 'right' },
   { key: 'ignition', name: 'Ignition', step: 'Gauge runs the proof', side: 'left' },
-  { key: 'heads', name: 'Heads', step: 'Review panel, two models', side: 'right' },
+  { key: 'heads', name: 'Heads', step: 'Review panel, two models', side: 'left' }, // on the right it runs into the stage's commands
   { key: 'crank', name: 'Crank', step: 'Verifier at the patch-id', side: 'left' },
   { key: 'exhaust', name: 'Exhaust', step: 'Open the PR', side: 'right' },
 ];
@@ -96,6 +97,8 @@ const arc = (from: number, to: number) => {
   const b = at(to, 90);
   return `M ${a.x} ${a.y} A 90 90 0 ${to - from > 270 ? 1 : 0} 1 ${b.x} ${b.y}`;
 };
+// the speeds Drive times from a standing start, km/h (the car makes 300 in about 10 s)
+const marks = [100, 200, 300];
 // what search engines read the page as
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -115,9 +118,16 @@ const jsonLd = {
 <Base title="pitwall — a Claude Code plugin that proves every PR">
   <script type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
   <div class="stage" data-stage-root>
+    <script is:inline>
+      // Hold the ring, the stepper and Drive back until the start lights go out (the page script below runs them).
+      // Set before the first paint, so they never flash in and out; reduced motion skips the show altogether.
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.currentScript.parentElement.classList.add('is-arming');
+    </script>
     <canvas class="scene" aria-hidden="true"></canvas>
-    <div class="poster" aria-hidden="true" style={`background-image: url(${href('hero-poster.jpg')})`}></div>
+    <!-- the image is only fetched when it is shown: no WebGL, or reduced motion -->
+    <div class="poster" aria-hidden="true" style={`--poster: url(${href('hero-poster.jpg')})`}></div>
     <div class="ring" aria-hidden="true"></div>
+    <div class="gantry" data-gantry aria-hidden="true">{Array.from({ length: 5 }, () => <span />)}</div>
 
     <header class="chrome top">
       <a class="wordmark" href={href('/')}><span>pit</span>wall</a>
@@ -126,15 +136,25 @@ const jsonLd = {
 
     <div class="intro">
       <h1 class="pitch">The agent loop for Claude Code. It queues your work, proves every PR, and leaves the merge to you.</h1>
-      {
-        stages.map((s, i) => (
-          <section data-panel hidden={i !== 0} aria-live="polite">
-            <p class="eyebrow label">{tr('hero.stage')} {i + 1}</p>
-            <h2 class="title label">{s.title}</h2>
-            <p class="lede">{s.lede}</p>
-          </section>
-        ))
-      }
+      <div class="panels">
+        {
+          stages.map((s, i) => (
+            <section data-panel hidden={i !== 0} aria-live="polite">
+              {/* each word rises out of its own slot */}
+              <h2 class="title label">
+                {s.title.split(' ').map((word, k) => (
+                  <>
+                    <span class="word" style={`--k: ${k}`}>
+                      <span>{word}</span>
+                    </span>{' '}
+                  </>
+                ))}
+              </h2>
+              <p class="lede">{s.lede}</p>
+            </section>
+          ))
+        }
+      </div>
     </div>
 
     <nav class="stepper" aria-label="The loop">
@@ -174,13 +194,26 @@ const jsonLd = {
         engineParts.map((p, i) => (
           <div class="part" data-part={p.key} data-side={p.side}>
             <span class="part-name label">
-              {String(i + 1).padStart(2, '0')} {p.name}
+              {String(i + 1).padStart(2, '0')} <span class="part-word">{p.name}</span>
             </span>
             <span class="part-step">{p.step}</span>
           </div>
         ))
       }
     </div>
+    <!-- phone: the parts carry only their number, and the names and steps sit in a key below the stepper -->
+    <ol class="legend" aria-hidden="true">
+      {
+        engineParts.map((p, i) => (
+          <li>
+            <span class="part-name label">
+              {String(i + 1).padStart(2, '0')} {p.name}
+            </span>
+            <span class="part-step">{p.step}</span>
+          </li>
+        ))
+      }
+    </ol>
 
     <div class="hud" data-hud hidden>
       <div class="lights" aria-hidden="true">{Array.from({ length: 15 }, () => <span />)}</div>
@@ -199,13 +232,28 @@ const jsonLd = {
         <span class="pedal"><span class="pedal-fill brake" data-pedal="brake"></span></span>
         <span class="pedal"><span class="pedal-fill throttle" data-pedal="throttle"></span></span>
       </div>
+      <!-- splits from a standing start, timed as the pit wall would -->
+      <dl class="splits">
+        {
+          marks.map((m) => (
+            <div>
+              <dt class="label">0–{m}</dt>
+              <dd class="label" data-split={m}>–</dd>
+            </div>
+          ))
+        }
+      </dl>
       <p class="hint">{tr('drive.hint')}</p>
     </div>
 
     <div class="pads" data-pads hidden>
       <div class="pad-group">
-        <button type="button" class="pad label" data-key="left" aria-label={tr('drive.left')}>◀</button>
-        <button type="button" class="pad label" data-key="right" aria-label={tr('drive.right')}>▶</button>
+        <button type="button" class="pad" data-key="left" aria-label={tr('drive.left')}>
+          <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M6.5 2L3.5 5L6.5 8" /></svg>
+        </button>
+        <button type="button" class="pad" data-key="right" aria-label={tr('drive.right')}>
+          <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M3.5 2L6.5 5L3.5 8" /></svg>
+        </button>
       </div>
       <div class="pad-group">
         <button type="button" class="pad label" data-key="down" aria-label={tr('drive.brake')}>BRK</button>
@@ -214,6 +262,7 @@ const jsonLd = {
     </div>
 
     <div class="drive-ctl">
+      <p class="debrief label" data-debrief data-best={tr('drive.best')} data-top={tr('drive.top')} role="status"></p>
       <div class="keys" aria-hidden="true">
         <span class="cap" data-cap="up"><svg viewBox="0 0 10 10"><path d="M2 6.5L5 3.5L8 6.5" /></svg></span>
         <span class="cap" data-cap="left"><svg viewBox="0 0 10 10"><path d="M6.5 2L3.5 5L6.5 8" /></svg></span>
@@ -264,6 +313,7 @@ const jsonLd = {
   const steps = [...document.querySelectorAll<HTMLButtonElement>('[data-step]')];
   const panels = [...document.querySelectorAll<HTMLElement>('[data-panel]')];
   const options = [...document.querySelectorAll<HTMLElement>('[data-option]')];
+  const menu = document.querySelector<HTMLElement>('[data-menu]');
 
   let scene: Scene | undefined;
   const canvas = root?.querySelector<HTMLCanvasElement>('.scene');
@@ -286,17 +336,132 @@ const jsonLd = {
       scene = undefined; // a context that still failed to start
     }
   }
-  root?.classList.toggle('static-hero', !scene);
 
+  // ---------- start lights: on arrival they count the car in, in Drive they start the race ----------
+  const bulbs = [...document.querySelectorAll<HTMLElement>('[data-gantry] span')];
+  let lightsTimer = 0;
+  const light = (n: number): void => bulbs.forEach((b, i) => b.classList.toggle('on', i < n));
+  const stopLights = (): void => {
+    clearTimeout(lightsTimer);
+    light(0);
+  };
+  /** The lamps come on one by one, no faster than `pace` ms and no further than `allowed()`; all five lit, a random hold, then lights out. */
+  const runLights = (pace: number, allowed: () => number, out: () => void): void => {
+    clearTimeout(lightsTimer);
+    let n = 0;
+    const next = (): void => {
+      if (n < allowed()) light(++n);
+      lightsTimer =
+        n < bulbs.length
+          ? window.setTimeout(next, pace)
+          : window.setTimeout(() => {
+              light(0);
+              out();
+            }, 250 + Math.random() * 450); // never the same hold twice, as at a real start
+    };
+    next();
+  };
+
+  /** No scene (no WebGL, reduced motion, or the car failed to load): the still image, and nothing to drive. */
+  const still = (): void => {
+    stopLights();
+    scene?.dispose();
+    scene = undefined;
+    root?.classList.remove('is-arming');
+    root?.classList.add('static-hero');
+  };
+  if (!scene) still();
+  else {
+    // four lamps follow the car's download and the fifth comes on once it is on the stage; a slow line gets the
+    // stage after 5 s anyway, and the car paints in when it lands
+    const since = performance.now();
+    let loaded = false;
+    scene.ready.then(() => (loaded = true), still);
+    runLights(
+      180,
+      () => (loaded || performance.now() - since > 5000 ? 5 : 1 + Math.floor((scene?.progress() ?? 0) * 3.99)),
+      () => {
+        scene?.reveal();
+        root?.classList.remove('is-arming');
+      },
+    );
+  }
+
+  let active = 0;
+  let changed = 0; // when the stage last changed: a scroll moves one stage at a time
+  const leaving: number[] = [];
   const select = (n: number): void => {
+    if (n === active || n < 0 || n >= steps.length) return;
     steps.forEach((s, i) => s.setAttribute('aria-pressed', String(i === n)));
-    panels.forEach((p, i) => (p.hidden = i !== n));
+    // the old text steps out while the new one comes in, in the same grid cell
+    panels.forEach((p, i) => {
+      clearTimeout(leaving[i]);
+      p.removeAttribute('data-leaving');
+      if (i === n) p.hidden = false;
+      else if (i === active && !p.hidden) {
+        p.setAttribute('data-leaving', '');
+        leaving[i] = window.setTimeout(() => {
+          p.hidden = true;
+          p.removeAttribute('data-leaving');
+        }, 280);
+      } else p.hidden = true;
+    });
     options.forEach((o, i) => (o.hidden = i !== n));
     root?.style.setProperty('--active', String(n));
     root?.classList.toggle('is-engine', n === 2); // the exploded engine needs the bottom of the stage
     scene?.focus(n);
+    active = n;
+    changed = performance.now();
   };
   steps.forEach((s, i) => s.addEventListener('click', () => select(i)));
+
+  // arrow keys walk the loop from any node
+  document.querySelector('.stepper')?.addEventListener('keydown', (e) => {
+    const { key } = e as KeyboardEvent;
+    const d = key === 'ArrowDown' || key === 'ArrowRight' ? 1 : key === 'ArrowUp' || key === 'ArrowLeft' ? -1 : 0;
+    if (!d) return;
+    e.preventDefault();
+    select(active + d);
+    steps[active]?.focus();
+  });
+
+  // A scroll moves one stage per gesture: a trackpad flick keeps sending wheel events long after the
+  // fingers lift, so a gesture only ends after a short quiet gap.
+  let wheelAt = 0;
+  let wheelSum = 0;
+  let wheelSpent = false;
+  root?.addEventListener(
+    'wheel',
+    (e) => {
+      if (driving || menu?.hasAttribute('data-open')) return;
+      const now = performance.now();
+      if (now - wheelAt > 160) {
+        wheelSpent = false;
+        wheelSum = 0;
+      }
+      wheelAt = now;
+      if (wheelSpent || now - changed < 700) return;
+      wheelSum += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY; // Firefox counts a mouse wheel in lines
+      if (Math.abs(wheelSum) < 40) return;
+      wheelSpent = true;
+      select(active + Math.sign(wheelSum));
+    },
+    { passive: true },
+  );
+
+  // on a touch screen, a sideways swipe across the car does the same
+  let swipe: { x: number; y: number } | undefined;
+  canvas?.addEventListener('pointerdown', (e) => {
+    swipe = e.pointerType === 'mouse' || driving ? undefined : { x: e.clientX, y: e.clientY };
+  });
+  canvas?.addEventListener('pointerup', (e) => {
+    if (!swipe) return;
+    const dx = e.clientX - swipe.x;
+    const dy = e.clientY - swipe.y;
+    swipe = undefined;
+    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.5) select(active - Math.sign(dx));
+  });
+  canvas?.addEventListener('pointercancel', () => (swipe = undefined));
 
   // ---------- drive mode ----------
   const toggle = document.querySelector<HTMLButtonElement>('[data-drive]');
@@ -312,6 +477,49 @@ const jsonLd = {
   const held = new Set<string>();
   let driving = false;
   let hudFrame = 0;
+
+  // the pit wall's numbers: each run from a standing start is timed to 100, 200 and 300 km/h, the visit keeps the best
+  const splits = [...document.querySelectorAll<HTMLElement>('[data-split]')];
+  const best: number[] = [];
+  let runFrom = -1; // when the car last pulled away from rest
+  let passed = 0; // how many marks this run has passed
+  let topKmh = 0;
+  const timeSplits = (kmh: number): void => {
+    const now = performance.now();
+    if (kmh < 1) runFrom = -1; // at rest: the next pull-away is a new run
+    else if (runFrom < 0) {
+      runFrom = now;
+      passed = 0;
+      splits.forEach((s) => {
+        s.textContent = '–';
+        s.classList.remove('set', 'best');
+      });
+    }
+    for (const s of splits.slice(passed)) {
+      if (runFrom < 0 || kmh < Number(s.dataset['split'])) break;
+      const time = (now - runFrom) / 1000;
+      const pb = !((best[passed] ?? Infinity) <= time);
+      if (pb) best[passed] = time;
+      s.textContent = time.toFixed(2);
+      s.classList.add('set');
+      s.classList.toggle('best', pb);
+      passed += 1;
+    }
+    topKmh = Math.max(topKmh, kmh);
+  };
+
+  // back in the pits, the best split of the visit and its top speed stay up for a few seconds
+  const brief = document.querySelector<HTMLElement>('[data-debrief]');
+  let briefTimer = 0;
+  const debrief = (): void => {
+    const i = best.length - 1;
+    const mark = splits[i]?.dataset['split'];
+    if (!brief || !mark) return;
+    brief.textContent = `${brief.dataset['best']} 0–${mark} km/h ${best[i]?.toFixed(2)} s · ${brief.dataset['top']} ${Math.round(topKmh)} km/h`;
+    brief.classList.add('on');
+    clearTimeout(briefTimer);
+    briefTimer = window.setTimeout(() => brief.classList.remove('on'), 7000);
+  };
 
   const caps = [...document.querySelectorAll<HTMLElement>('[data-cap]')];
   const push = (): void => {
@@ -343,6 +551,7 @@ const jsonLd = {
     lights.forEach((l, i) => l.classList.toggle('on', i < lit));
     pedalBrake?.style.setProperty('scale', `1 ${brake}`);
     pedalThrottle?.style.setProperty('scale', `1 ${throttle}`);
+    timeSplits(kmh);
     hudFrame = requestAnimationFrame(drawHud);
   };
 
@@ -352,6 +561,22 @@ const jsonLd = {
     held.clear();
     scene.drive(on);
     root?.classList.toggle('is-driving', on);
+    // the start: five red lights over the grid (rev it up meanwhile), then lights out and away
+    root?.toggleAttribute('data-staged', on);
+    if (on) {
+      brief?.classList.remove('on');
+      runLights(
+        360,
+        () => 5,
+        () => {
+          root?.removeAttribute('data-staged');
+          scene?.launch();
+        },
+      );
+    } else {
+      stopLights();
+      debrief();
+    }
     if (hud) hud.hidden = !on;
     if (pads) pads.hidden = !on || !matchMedia('(pointer: coarse)').matches;
     if (toggle) {
@@ -449,6 +674,7 @@ const jsonLd = {
     width: 100%;
     height: 100%;
     display: block;
+    touch-action: pan-y; /* a sideways swipe on the car changes stage */
   }
 
   /* the still image for browsers without WebGL and for reduced motion */
@@ -460,7 +686,7 @@ const jsonLd = {
     pointer-events: none;
     transition: opacity 1s var(--ease-reveal);
   }
-  .static-hero .poster { opacity: 1; }
+  .static-hero .poster { opacity: 1; background-image: var(--poster); }
   .static-hero .drive-ctl { display: none; } /* no scene, nothing to drive */
   @media (max-aspect-ratio: 1/1) {
     .poster { background-size: 150vw auto; }
@@ -476,9 +702,67 @@ const jsonLd = {
     border-radius: 50%;
     border: 1.5px solid rgb(255 255 255 / 0.7);
     box-shadow: -18px 0 60px -20px rgb(225 6 0 / 0.5), 18px 0 60px -20px rgb(225 6 0 / 0.3);
-    mask-image: linear-gradient(to bottom, transparent 4%, #000 30%, #000 70%, transparent 96%);
+    /* faded out at top and bottom; the conic part draws the ring in, from the bottom round, at lights out */
+    mask-image:
+      linear-gradient(to bottom, transparent 4%, #000 30%, #000 70%, transparent 96%),
+      conic-gradient(from 180deg, #000 var(--sweep), transparent 0);
+    mask-composite: intersect;
     pointer-events: none;
+    animation: draw 1.8s var(--ease-out) 0.1s backwards;
   }
+  @property --sweep { syntax: '<angle>'; inherits: false; initial-value: 360deg; }
+  @keyframes draw {
+    from { --sweep: 0deg; }
+  }
+
+  /*
+   * Arrival: until the start lights go out, the stage shows only the lamps (the class is set by an inline
+   * script before the first paint). Lifting it starts each element's own entrance. If the page script never
+   * runs, everything comes back on its own after 6 s.
+   */
+  .is-arming > :is(.ring, .stepper, .options, .drive-ctl) { opacity: 0; visibility: hidden; animation: unarm 0s 6s forwards; }
+  .is-arming :is(.stepper li, .options li) { animation: none; }
+  @keyframes unarm {
+    to { opacity: 1; visibility: visible; }
+  }
+
+  /* the F1 start lights: five lamps that light one by one, then all go out at once */
+  .gantry {
+    position: absolute;
+    left: 50%;
+    top: var(--cy);
+    translate: -50% -50%;
+    z-index: 3;
+    display: flex;
+    gap: 14px;
+    padding: 18px 26px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s var(--ease-move), top 0.8s var(--ease-out);
+  }
+  /* the gantry's beam */
+  .gantry::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1.5px;
+    background: linear-gradient(to right, transparent, rgb(255 255 255 / 0.35), transparent);
+  }
+  .gantry span {
+    width: 22px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: rgb(19 19 27);
+    box-shadow: 0 0 0 1.5px rgb(255 255 255 / 0.25);
+    transition: background 0.08s, box-shadow 0.08s; /* lights out is instant */
+  }
+  .gantry span.on {
+    background: radial-gradient(circle at 40% 35%, #ff8a80, var(--accent) 55%);
+    box-shadow: 0 0 0 1.5px #ff6a60, 0 0 22px 6px rgb(225 6 0 / 0.55);
+  }
+  .is-arming .gantry, [data-staged] .gantry { opacity: 1; }
+  /* in Drive the gantry hangs over the grid, above the car */
+  [data-staged] .gantry, .is-driving .gantry { top: calc(var(--cy) - var(--r) * 0.55); }
 
   .chrome {
     position: absolute;
@@ -513,7 +797,13 @@ const jsonLd = {
     text-align: center;
     z-index: 2;
   }
-  .intro section:not([hidden]) { animation: reveal 2s var(--ease-reveal); }
+  /* the stage's text: the old panel steps out while the new one comes in, in the same cell */
+  .panels { display: grid; }
+  .panels > section { grid-area: 1 / 1; }
+  .panels > [data-leaving] { animation: leave 0.28s var(--ease-move) forwards; pointer-events: none; }
+  @keyframes leave {
+    to { opacity: 0; filter: blur(4px); translate: 0 -6px; }
+  }
   .pitch {
     margin: 0 auto 22px;
     max-width: 44ch;
@@ -529,23 +819,43 @@ const jsonLd = {
     color: var(--t-80);
   }
   .title {
-    margin: 8px 0 10px;
+    margin: 0 0 10px;
     font-size: clamp(24px, 2.4vw, 34px);
     line-height: 1.3;
     letter-spacing: var(--track-lede);
+    text-wrap: balance;
+  }
+  /* each word rises out of its own slot, one after another */
+  .word { display: inline-block; overflow: hidden; vertical-align: top; }
+  .word > span { display: inline-block; }
+  .panels > :not([hidden], [data-leaving]) .word > span {
+    animation: rise 0.9s var(--ease-out) backwards;
+    animation-delay: calc(var(--k) * 45ms + 60ms);
+  }
+  @keyframes rise {
+    from { translate: 0 110%; }
   }
   .lede {
     margin: 0 auto;
-    max-width: 52ch;
-    font: 500 11px/18px var(--font-body);
+    max-width: 66ch;
+    font: 500 12px/20px var(--font-body);
     letter-spacing: var(--track-lede);
     text-transform: uppercase;
+    text-wrap: pretty;
     color: var(--t-60);
+    /* a dark halo keeps the words readable where they cross the car's light */
+    text-shadow: 0 0 3px var(--bg), 0 0 12px var(--bg);
+  }
+  .panels > :not([hidden], [data-leaving]) .lede { animation: settle 1.1s var(--ease-out) 0.18s backwards; }
+  @keyframes settle {
+    from { opacity: 0; filter: blur(6px); translate: 0 6px; }
   }
 
   .stepper ol { list-style: none; margin: 0; padding: 0; }
+  /* --slide moves a node or an option along the ring: on arrival they glide down it into place */
+  @property --slide { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
   .stepper li {
-    --a: calc(198deg - var(--i) * 9deg);
+    --a: calc(198deg - var(--i) * 9deg + var(--slide));
     --node: 48px;
     position: absolute;
     left: calc(50% + var(--r) * cos(var(--a)));
@@ -553,6 +863,11 @@ const jsonLd = {
     /* the node's centre, not the button's edge, lands on the ring */
     translate: calc(-100% + var(--node) / 2) -50%;
     z-index: 2;
+    animation: along-left 1.3s var(--ease-out) backwards;
+    animation-delay: calc(var(--i) * 90ms + 150ms);
+  }
+  @keyframes along-left {
+    from { --slide: 26deg; opacity: 0; }
   }
   .stepper button {
     display: flex;
@@ -567,10 +882,10 @@ const jsonLd = {
   .stepper button:focus-visible { box-shadow: none; }
   .step-label {
     font-size: 20px;
-    opacity: 0.3;
+    opacity: 0.5; /* 5:1 on the stage: still readable, still clearly not the current one */
     transition: opacity 0.6s var(--ease-move);
   }
-  .stepper button:hover .step-label, .stepper button:focus-visible .step-label { opacity: 0.75; }
+  .stepper button:hover .step-label, .stepper button:focus-visible .step-label { opacity: 0.8; }
   [aria-pressed='true'] .step-label { opacity: 1; }
   .node {
     display: grid;
@@ -600,14 +915,18 @@ const jsonLd = {
     font-size: 16px;
   }
   .options li {
-    --a: calc(-6deg + var(--j) * 5.5deg);
+    --a: calc(-6deg + var(--j) * 5.5deg + var(--slide));
     position: absolute;
     left: calc(50% + var(--r) * cos(var(--a)));
     top: calc(var(--cy) + var(--r) * sin(var(--a)));
     translate: -8px -50%;
     z-index: 2;
   }
-  .options:not([hidden]) li { animation: reveal 2s var(--ease-reveal) backwards; animation-delay: calc(var(--j) * 120ms); }
+  /* a stage's commands glide down the right of the ring into place */
+  .options:not([hidden]) li { animation: along-right 1s var(--ease-out) backwards; animation-delay: calc(var(--j) * 80ms + 120ms); }
+  @keyframes along-right {
+    from { --slide: -14deg; opacity: 0; }
+  }
   .options a {
     display: flex;
     align-items: center;
@@ -695,25 +1014,27 @@ const jsonLd = {
     gap: 2px;
     padding: 0 0 0 14px;
     margin: -10px 0 0 34px;
-    border-left: 1.5px solid var(--accent);
+    border-left: 1px solid var(--accent);
     opacity: 0;
     white-space: nowrap;
+    text-shadow: 0 0 3px var(--bg), 0 0 12px var(--bg);
   }
   .part[data-side='left'] {
     margin: -10px 0 0 -34px;
     padding: 0 14px 0 0;
     border-left: 0;
-    border-right: 1.5px solid var(--accent);
+    border-right: 1px solid var(--accent);
     text-align: right;
     translate: -100% 0;
   }
   .part-name { font-size: 15px; color: var(--text); }
   .part-step {
-    font: 500 10px/1.4 var(--font-body);
+    font: 500 11px/1.4 var(--font-body);
     letter-spacing: var(--track-lede);
     text-transform: uppercase;
     color: var(--t-60);
   }
+  .legend { display: none; }
 
   /* ---------- drive mode ---------- */
   /* bottom-right: one control with room around it, as in the reference */
@@ -725,7 +1046,36 @@ const jsonLd = {
     display: flex;
     align-items: center;
     gap: 22px;
+    animation: rise-in 0.9s var(--ease-out) 0.6s backwards;
   }
+  @keyframes rise-in {
+    from { opacity: 0; translate: 0 12px; }
+  }
+  /* after a drive: the visit's best split and top speed, for a few seconds */
+  .debrief {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 22px);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+    font-size: 15px;
+    color: var(--t-80);
+    opacity: 0;
+    translate: 0 6px;
+    transition: opacity 0.6s var(--ease-move), translate 0.6s var(--ease-out);
+  }
+  .debrief::before {
+    content: '';
+    width: 6px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px 1px rgb(225 6 0 / 0.8);
+  }
+  .debrief.on { opacity: 1; translate: 0 0; }
   .keys {
     display: grid;
     grid-template-columns: repeat(3, 24px);
@@ -860,12 +1210,22 @@ const jsonLd = {
   }
   .pedal-fill.brake { background: var(--accent); box-shadow: 0 0 10px rgb(225 6 0 / 0.7); }
   .pedal-fill.throttle { background: var(--text); box-shadow: 0 0 10px rgb(255 255 255 / 0.5); }
+  .splits { display: flex; gap: 22px; margin: 2px 0 6px; }
+  .splits div { display: grid; justify-items: center; }
+  .splits dt { font-size: 12px; color: var(--t-60); }
+  .splits dd { margin: 0; font-size: 22px; line-height: 1.1; letter-spacing: 0.04em; color: var(--t-40); }
+  .splits dd.set { color: var(--text); }
+  /* a best of the visit flashes red, like a fastest sector on the timing screens */
+  .splits dd.best { animation: best 1.2s var(--ease-out); }
+  @keyframes best {
+    from { color: var(--accent-muted); text-shadow: 0 0 14px rgb(225 6 0 / 0.9); }
+  }
   .hint {
-    margin: 4px 0 0;
-    font: 500 10px/1.5 var(--font-body);
+    margin: 0;
+    font: 500 11px/1.5 var(--font-body);
     letter-spacing: var(--track-lede);
     text-transform: uppercase;
-    color: var(--t-40);
+    color: var(--t-60);
     text-align: center;
   }
 
@@ -891,6 +1251,7 @@ const jsonLd = {
     box-shadow: 0 0 0 1.5px rgb(255 255 255 / 0.4);
     touch-action: none;
   }
+  .pad svg { width: 16px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
   .pad:active { box-shadow: var(--ring-glow); }
   .pad-go { box-shadow: 0 0 0 1.5px var(--accent); }
 
@@ -928,7 +1289,25 @@ const jsonLd = {
     .install code { font-size: 12px; }
     .copy { min-width: 64px; padding: 6px 10px; font-size: 14px; }
     .cta, .star { padding: 8px 16px; }
-    .part { white-space: normal; }
-    .part-step { max-width: 34vw; }
+    .lede { font-size: 11px; line-height: 18px; }
+    /* the parts carry only their number; the key below the stepper names them */
+    .part { margin-left: 18px; padding-left: 8px; }
+    .part[data-side='left'] { margin-left: -18px; padding-right: 8px; }
+    .part .part-word, .part .part-step { display: none; }
+    .is-engine .legend {
+      position: absolute;
+      inset-inline: var(--edge);
+      bottom: var(--edge);
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 18px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      animation: reveal 0.8s var(--ease-reveal) 0.6s backwards;
+    }
+    .legend li { display: grid; align-content: start; gap: 2px; padding-left: 10px; border-left: 1px solid var(--accent); }
+    .is-driving > .legend { display: none; }
   }
 </style>

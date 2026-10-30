@@ -4,7 +4,7 @@ playbook: doctor
 
 ## What it does
 
-`/pitwall:doctor` checks the profile, `.claude/agent-loop.md`, against the contract every command relies on, and names any section that is missing or wrong. It is read-only: fixes go through `/pitwall:init` or through you.
+`/pitwall:doctor` checks the profile, `.claude/agent-loop.md`, against the contract every command relies on, and names any section that is missing or wrong. It is read-only. You fix problems yourself or with `/pitwall:init`.
 
 ## Use it when
 
@@ -21,7 +21,7 @@ playbook: doctor
 ## What it checks
 
 <ol class="steps">
-<li><strong>The sections.</strong> Every required section is there (repo, git, checks, level B, states to build, repo-specific evidence, agents per task, repo rules, permissions, language), the tracker line is valid, <code>parallel</code> and <code>port</code> hold a valid value when they are set, <code>merge</code> is <code>human</code> or <code>auto</code>, under <code>merge: auto</code> the <code>dev branch</code> row names the base itself, is on origin, and is not <code>main</code>, <code>master</code> or a release or production line, and no <code>{{…}}</code> placeholder is left.</li>
+<li><strong>The sections.</strong> Every required section is there (repo, git, checks, level B, states to build, repo-specific evidence, agents per task, repo rules, permissions, language) and no <code>{{…}}</code> placeholder is left. The tracker line is valid, <code>parallel</code> and <code>port</code> hold a valid value when they are set, and <code>merge</code> is <code>human</code> or <code>auto</code>. Under <code>merge: auto</code>, the <code>dev branch</code> row names the base itself, which must be on origin and must not be <code>main</code>, <code>master</code> or a release or production line.</li>
 <li><strong>What a script cannot see.</strong> The install command still matches the lockfile on the base, every check command exists, the base branch exists on the remote, <code>gh</code> is signed in, and the tracker's tools are connected.</li>
 </ol>
 
@@ -39,7 +39,7 @@ optional multi-machine (not set)
 doctor: profile OK (.claude/agent-loop.md)
 ```
 
-A profile with problems, each line explained in the report:
+A profile with problems (the report explains each line):
 
 ```text
 MISSING  states to build
@@ -48,4 +48,4 @@ UNFILLED 1 line(s) still hold a {{…}} placeholder:
 doctor: 3 problem(s) in .claude/agent-loop.md
 ```
 
-No profile at all: doctor says the repo has not set up pitwall and points to `/pitwall:init`.
+With no profile at all, doctor says the repo has not set up pitwall and points to `/pitwall:init`.

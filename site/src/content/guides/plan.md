@@ -4,7 +4,7 @@ playbook: plan
 
 ## What it does
 
-`/pitwall:plan` is the front of the loop. It interviews you in short rounds of tick-box questions, writes every answer into the spec or the plan before the next round, and ends with plan rows that `/pitwall:queue` can pick. It never writes code, and it ends with a docs-only PR that you merge.
+`/pitwall:plan` sits at the front of the loop. It interviews you in short rounds of tick-box questions and writes each answer into the spec or the plan before the next round. It ends with plan rows that `/pitwall:queue` can pick, in a docs-only PR that you merge. It never writes code.
 
 ## Use it when
 
@@ -20,16 +20,16 @@ playbook: plan
 /pitwall:plan prices now include tax
 ```
 
-The mode follows from what it finds: **new** (no spec: the whole product), **phase** (one phase still `TBD`), or **amend** (a decision you describe in words).
+It picks the mode from what it finds: new when there is no spec (it plans the whole product), phase when one phase is still `TBD`, and amend when you describe a decision in words.
 
 ## How it runs
 
 <ol class="steps">
-<li><strong>Read first.</strong> The spec, the plan, the repo rules and the questions already answered. Anything a file answers is never asked.</li>
-<li><strong>Ask in rounds.</strong> Two or three questions per round, recommended answer first, each option saying what it does to the plan. Only questions whose prerequisites are settled; a question that reshapes everything is asked alone.</li>
-<li><strong>Record as it goes.</strong> Product decisions go into the spec, marked <code>(owner &lt;date&gt;)</code>; order and process decisions into the plan's answered table. Nothing stays only in chat.</li>
+<li><strong>Read first.</strong> It reads the spec, the plan, the repo rules and the questions already answered, and never asks what a file already answers.</li>
+<li><strong>Ask in rounds.</strong> Two or three questions per round, recommended answer first, and each option says what it does to the plan. It only asks questions whose prerequisites are settled, and a question that reshapes everything gets a round of its own.</li>
+<li><strong>Record as it goes.</strong> Product decisions go into the spec, marked <code>(owner &lt;date&gt;)</code>. Order and process decisions go into the plan's answered table. Nothing stays only in chat.</li>
 <li><strong>Write rows.</strong> Each row cites a spec section, names its files (about eight at most) and has a checkable "Done when". A row that needs a human verdict becomes a gate row.</li>
-<li><strong>Open the PR.</strong> A docs-only PR with a table of decision, where it landed and the date. You merge it, then run <code class="cmd">/pitwall:queue</code>.</li>
+<li><strong>Open the PR.</strong> The PR changes docs only and has a table of each decision, where it landed and the date. You merge it, then run <code class="cmd">/pitwall:queue</code>.</li>
 </ol>
 
 ## What you'll see
@@ -58,4 +58,4 @@ A row it writes into the plan:
 
 ## Next steps
 
-Merge the plan PR, then `/pitwall:queue`. Anything still undecided stays labelled open, and a phase that is not ready keeps `TBD`, so the queue skips it.
+Merge the plan PR, then run `/pitwall:queue`. Anything still undecided stays labelled open, and a phase that is not ready keeps `TBD`, so the queue skips it.
